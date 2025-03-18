@@ -55,6 +55,29 @@ export default function DataGridDemo() {
   const [rows, setRows] = useState<Employee[]>(employees);
   const [cellModesModel, setCellModesModel] = useState<GridCellModesModel>({});
 
+  // Handle cell double-click to enter edit mode
+  const handleCellDoubleClick = useCallback((params: any) => {
+    const { id, field } = params;
+    
+    // Skip editing for non-editable fields
+    if (field === 'id') return;
+    
+    setCellModesModel((prevModel) => ({
+      ...prevModel,
+      [id]: {
+        ...prevModel[id],
+        [field]: { mode: GridCellModes.Edit },
+      },
+    }));
+    
+    console.log('Cell edit started:', { 
+      rowId: id, 
+      field: field, 
+      value: params.value,
+      rowData: rows.find(row => row.id === id)
+    });
+  }, [rows]);
+
   // Handle cell edit start
   const handleCellEditStart = useCallback((params: any) => {
     console.log('Cell edit started:', { 
@@ -67,11 +90,21 @@ export default function DataGridDemo() {
 
   // Handle cell edit stop
   const handleCellEditStop = useCallback((params: any, event: any) => {
-    if (params.reason === GridCellEditStopReasons.cellFocusOut) {
+    const { id, field, reason } = params;
+    
+    setCellModesModel((prevModel) => ({
+      ...prevModel,
+      [id]: {
+        ...prevModel[id],
+        [field]: { mode: GridCellModes.View },
+      },
+    }));
+    
+    if (reason === GridCellEditStopReasons.cellFocusOut) {
       console.log('Cell edit completed (focus out):', { 
-        rowId: params.id, 
-        field: params.field,
-        reason: params.reason
+        rowId: id, 
+        field: field,
+        reason: reason
       });
     }
   }, []);
@@ -146,6 +179,9 @@ export default function DataGridDemo() {
       width: 220, 
       editable: true,
       valueFormatter: (params: any) => getDepartmentLabel(params.value as number),
+      renderCell: (params: any) => {
+        return <span>{getDepartmentLabel(params.value as number)}</span>;
+      },
       renderEditCell: (params) => <DepartmentEditCell {...params} />,
     },
   ];
@@ -165,7 +201,7 @@ export default function DataGridDemo() {
             Instructions:
           </Typography>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Click on any cell (except ID) to edit its value</li>
+            <li>Double-click on any cell (except ID) to edit its value</li>
             <li>Press Enter or click outside to save changes</li>
             <li>Check the browser console to see logged events</li>
           </ul>
@@ -177,11 +213,13 @@ export default function DataGridDemo() {
           apiRef={apiRef}
           rows={rows}
           columns={columns}
+          onCellDoubleClick={handleCellDoubleClick}
           onCellEditStart={handleCellEditStart}
           onCellEditStop={handleCellEditStop}
           processRowUpdate={processRowUpdate}
           cellModesModel={cellModesModel}
           editMode="cell"
+          isCellEditable={(params) => params.field !== 'id'}
           disableRowSelectionOnClick
           pageSizeOptions={[5, 10, 25]}
           initialState={{
