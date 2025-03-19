@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tooltip } from '@mui/material';
 import { GridRenderCellParams } from '@mui/x-data-grid';
-import { FieldError } from 'react-hook-form';
+import { FieldError } from '../../../types/form';
 import { EnhancedColumnConfig } from '../EnhancedDataGrid';
 import { ValidationIndicator } from '../components/ValidationIndicator';
 

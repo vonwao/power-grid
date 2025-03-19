@@ -9,7 +9,7 @@ import {
   GridRenderCellParams,
 } from '@mui/x-data-grid';
 import { Box, Paper, Typography } from '@mui/material';
-import { RegisterOptions } from 'react-hook-form';
+import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
@@ -28,7 +28,7 @@ export interface FieldConfig<T = any> {
   renderEditMode?: (props: any) => React.ReactNode;
   
   // Validation
-  validation?: RegisterOptions;
+  validation?: ValidationOptions;
   
   // Transform functions (optional)
   parse?: (value: any) => T | null;

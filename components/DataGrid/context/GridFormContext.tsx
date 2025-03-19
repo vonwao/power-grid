@@ -2,9 +2,11 @@ import React, { createContext, useCallback, useContext, useState, useRef, useEff
 import { 
   FieldValues, 
   FieldError, 
-  RegisterOptions,
-  FieldPath
-} from 'react-hook-form';
+  ValidationOptions,
+  FieldPath,
+  FormState,
+  FormMethods
+} from '../../../types/form';
 import { GridRowId } from '@mui/x-data-grid';
 import { EnhancedColumnConfig } from '../EnhancedDataGrid';
 
@@ -13,28 +15,11 @@ export interface ValidationHelpers {
   setError: (field: string, message: string) => void;
 }
 
-// Simplified form state
-interface SimpleFormState {
-  values: Record<string, any>;
-  errors: Record<string, FieldError>;
-  dirtyFields: Record<string, boolean>;
-  isDirty: boolean;
-  isValid: boolean;
-}
-
-// Simplified form methods
-interface SimpleFormMethods {
-  getValues: () => Record<string, any>;
-  setValue: (name: string, value: any, options?: { shouldDirty?: boolean; shouldValidate?: boolean }) => void;
-  setError: (name: string, error: { type: string; message: string }) => void;
-  clearErrors: () => void;
-  trigger: () => Promise<boolean>;
-  formState: SimpleFormState;
-}
+// We're now using FormState and FormMethods from our custom types
 
 interface GridFormContextType {
   // Form instances for each row
-  getFormMethods: (rowId: GridRowId) => SimpleFormMethods | undefined;
+  getFormMethods: (rowId: GridRowId) => FormMethods | undefined;
   
   // Row management
   startEditingRow: (rowId: GridRowId, field: string) => void;
@@ -82,10 +67,10 @@ interface GridFormProviderProps {
 export const GridFormContext = createContext<GridFormContextType | undefined>(undefined);
 
 // Create a form instance factory
-const createFormInstance = (defaultValues: Record<string, any>): SimpleFormMethods => {
+const createFormInstance = (defaultValues: Record<string, any>): FormMethods => {
   try {
     // Create a form state
-    const formState: SimpleFormState = {
+    const formState: FormState = {
       values: { ...defaultValues },
       errors: {},
       dirtyFields: {},
@@ -94,7 +79,7 @@ const createFormInstance = (defaultValues: Record<string, any>): SimpleFormMetho
     };
     
     // Create the form methods
-    const formMethods: SimpleFormMethods = {
+    const formMethods: FormMethods = {
       formState,
       getValues: () => {
         return { ...formState.values };
@@ -167,7 +152,7 @@ export function GridFormProvider({
   const [pendingChanges, setPendingChanges] = useState<Map<GridRowId, Record<string, any>>>(new Map());
   
   // Use a ref to store form instances to avoid re-renders when they change
-  const formInstancesRef = useRef<Map<GridRowId, SimpleFormMethods>>(new Map());
+  const formInstancesRef = useRef<Map<GridRowId, FormMethods>>(new Map());
   
   // Track original data for each row being edited
   const originalDataRef = useRef<Map<GridRowId, any>>(new Map());
@@ -184,7 +169,7 @@ export function GridFormProvider({
   }, [pendingChanges]);
   
   // Get form methods for a specific row
-  const getFormMethods = useCallback((rowId: GridRowId): SimpleFormMethods | undefined => {
+  const getFormMethods = useCallback((rowId: GridRowId): FormMethods | undefined => {
     try {
       return formInstancesRef.current.get(rowId);
     } catch (error) {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tooltip } from '@mui/material';
-import { FieldError } from 'react-hook-form';
+import { FieldError } from '../../../types/form';
 
 interface ValidationIndicatorProps {
   error?: FieldError;
