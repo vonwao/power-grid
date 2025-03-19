@@ -174,7 +174,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
           
           <Box className="flex items-center mt-2">
             <Typography variant="body2" className="text-gray-600">
-              Click to edit • Tab to navigate • Enter or click outside to save cell
+              Click to edit • Tab to navigate
             </Typography>
           </Box>
         </Paper>
