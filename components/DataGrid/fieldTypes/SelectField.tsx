@@ -40,7 +40,7 @@ export class SelectFieldType<T = any> implements FieldTypeConfig<T> {
     if (value === null || value === undefined) return <span></span>;
     
     const option = this.options.find(opt => opt[this.valueKey] === value);
-    return <span>{option ? option[this.labelKey] : ''}</span>;
+    return <span>{option ? option[this.labelKey] : String(value)}</span>;
   }
   
   renderEditMode(props: EditCellProps<T>) {
@@ -88,7 +88,7 @@ export class SelectFieldType<T = any> implements FieldTypeConfig<T> {
     if (value === null || value === undefined) return '';
     
     const option = this.options.find(opt => opt[this.valueKey] === value);
-    return option ? option[this.labelKey] : '';
+    return option ? option[this.labelKey] : String(value);
   }
   
   getDefaultValue(): T | null {

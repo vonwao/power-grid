@@ -175,7 +175,15 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
                 const { id, field } = params;
                 const column = columns.find(col => col.field === field);
                 if (column?.editable !== false) {
-                  apiRef.current.startCellEditMode({ id, field });
+                  try {
+                    // Check if the cell is already in edit mode
+                    const cellMode = apiRef.current.getCellMode(id, field);
+                    if (cellMode === 'view') {
+                      apiRef.current.startCellEditMode({ id, field });
+                    }
+                  } catch (error) {
+                    console.error('Error starting cell edit mode:', error);
+                  }
                 }
               }
             }}
