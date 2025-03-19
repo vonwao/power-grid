@@ -55,8 +55,8 @@ export default function DataGridDemo() {
   const [rows, setRows] = useState<Employee[]>(employees);
   const [cellModesModel, setCellModesModel] = useState<GridCellModesModel>({});
 
-  // Handle cell double-click to enter edit mode
-  const handleCellDoubleClick = useCallback((params: any) => {
+  // Handle cell click to enter edit mode
+  const handleCellClick = useCallback((params: any) => {
     const { id, field } = params;
     
     // Skip editing for non-editable fields
@@ -187,33 +187,27 @@ export default function DataGridDemo() {
   ];
 
   return (
-    <div className="w-full p-6">
-      <Paper elevation={3} className="p-6 mb-6">
-        <Typography variant="h4" className="mb-4 text-center sm:text-left">
+    <div className="h-screen w-screen flex flex-col overflow-hidden">
+      <Paper elevation={1} className="p-3 shadow-sm">
+        <Typography variant="h5" className="text-center sm:text-left">
           MUI X Data Grid Demo with Inline Editing
         </Typography>
-        <Typography variant="body1" className="mb-6 text-center sm:text-left">
-          This demo showcases an editable data grid with various field types: text, number, date, boolean, and select with autocomplete.
-        </Typography>
-        
-        <Box className="bg-gray-50 p-4 mb-6 rounded-md">
-          <Typography variant="subtitle1" className="font-bold mb-2">
+        <Box className="flex items-center mt-2">
+          <Typography variant="body2" className="text-gray-600 mr-2">
             Instructions:
           </Typography>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Double-click on any cell (except ID) to edit its value</li>
-            <li>Press Enter or click outside to save changes</li>
-            <li>Check the browser console to see logged events</li>
-          </ul>
+          <Typography variant="body2" className="text-gray-600">
+            Click to edit • Press Enter or click outside to save
+          </Typography>
         </Box>
       </Paper>
 
-      <Paper elevation={3} className="h-[500px] w-full">
+      <Paper elevation={0} className="flex-grow w-full">
         <DataGrid
           apiRef={apiRef}
           rows={rows}
           columns={columns}
-          onCellDoubleClick={handleCellDoubleClick}
+          onCellClick={handleCellClick}
           onCellEditStart={handleCellEditStart}
           onCellEditStop={handleCellEditStop}
           processRowUpdate={processRowUpdate}
@@ -221,10 +215,16 @@ export default function DataGridDemo() {
           editMode="cell"
           isCellEditable={(params) => params.field !== 'id'}
           disableRowSelectionOnClick
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[10, 25, 50, 100]}
           initialState={{
             pagination: {
-              paginationModel: { pageSize: 10 },
+              paginationModel: { pageSize: 25 },
+            },
+          }}
+          sx={{ 
+            border: 'none',
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
             },
           }}
         />
