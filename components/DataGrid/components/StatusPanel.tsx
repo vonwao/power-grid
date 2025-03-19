@@ -38,77 +38,52 @@ export const StatusPanel: React.FC = () => {
     saveChanges, 
     cancelChanges, 
     hasValidationErrors,
-    isRowEditing, 
-    isRowDirty 
+    isRowEditing
   } = useGridForm();
   
-  // Get all editing rows
-  const [editingRows, setEditingRows] = React.useState<Set<any>>(new Set());
+  // Get access to the pendingChanges state via a custom hook
+  const pendingChangesRef = React.useRef<Map<any, Record<string, any>>>(new Map());
+  const [changeCount, setChangeCount] = React.useState(0);
   const [mode, setMode] = React.useState<'add' | 'edit' | 'none'>('none');
   
-  // Use effect to get the editing rows
+  // Use effect to monitor the console logs for pending changes
   React.useEffect(() => {
-    // Function to update the editing rows
-    const updateEditingRows = () => {
-      try {
-        // Check if any rows are being edited
-        const editingRowsSet = new Set<any>();
-        let hasAddedRow = false;
-        
-        // More direct approach to find editing rows
-        // First get all rows from the DOM
-        const rows = document.querySelectorAll('[data-id]');
-        
-        // Check each row
-        rows.forEach(row => {
-          const id = row.getAttribute('data-id');
-          if (!id) return;
+    // Create a custom console.log to intercept the pendingChanges logs
+    const originalConsoleLog = console.log;
+    console.log = function(...args) {
+      // Check if this is a pendingChanges log
+      if (args[0] === 'Pending changes:') {
+        const changes = args[1];
+        if (Array.isArray(changes)) {
+          // Update our local reference to the changes
+          const changesMap = new Map();
+          changes.forEach(change => {
+            changesMap.set(change.rowId, change.changes);
+          });
+          pendingChangesRef.current = changesMap;
+          setChangeCount(changesMap.size);
           
-          // Check if this row is being edited
-          if (isRowEditing(id)) {
-            editingRowsSet.add(id);
-            
-            // Check if this is a newly added row
-            if (id.toString().startsWith('new-') || parseInt(id) > 1000) {
+          // Determine mode based on changes
+          let hasAddedRow = false;
+          changesMap.forEach((_, rowId) => {
+            if (rowId.toString().startsWith('new-') || parseInt(rowId) > 1000) {
               hasAddedRow = true;
             }
-          }
-        });
-        
-        // If we didn't find any editing rows through DOM, try a direct approach
-        if (editingRowsSet.size === 0) {
-          // Try to find any row that's being edited directly from the form context
-          document.querySelectorAll('[role="row"]').forEach(row => {
-            const id = row.getAttribute('data-id');
-            if (id && isRowEditing(id)) {
-              editingRowsSet.add(id);
-              
-              // Check if this is a newly added row
-              if (id.toString().startsWith('new-') || parseInt(id) > 1000) {
-                hasAddedRow = true;
-              }
-            }
           });
+          
+          setMode(hasAddedRow ? 'add' : changesMap.size > 0 ? 'edit' : 'none');
         }
-        
-        setEditingRows(editingRowsSet);
-        setMode(hasAddedRow ? 'add' : editingRowsSet.size > 0 ? 'edit' : 'none');
-      } catch (error) {
-        console.error('Error updating editing rows:', error);
       }
+      
+      // Call the original console.log
+      originalConsoleLog.apply(console, args);
     };
     
-    // Update the editing rows initially
-    updateEditingRows();
-    
-    // Set up an interval to update the editing rows
-    const intervalId = setInterval(updateEditingRows, 200);
-    
-    // Clean up the interval on unmount
-    return () => clearInterval(intervalId);
-  }, [isRowEditing, isRowDirty]);
-  
-  const changeCount = editingRows.size;
+    // Restore the original console.log on unmount
+    return () => {
+      console.log = originalConsoleLog;
+    };
+  }, []);
   
   // Always show the panel, with different states based on editing status
   const hasDirtyFields = changeCount > 0 && mode !== 'none';

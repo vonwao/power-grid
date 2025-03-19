@@ -163,6 +163,9 @@ export function GridFormProvider({
   const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
   const [currentCell, setCurrentCell] = useState<{ rowId: GridRowId; field: string }>();
   
+  // Add state to track pending changes
+  const [pendingChanges, setPendingChanges] = useState<Map<GridRowId, Record<string, any>>>(new Map());
+  
   // Use a ref to store form instances to avoid re-renders when they change
   const formInstancesRef = useRef<Map<GridRowId, SimpleFormMethods>>(new Map());
   
@@ -171,6 +174,14 @@ export function GridFormProvider({
   
   // Track rows that were added (not in the original data)
   const addedRowsRef = useRef<Set<GridRowId>>(new Set());
+  
+  // Log pending changes whenever they change
+  useEffect(() => {
+    console.log('Pending changes:', Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
+      rowId,
+      changes
+    })));
+  }, [pendingChanges]);
   
   // Get form methods for a specific row
   const getFormMethods = useCallback((rowId: GridRowId): SimpleFormMethods | undefined => {
@@ -279,24 +290,25 @@ export function GridFormProvider({
   // Check if a row has any dirty fields
   const isRowDirty = useCallback((rowId: GridRowId) => {
     try {
-      const form = formInstancesRef.current.get(rowId);
-      return form ? form.formState.isDirty : false;
+      // Use our explicit pendingChanges tracking
+      return pendingChanges.has(rowId);
     } catch (error) {
       console.error(`Error checking if row ${rowId} is dirty:`, error);
       return false;
     }
-  }, []);
+  }, [pendingChanges]);
   
   // Check if a specific field is dirty
   const isFieldDirty = useCallback((rowId: GridRowId, field: string) => {
     try {
-      const form = formInstancesRef.current.get(rowId);
-      return form ? !!form.formState.dirtyFields[field] : false;
+      // Use our explicit pendingChanges tracking
+      const rowChanges = pendingChanges.get(rowId);
+      return rowChanges ? field in rowChanges : false;
     } catch (error) {
       console.error(`Error checking if field ${rowId}.${field} is dirty:`, error);
       return false;
     }
-  }, []);
+  }, [pendingChanges]);
   
   // Get errors for a row
   const getRowErrors = useCallback((rowId: GridRowId) => {
@@ -361,6 +373,34 @@ export function GridFormProvider({
         form.setValue(field, value, { 
           shouldDirty: hasChanged,
           shouldValidate: true 
+        });
+        
+        // Track changes explicitly in our pendingChanges state
+        setPendingChanges(prev => {
+          const newChanges = new Map(prev);
+          
+          // Get or create row changes
+          let rowChanges = newChanges.get(rowId) || {};
+          
+          // Only track if value has changed from original
+          if (originalData && JSON.stringify(value) !== JSON.stringify(originalData[field])) {
+            rowChanges = { ...rowChanges, [field]: value };
+            newChanges.set(rowId, rowChanges);
+          } else {
+            // If value is back to original, remove it from changes
+            if (field in rowChanges) {
+              const { [field]: _, ...rest } = rowChanges;
+              
+              // If row has no changes, remove it from the map
+              if (Object.keys(rest).length === 0) {
+                newChanges.delete(rowId);
+              } else {
+                newChanges.set(rowId, rest);
+              }
+            }
+          }
+          
+          return newChanges;
         });
         
         // Force a re-render to update the UI
@@ -433,6 +473,7 @@ export function GridFormProvider({
       // Clear editing state
       setEditingRows(new Set());
       setCurrentCell(undefined);
+      setPendingChanges(new Map());
       
       // Keep form instances and original data for now
       // They'll be garbage collected when no longer referenced
@@ -471,6 +512,7 @@ export function GridFormProvider({
       // Clear editing state
       setEditingRows(new Set());
       setCurrentCell(undefined);
+      setPendingChanges(new Map());
       
       // Keep form instances and original data for now
       // They'll be garbage collected when no longer referenced
@@ -530,6 +572,22 @@ export function GridFormProvider({
       
       // Add the row to the grid
       setRows(prev => [...prev, newRow]);
+      
+      // Mark all fields as dirty in pendingChanges
+      setPendingChanges(prev => {
+        const newChanges = new Map(prev);
+        const rowChanges: Record<string, any> = {};
+        
+        // Add all fields to changes
+        Object.keys(newRow).forEach(field => {
+          if (field !== 'id') {
+            rowChanges[field] = newRow[field];
+          }
+        });
+        
+        newChanges.set(newId, rowChanges);
+        return newChanges;
+      });
     } catch (error) {
       console.error('Error adding new row:', error);
     }

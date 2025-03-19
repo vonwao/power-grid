@@ -3,6 +3,7 @@ import { Tooltip } from '@mui/material';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { FieldError } from 'react-hook-form';
 import { EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { ValidationIndicator } from '../components/ValidationIndicator';
 
 export interface CellRendererProps {
   params: GridRenderCellParams;
@@ -30,32 +31,10 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
     content = value != null ? String(value) : '';
   }
   
-  // If the field is not dirty, just return the content without styling
-  if (!isDirty) {
-    return <>{content}</>;
-  }
-  
-  // Apply validation styling if needed
-  const style: React.CSSProperties = {};
-  
-  if (error) {
-    // Invalid field styling
-    style.border = '1px solid red';
-    style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-    style.borderStyle = 'dotted';
-    style.padding = '4px';
-    style.borderRadius = '4px';
-  } else {
-    // Valid field styling
-    style.border = '1px solid green';
-    style.backgroundColor = 'rgba(0, 255, 0, 0.1)';
-    style.padding = '4px';
-    style.borderRadius = '4px';
-  }
-  
+  // Use the ValidationIndicator component to handle styling
   return (
-    <Tooltip title={error ? error.message || 'Invalid' : 'Valid'}>
-      <div style={style}>{content}</div>
-    </Tooltip>
+    <ValidationIndicator error={error} isDirty={isDirty}>
+      {content}
+    </ValidationIndicator>
   );
 };
