@@ -39,33 +39,46 @@ export const StatusPanel: React.FC = () => {
   const [editingRows, setEditingRows] = React.useState<Set<any>>(new Set());
   const [mode, setMode] = React.useState<'add' | 'edit' | 'none'>('none');
   
+  // Get the form context
+  const { isRowEditing, isRowDirty } = useGridForm();
+  
   // Use effect to get the editing rows
   React.useEffect(() => {
-    const { isRowEditing, isRowDirty } = useGridForm();
-    
-    // Check if any rows are being edited
-    const editingRowsSet = new Set<any>();
-    let hasAddedRow = false;
-    
-    // This is a simplified approach - in a real implementation, we would
-    // track this information in the GridFormContext
-    document.querySelectorAll('[role="row"]').forEach(row => {
-      const id = row.getAttribute('data-id');
-      if (id && isRowEditing(id) && isRowDirty(id)) {
-        editingRowsSet.add(id);
-        
-        // Check if this is a newly added row
-        // This is a simplified approach - in a real implementation, we would
-        // track this information in the GridFormContext
-        if (id.toString().startsWith('new-')) {
-          hasAddedRow = true;
+    // Function to update the editing rows
+    const updateEditingRows = () => {
+      // Check if any rows are being edited
+      const editingRowsSet = new Set<any>();
+      let hasAddedRow = false;
+      
+      // This is a simplified approach - in a real implementation, we would
+      // track this information in the GridFormContext
+      document.querySelectorAll('[role="row"]').forEach(row => {
+        const id = row.getAttribute('data-id');
+        if (id && isRowEditing(id) && isRowDirty(id)) {
+          editingRowsSet.add(id);
+          
+          // Check if this is a newly added row
+          // This is a simplified approach - in a real implementation, we would
+          // track this information in the GridFormContext
+          if (id.toString().startsWith('new-')) {
+            hasAddedRow = true;
+          }
         }
-      }
-    });
+      });
+      
+      setEditingRows(editingRowsSet);
+      setMode(hasAddedRow ? 'add' : editingRowsSet.size > 0 ? 'edit' : 'none');
+    };
     
-    setEditingRows(editingRowsSet);
-    setMode(hasAddedRow ? 'add' : editingRowsSet.size > 0 ? 'edit' : 'none');
-  }, []);
+    // Update the editing rows initially
+    updateEditingRows();
+    
+    // Set up an interval to update the editing rows
+    const intervalId = setInterval(updateEditingRows, 500);
+    
+    // Clean up the interval on unmount
+    return () => clearInterval(intervalId);
+  }, [isRowEditing, isRowDirty]);
   
   const changeCount = editingRows.size;
   

@@ -13,8 +13,7 @@ import { RegisterOptions } from 'react-hook-form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
-import { StatusPanel } from './components/StatusPanel';
-import { AddRowButton } from './components/AddRowButton';
+import { StatusPanel, AddRowButton, CellEditHandler } from './components';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -147,6 +146,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         </Paper>
 
         <Paper elevation={0} className="flex-grow w-full">
+          <CellEditHandler apiRef={apiRef} />
           <DataGrid
             apiRef={apiRef}
             rows={rows}
@@ -179,14 +179,12 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
                 }
               }
             }}
-            onCellEditStart={(params) => {
-              const { id, field } = params;
-              const gridForm = useGridForm();
-              gridForm.startEditingCell(id, field);
-            }}
-            onCellEditStop={(params) => {
-              const gridForm = useGridForm();
-              gridForm.stopEditingCell();
+            slots={{
+              noRowsOverlay: () => (
+                <div className="flex items-center justify-center h-full">
+                  <Typography>No rows</Typography>
+                </div>
+              )
             }}
             sx={{ 
               border: 'none',
