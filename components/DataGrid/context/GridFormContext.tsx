@@ -100,13 +100,22 @@ const createFormInstance = (defaultValues: Record<string, any>): SimpleFormMetho
         return { ...formState.values };
       },
       setValue: (name, value, options) => {
+        // Check if the value has actually changed
+        const currentValue = formState.values[name];
+        const valueHasChanged = JSON.stringify(currentValue) !== JSON.stringify(value);
+        
         // Set the value
         formState.values[name] = value;
         
-        // Update form state
-        if (options?.shouldDirty) {
+        // Update form state - only mark as dirty if the value has actually changed
+        if (options?.shouldDirty && valueHasChanged) {
           formState.isDirty = true;
           formState.dirtyFields[name] = true;
+        } else if (!valueHasChanged && formState.dirtyFields[name]) {
+          // If the value is back to its original state, remove the dirty flag
+          delete formState.dirtyFields[name];
+          // Check if there are any remaining dirty fields
+          formState.isDirty = Object.keys(formState.dirtyFields).length > 0;
         }
         
         // Validate if needed
@@ -342,10 +351,22 @@ export function GridFormProvider({
     try {
       const form = formInstancesRef.current.get(rowId);
       if (form) {
+        // Get the original value to compare
+        const originalData = originalDataRef.current.get(rowId);
+        
+        // Only mark as dirty if the value has actually changed from the original
+        const hasChanged = originalData && 
+          JSON.stringify(value) !== JSON.stringify(originalData[field]);
+        
         form.setValue(field, value, { 
-          shouldDirty: true,
+          shouldDirty: hasChanged,
           shouldValidate: true 
         });
+        
+        // Force a re-render to update the UI
+        setTimeout(() => {
+          setEditingRows(prev => new Set(prev));
+        }, 0);
       }
     } catch (error) {
       console.error(`Error updating cell value ${rowId}.${field}:`, error);

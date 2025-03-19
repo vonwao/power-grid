@@ -110,8 +110,9 @@ export const StatusPanel: React.FC = () => {
   
   const changeCount = editingRows.size;
   
-  // Only show when there are pending changes
-  if (changeCount === 0 || mode === 'none') return null;
+  // Always show the panel, with different states based on editing status
+  const hasDirtyFields = changeCount > 0 && mode !== 'none';
+  const canSave = hasDirtyFields && !hasValidationErrors;
   
   return (
     <div className="fixed bottom-4 right-4 z-50 transition-all duration-300 ease-in-out">
@@ -119,7 +120,7 @@ export const StatusPanel: React.FC = () => {
         elevation={3} 
         className={`
           rounded-full px-4 py-2 flex items-center space-x-2
-          ${mode === 'add' ? 'bg-green-50' : 'bg-blue-50'}
+          ${mode === 'add' ? 'bg-green-50' : hasDirtyFields ? 'bg-blue-50' : 'bg-gray-50'}
           hover:shadow-lg transition-shadow
         `}
       >
@@ -135,7 +136,9 @@ export const StatusPanel: React.FC = () => {
         <Typography variant="body2" className="font-medium">
           {mode === 'add' 
             ? 'Adding new record' 
-            : `Editing ${changeCount} record${changeCount > 1 ? 's' : ''}`}
+            : hasDirtyFields 
+              ? `Editing ${changeCount} record${changeCount > 1 ? 's' : ''}` 
+              : 'No changes'}
         </Typography>
         
         {/* Validation warning if needed */}
@@ -156,7 +159,7 @@ export const StatusPanel: React.FC = () => {
                 startIcon={<SaveIcon />}
                 onClick={saveChanges}
                 className="min-w-0 px-3"
-                disabled={hasValidationErrors}
+                disabled={!canSave}
               >
                 Save
               </Button>

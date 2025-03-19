@@ -3,6 +3,7 @@ import { GridRenderEditCellParams } from '@mui/x-data-grid';
 import { TextField, Checkbox, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
 import { EnhancedColumnConfig } from '../EnhancedDataGrid';
 import { useGridForm } from '../context/GridFormContext';
+import { ValidationIndicator } from '../components/ValidationIndicator';
 
 export interface EditCellRendererProps {
   params: GridRenderEditCellParams;
@@ -104,10 +105,9 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       const values = formMethods.getValues();
       setLocalValue(values[field]);
       
-      // If this is the first render and we're editing a text field,
-      // select all text to make it easier to replace
-      if (isFirstRender.current && inputRef.current && 
-          (fieldConfig?.type === 'string' || !fieldConfig?.type)) {
+      // Always select all text when editing a text field to make it easier to replace
+      if (inputRef.current && 
+          (fieldConfig?.type === 'string' || fieldConfig?.type === 'number' || !fieldConfig?.type)) {
         setTimeout(() => {
           if (inputRef.current) {
             inputRef.current.select();
@@ -118,13 +118,28 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
     }
   }, [formMethods, field, fieldConfig?.type]);
   
+  // Handle key press events
+  const handleKeyPress = React.useCallback((e: React.KeyboardEvent) => {
+    // If user presses Escape, revert to original value
+    if (e.key === 'Escape') {
+      const originalData = formMethods?.getValues()[field];
+      setLocalValue(originalData);
+      handleBlur();
+    }
+    // If user presses Enter, save and close
+    else if (e.key === 'Enter') {
+      handleBlur();
+    }
+  }, [field, formMethods, handleBlur]);
+  
   // Early return if formMethods is not available
   if (!formMethods) {
     return <div>Initializing form...</div>;
   }
   
-  // Get error state
+  // Get error state and dirty state
   const error = formMethods.formState.errors[field];
+  const isDirty = !!formMethods.formState.dirtyFields[field];
   
   // If the field config has a custom renderEditMode, use it
   if (fieldConfig?.renderEditMode && typeof fieldConfig.renderEditMode === 'function') {
@@ -137,8 +152,13 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       helperText: error?.message,
       id: `edit-${field}-${id}`,
       row: params.row,
+      isDirty: isDirty,
     });
-    return rendered as React.ReactElement;
+    return (
+      <ValidationIndicator error={error} isDirty={isDirty}>
+        {rendered as React.ReactElement}
+      </ValidationIndicator>
+    );
   }
   
   // If the legacy fieldType has a renderEditMode, use it
@@ -152,119 +172,140 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       helperText: error?.message,
       id: `edit-${field}-${id}`,
       row: params.row,
+      isDirty: isDirty,
     });
-    return rendered as React.ReactElement;
+    return (
+      <ValidationIndicator error={error} isDirty={isDirty}>
+        {rendered as React.ReactElement}
+      </ValidationIndicator>
+    );
   }
   
   // Otherwise, use default renderers based on field type
   switch (fieldConfig?.type) {
     case 'string':
       return (
-        <TextField
-          value={localValue || ''}
-          onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
-          onBlur={handleBlur}
-          error={!!error}
-          helperText={error?.message}
-          variant="outlined"
-          size="small"
-          fullWidth
-          autoFocus
-          inputRef={inputRef}
-        />
+        <ValidationIndicator error={error} isDirty={isDirty}>
+          <TextField
+            value={localValue || ''}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
       );
       
     case 'number':
       return (
-        <TextField
-          type="number"
-          value={localValue ?? ''}
-          onChange={(e) => {
-            const val = e.target.value === '' ? null : Number(e.target.value);
-            handleChangeWithLocalUpdate(val);
-          }}
-          onBlur={handleBlur}
-          error={!!error}
-          helperText={error?.message}
-          variant="outlined"
-          size="small"
-          fullWidth
-          autoFocus
-          inputRef={inputRef}
-        />
+        <ValidationIndicator error={error} isDirty={isDirty}>
+          <TextField
+            type="number"
+            value={localValue ?? ''}
+            onChange={(e) => {
+              const val = e.target.value === '' ? null : Number(e.target.value);
+              handleChangeWithLocalUpdate(val);
+            }}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
       );
       
     case 'boolean':
       return (
-        <Checkbox
-          checked={!!localValue}
-          onChange={(e) => handleChangeWithLocalUpdate(e.target.checked)}
-          onBlur={handleBlur}
-          inputRef={inputRef}
-        />
+        <ValidationIndicator error={error} isDirty={isDirty}>
+          <Checkbox
+            checked={!!localValue}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.checked)}
+            onBlur={handleBlur}
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
       );
       
     case 'date':
       return (
-        <TextField
-          type="date"
-          value={localValue ? new Date(localValue).toISOString().split('T')[0] : ''}
-          onChange={(e) => {
-            const val = e.target.value ? new Date(e.target.value) : null;
-            handleChangeWithLocalUpdate(val);
-          }}
-          onBlur={handleBlur}
-          error={!!error}
-          helperText={error?.message}
-          variant="outlined"
-          size="small"
-          fullWidth
-          autoFocus
-          inputRef={inputRef}
-        />
+        <ValidationIndicator error={error} isDirty={isDirty}>
+          <TextField
+            type="date"
+            value={localValue ? new Date(localValue).toISOString().split('T')[0] : ''}
+            onChange={(e) => {
+              const val = e.target.value ? new Date(e.target.value) : null;
+              handleChangeWithLocalUpdate(val);
+            }}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
       );
       
     case 'select':
       return (
-        <FormControl 
-          fullWidth 
-          size="small" 
-          error={!!error}
-          variant="outlined"
-        >
-          <InputLabel>{column.headerName}</InputLabel>
-          <Select
-            value={localValue || ''}
-            onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
-            onBlur={handleBlur}
-            label={column.headerName}
-            inputRef={inputRef}
+        <ValidationIndicator error={error} isDirty={isDirty}>
+          <FormControl 
+            fullWidth 
+            size="small" 
+            error={!!error}
+            variant="outlined"
           >
-            {fieldConfig.options?.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-          {error && <FormHelperText>{error.message}</FormHelperText>}
-        </FormControl>
+            <InputLabel>{column.headerName}</InputLabel>
+            <Select
+              value={localValue || ''}
+              onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
+              onBlur={handleBlur}
+              label={column.headerName}
+              inputRef={inputRef}
+            >
+              {fieldConfig.options?.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+            {error && <FormHelperText>{error.message}</FormHelperText>}
+          </FormControl>
+        </ValidationIndicator>
       );
       
     default:
       // Default to text input
       return (
-        <TextField
-          value={localValue || ''}
-          onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
-          onBlur={handleBlur}
-          error={!!error}
-          helperText={error?.message}
-          variant="outlined"
-          size="small"
-          fullWidth
-          autoFocus
-          inputRef={inputRef}
-        />
+        <ValidationIndicator error={error} isDirty={isDirty}>
+          <TextField
+            value={localValue || ''}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
       );
   }
 };
