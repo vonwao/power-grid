@@ -105,6 +105,49 @@ export const employees: Employee[] = [
     active: true,
     departmentId: 10, // Product Management
   },
+  {
+    id: 11,
+    name: 'Lisa Martinez',
+    age: 31,
+    birthday: new Date(1993, 10, 3), // November 3, 1993
+    active: true,
+    departmentId: 10, // Product Management
+  },
+
+  {
+    id: 12,
+    name: 'Lisa Martinez',
+    age: 31,
+    birthday: new Date(1993, 10, 3), // November 3, 1993
+    active: true,
+    departmentId: 10, // Product Management
+  },
+
+  {
+    id: 13,
+    name: 'Lisa Martinez',
+    age: 31,
+    birthday: new Date(1993, 10, 3), // November 3, 1993
+    active: true,
+    departmentId: 10, // Product Management
+  },
+
+  {
+    id: 14,
+    name: 'Lisa Martinez',
+    age: 31,
+    birthday: new Date(1993, 10, 3), // November 3, 1993
+    active: true,
+    departmentId: 10, // Product Management
+  },
+  {
+    id: 15,
+    name: 'Lisa Martinez',
+    age: 31,
+    birthday: new Date(1993, 10, 3), // November 3, 1993
+    active: true,
+    departmentId: 10, // Product Management
+  },
 ];
 
 // Helper function to get department label by ID
