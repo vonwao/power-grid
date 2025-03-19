@@ -54,6 +54,9 @@ interface GridFormContextType {
   
   // Columns config
   columns: EnhancedColumnConfig[];
+  
+  // UI configuration
+  isCompact: boolean;
 }
 
 interface GridFormProviderProps {
@@ -62,6 +65,7 @@ interface GridFormProviderProps {
   initialRows: any[];
   onSave?: (changes: { edits: any[], additions: any[] }) => void;
   validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
+  isCompact?: boolean;
 }
 
 export const GridFormContext = createContext<GridFormContextType | undefined>(undefined);
@@ -137,12 +141,13 @@ const createFormInstance = (defaultValues: Record<string, any>): FormMethods => 
   }
 };
 
-export function GridFormProvider({ 
-  children, 
-  columns, 
+export function GridFormProvider({
+  children,
+  columns,
   initialRows,
   onSave,
-  validateRow: validateRowProp
+  validateRow: validateRowProp,
+  isCompact = false
 }: GridFormProviderProps) {
   const [rows, setRows] = useState(initialRows);
   const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
@@ -612,7 +617,8 @@ export function GridFormProvider({
     cancelChanges,
     addRow,
     hasValidationErrors,
-    columns
+    columns,
+    isCompact
   };
   
   return (

@@ -15,7 +15,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   column,
 }) => {
   const { id, field, api, colDef } = params;
-  const { getFormMethods, updateCellValue, startEditingRow } = useGridForm();
+  const { getFormMethods, updateCellValue, startEditingRow, isCompact } = useGridForm();
   const inputRef = useRef<HTMLInputElement>(null);
   
   // Determine field config early
@@ -155,7 +155,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       isDirty: isDirty,
     });
     return (
-      <ValidationIndicator error={error} isDirty={isDirty}>
+      <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
         {rendered as React.ReactElement}
       </ValidationIndicator>
     );
@@ -175,7 +175,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       isDirty: isDirty,
     });
     return (
-      <ValidationIndicator error={error} isDirty={isDirty}>
+      <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
         {rendered as React.ReactElement}
       </ValidationIndicator>
     );
@@ -185,7 +185,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   switch (fieldConfig?.type) {
     case 'string':
       return (
-        <ValidationIndicator error={error} isDirty={isDirty}>
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
           <TextField
             value={localValue || ''}
             onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
@@ -204,7 +204,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       
     case 'number':
       return (
-        <ValidationIndicator error={error} isDirty={isDirty}>
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
           <TextField
             type="number"
             value={localValue ?? ''}
@@ -227,7 +227,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       
     case 'boolean':
       return (
-        <ValidationIndicator error={error} isDirty={isDirty}>
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
           <Checkbox
             checked={!!localValue}
             onChange={(e) => handleChangeWithLocalUpdate(e.target.checked)}
@@ -239,7 +239,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       
     case 'date':
       return (
-        <ValidationIndicator error={error} isDirty={isDirty}>
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
           <TextField
             type="date"
             value={localValue ? new Date(localValue).toISOString().split('T')[0] : ''}
@@ -262,10 +262,10 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       
     case 'select':
       return (
-        <ValidationIndicator error={error} isDirty={isDirty}>
-          <FormControl 
-            fullWidth 
-            size="small" 
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <FormControl
+            fullWidth
+            size="small"
             error={!!error}
             variant="outlined"
           >
@@ -291,7 +291,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
     default:
       // Default to text input
       return (
-        <ValidationIndicator error={error} isDirty={isDirty}>
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
           <TextField
             value={localValue || ''}
             onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}

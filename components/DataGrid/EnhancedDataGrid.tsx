@@ -77,10 +77,11 @@ export interface EnhancedDataGridProps<T = any> {
   hideFooter?: boolean;
   hideFooterPagination?: boolean;
   hideFooterSelectedRowCount?: boolean;
+  rowHeight?: number; // Custom row height in pixels
 }
 
-export function EnhancedDataGrid<T extends { id: GridRowId }>({ 
-  columns, 
+export function EnhancedDataGrid<T extends { id: GridRowId }>({
+  columns,
   rows,
   onSave,
   validateRow,
@@ -101,6 +102,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   hideFooter,
   hideFooterPagination,
   hideFooterSelectedRowCount,
+  rowHeight,
   ...props
 }: EnhancedDataGridProps<T>) {
   const apiRef = useGridApiRef();
@@ -160,8 +162,17 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     };
   });
   
+  // Determine if we're in compact mode based on row height
+  const isCompact = rowHeight !== undefined && rowHeight <= 30;
+  
   return (
-    <GridFormProvider columns={columns} initialRows={rows} onSave={onSave} validateRow={validateRow}>
+    <GridFormProvider
+      columns={columns}
+      initialRows={rows}
+      onSave={onSave}
+      validateRow={validateRow}
+      isCompact={isCompact}
+    >
       <div className={`h-screen w-screen flex flex-col overflow-hidden ${className || ''}`}>
         <Paper elevation={1} className="p-3 shadow-sm">
           <div className="flex justify-between items-center">
@@ -204,6 +215,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             }}
             pageSizeOptions={rowsPerPageOptions}
             editMode="cell"
+            rowHeight={rowHeight}
             onCellClick={(params) => {
               if (params.field !== '__check__' && params.field !== '__actions__') {
                 const { id, field } = params;

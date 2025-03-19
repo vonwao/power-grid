@@ -4,6 +4,7 @@ import { GridRenderCellParams } from '@mui/x-data-grid';
 import { FieldError } from '../../../types/form';
 import { EnhancedColumnConfig } from '../EnhancedDataGrid';
 import { ValidationIndicator } from '../components/ValidationIndicator';
+import { useGridForm } from '../context/GridFormContext';
 
 export interface CellRendererProps {
   params: GridRenderCellParams;
@@ -19,6 +20,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   error,
 }) => {
   const { value, row } = params;
+  const { isCompact } = useGridForm();
   
   // Use the field config's renderViewMode if provided, otherwise use the legacy fieldType
   let content: React.ReactNode;
@@ -33,7 +35,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   
   // Use the ValidationIndicator component to handle styling
   return (
-    <ValidationIndicator error={error} isDirty={isDirty}>
+    <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
       {content}
     </ValidationIndicator>
   );

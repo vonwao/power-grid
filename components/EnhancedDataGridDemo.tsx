@@ -110,6 +110,7 @@ export default function EnhancedDataGridDemo() {
       rows={employees}
       onSave={handleSave}
       validateRow={validateEmployeeRow}
+      rowHeight={26} // Set to half the default height (approximately)
     />
   );
 }
