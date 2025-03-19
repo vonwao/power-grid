@@ -15,12 +15,19 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   column,
 }) => {
   const { id, field, api, colDef } = params;
-  const { getFormMethods, updateCellValue } = useGridForm();
+  const { getFormMethods, updateCellValue, startEditingRow } = useGridForm();
   
-  // Get form methods for this row
+  // If we don't have a form for this row yet, create one
+  React.useEffect(() => {
+    const formMethods = getFormMethods(id);
+    if (!formMethods) {
+      startEditingRow(id, field);
+    }
+  }, [id, field, getFormMethods, startEditingRow]);
+  
   const formMethods = getFormMethods(id);
   if (!formMethods) {
-    return <div>Error: No form found for row {id}</div>;
+    return <div>Initializing form...</div>;
   }
   
   // Handle blur event

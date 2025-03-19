@@ -33,14 +33,18 @@ const CloseIcon = () => (
 );
 
 export const StatusPanel: React.FC = () => {
-  const { saveChanges, cancelChanges, hasValidationErrors } = useGridForm();
+  // Get all form context values we need
+  const { 
+    saveChanges, 
+    cancelChanges, 
+    hasValidationErrors,
+    isRowEditing, 
+    isRowDirty 
+  } = useGridForm();
   
   // Get all editing rows
   const [editingRows, setEditingRows] = React.useState<Set<any>>(new Set());
   const [mode, setMode] = React.useState<'add' | 'edit' | 'none'>('none');
-  
-  // Get the form context
-  const { isRowEditing, isRowDirty } = useGridForm();
   
   // Use effect to get the editing rows
   React.useEffect(() => {
