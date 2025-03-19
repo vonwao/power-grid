@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import DataGridDemo from '../components/DataGridDemo';
+import EnhancedDataGridDemo from '../components/EnhancedDataGridDemo';
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       
-      <DataGridDemo />
+      <EnhancedDataGridDemo />
     </>
   );
 }
