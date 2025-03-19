@@ -1,24 +1,28 @@
-import { useCallback } from 'react';
-import { GridApi, GridCellParams, GridEventListener, GridRowId } from '@mui/x-data-grid';
+import { useCallback, useEffect } from 'react';
+import { GridApi, GridCellParams, GridEventListener, GridRowId, GridColDef } from '@mui/x-data-grid';
 
 export interface UseGridNavigationProps {
   api: GridApi;
+  columns?: GridColDef[];
+  rows?: Array<{ id: GridRowId }>;
 }
 
-export const useGridNavigation = ({ api }: UseGridNavigationProps) => {
+export const useGridNavigation = ({ api, columns = [], rows = [] }: UseGridNavigationProps) => {
+  // Add diagnostic logging
+  useEffect(() => {
+    console.log('useGridNavigation hook initialized with api:', api);
+  }, [api]);
+
   // Handle keyboard navigation
   const handleKeyDown: GridEventListener<'cellKeyDown'> = useCallback((params, event) => {
+    console.log('handleKeyDown called with key:', event.key, 'params:', params);
     const { id, field, cellMode } = params;
-    
-    // Only handle navigation in edit mode
-    if (cellMode !== 'edit') return;
-    
     // Get the current column index
-    const columnFields = api.getAllColumns().map(col => col.field);
+    const columnFields = columns.map(col => col.field);
     const currentColIndex = columnFields.indexOf(field);
     
-    // Get all row IDs
-    const rowIds = api.getAllRowIds();
+    // Get all row IDs from the rows parameter
+    const rowIds = rows.map(row => row.id);
     const currentRowIndex = rowIds.indexOf(id);
     
     switch (event.key) {
@@ -82,12 +86,14 @@ export const useGridNavigation = ({ api }: UseGridNavigationProps) => {
         }
         break;
     }
-  }, [api]);
+  }, [api, columns, rows]);
   
   // Navigate to a specific cell and enter edit mode
   const navigateToCell = useCallback((id: GridRowId, field: string) => {
+    console.log('navigateToCell called with id:', id, 'field:', field);
     api.setCellFocus(id, field);
-    api.setCellMode(id, field, 'edit');
+    // Use startCellEditMode instead of setCellMode
+    api.startCellEditMode({ id, field });
   }, [api]);
   
   return {
