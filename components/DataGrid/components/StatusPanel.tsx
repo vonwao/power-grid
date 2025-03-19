@@ -50,35 +50,59 @@ export const StatusPanel: React.FC = () => {
   React.useEffect(() => {
     // Function to update the editing rows
     const updateEditingRows = () => {
-      // Check if any rows are being edited
-      const editingRowsSet = new Set<any>();
-      let hasAddedRow = false;
-      
-      // This is a simplified approach - in a real implementation, we would
-      // track this information in the GridFormContext
-      document.querySelectorAll('[role="row"]').forEach(row => {
-        const id = row.getAttribute('data-id');
-        if (id && isRowEditing(id) && isRowDirty(id)) {
-          editingRowsSet.add(id);
+      try {
+        // Check if any rows are being edited
+        const editingRowsSet = new Set<any>();
+        let hasAddedRow = false;
+        
+        // More direct approach to find editing rows
+        // First get all rows from the DOM
+        const rows = document.querySelectorAll('[data-id]');
+        
+        // Check each row
+        rows.forEach(row => {
+          const id = row.getAttribute('data-id');
+          if (!id) return;
           
-          // Check if this is a newly added row
-          // This is a simplified approach - in a real implementation, we would
-          // track this information in the GridFormContext
-          if (id.toString().startsWith('new-')) {
-            hasAddedRow = true;
+          // Check if this row is being edited
+          if (isRowEditing(id)) {
+            editingRowsSet.add(id);
+            
+            // Check if this is a newly added row
+            if (id.toString().startsWith('new-') || parseInt(id) > 1000) {
+              hasAddedRow = true;
+            }
           }
+        });
+        
+        // If we didn't find any editing rows through DOM, try a direct approach
+        if (editingRowsSet.size === 0) {
+          // Try to find any row that's being edited directly from the form context
+          document.querySelectorAll('[role="row"]').forEach(row => {
+            const id = row.getAttribute('data-id');
+            if (id && isRowEditing(id)) {
+              editingRowsSet.add(id);
+              
+              // Check if this is a newly added row
+              if (id.toString().startsWith('new-') || parseInt(id) > 1000) {
+                hasAddedRow = true;
+              }
+            }
+          });
         }
-      });
-      
-      setEditingRows(editingRowsSet);
-      setMode(hasAddedRow ? 'add' : editingRowsSet.size > 0 ? 'edit' : 'none');
+        
+        setEditingRows(editingRowsSet);
+        setMode(hasAddedRow ? 'add' : editingRowsSet.size > 0 ? 'edit' : 'none');
+      } catch (error) {
+        console.error('Error updating editing rows:', error);
+      }
     };
     
     // Update the editing rows initially
     updateEditingRows();
     
     // Set up an interval to update the editing rows
-    const intervalId = setInterval(updateEditingRows, 500);
+    const intervalId = setInterval(updateEditingRows, 200);
     
     // Clean up the interval on unmount
     return () => clearInterval(intervalId);

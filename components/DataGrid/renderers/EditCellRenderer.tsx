@@ -17,19 +17,61 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   const { getFormMethods, updateCellValue, startEditingRow } = useGridForm();
   const inputRef = useRef<HTMLInputElement>(null);
   
+  // Determine field config early
+  const fieldConfig = column.fieldConfig;
+  const fieldType = column.fieldType;
+  
+  // Initialize state at the top level, before any conditional returns
+  // Use empty string/null as initial value, will be updated in useEffect
+  const [localValue, setLocalValue] = React.useState<any>(null);
+  
+  // Track if this is the first render to handle text selection
+  const isFirstRender = React.useRef(true);
+  
   // Define callbacks at the top level, before any conditional returns
   // Handle change event
   const handleChange = useCallback((newValue: any) => {
     if (id && field) {
       updateCellValue(id, field, newValue);
+      
+      // Force a re-render to update the UI immediately
+      // This is needed because the form state update might not trigger a re-render
+      setTimeout(() => {
+        if (api && id && field) {
+          // Use a different approach to force a refresh since setCellMode doesn't exist
+          try {
+            // Try to refresh the cell
+            api.forceUpdate();
+          } catch (error) {
+            console.error('Error forcing update:', error);
+          }
+        }
+      }, 0);
     }
-  }, [updateCellValue, id, field]);
+  }, [updateCellValue, id, field, api]);
+  
+  // Create a wrapped handleChange that updates both the form and local state
+  // Define this at the top level too, before any conditional returns
+  const handleChangeWithLocalUpdate = React.useCallback((newValue: any) => {
+    setLocalValue(newValue);
+    handleChange(newValue);
+  }, [handleChange, setLocalValue]);
   
   // Handle blur event
   const handleBlur = useCallback(() => {
     // Stop editing this cell
     if (api && id && field) {
-      api.stopCellEditMode({ id, field });
+      try {
+        api.stopCellEditMode({ id, field });
+      } catch (error) {
+        console.error('Error stopping cell edit mode:', error);
+        // If there's an error, try to force a refresh
+        try {
+          api.forceUpdate();
+        } catch (innerError) {
+          console.error('Error forcing update:', innerError);
+        }
+      }
     }
   }, [api, field, id]);
   
@@ -41,25 +83,42 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
     }
   }, [id, field, getFormMethods, startEditingRow]);
   
+  // Get form methods and handle loading state
   const formMethods = getFormMethods(id);
+  
+  // Update local value when form value changes or when formMethods becomes available
+  React.useEffect(() => {
+    if (formMethods) {
+      const values = formMethods.getValues();
+      setLocalValue(values[field]);
+      
+      // If this is the first render and we're editing a text field,
+      // select all text to make it easier to replace
+      if (isFirstRender.current && inputRef.current && 
+          (fieldConfig?.type === 'string' || !fieldConfig?.type)) {
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.select();
+          }
+        }, 50);
+      }
+      isFirstRender.current = false;
+    }
+  }, [formMethods, field, fieldConfig?.type]);
+  
+  // Early return if formMethods is not available
   if (!formMethods) {
     return <div>Initializing form...</div>;
   }
   
-  // Get the current value and error state
-  const values = formMethods.getValues();
-  const value = values[field];
+  // Get error state
   const error = formMethods.formState.errors[field];
-  
-  // Determine which renderer to use based on field config
-  const fieldConfig = column.fieldConfig;
-  const fieldType = column.fieldType;
   
   // If the field config has a custom renderEditMode, use it
   if (fieldConfig?.renderEditMode && typeof fieldConfig.renderEditMode === 'function') {
     const rendered = fieldConfig.renderEditMode({
-      value,
-      onChange: handleChange,
+      value: localValue,
+      onChange: handleChangeWithLocalUpdate,
       ref: inputRef,
       onBlur: handleBlur,
       error: !!error,
@@ -73,8 +132,8 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   // If the legacy fieldType has a renderEditMode, use it
   if (fieldType?.renderEditMode && typeof fieldType.renderEditMode === 'function') {
     const rendered = fieldType.renderEditMode({
-      value,
-      onChange: handleChange,
+      value: localValue,
+      onChange: handleChangeWithLocalUpdate,
       onBlur: handleBlur,
       autoFocus: true,
       error: !!error,
@@ -90,8 +149,8 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
     case 'string':
       return (
         <TextField
-          value={value || ''}
-          onChange={(e) => handleChange(e.target.value)}
+          value={localValue || ''}
+          onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
           onBlur={handleBlur}
           error={!!error}
           helperText={error?.message}
@@ -107,10 +166,10 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       return (
         <TextField
           type="number"
-          value={value ?? ''}
+          value={localValue ?? ''}
           onChange={(e) => {
             const val = e.target.value === '' ? null : Number(e.target.value);
-            handleChange(val);
+            handleChangeWithLocalUpdate(val);
           }}
           onBlur={handleBlur}
           error={!!error}
@@ -126,8 +185,8 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
     case 'boolean':
       return (
         <Checkbox
-          checked={!!value}
-          onChange={(e) => handleChange(e.target.checked)}
+          checked={!!localValue}
+          onChange={(e) => handleChangeWithLocalUpdate(e.target.checked)}
           onBlur={handleBlur}
           inputRef={inputRef}
         />
@@ -137,10 +196,10 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       return (
         <TextField
           type="date"
-          value={value ? new Date(value).toISOString().split('T')[0] : ''}
+          value={localValue ? new Date(localValue).toISOString().split('T')[0] : ''}
           onChange={(e) => {
             const val = e.target.value ? new Date(e.target.value) : null;
-            handleChange(val);
+            handleChangeWithLocalUpdate(val);
           }}
           onBlur={handleBlur}
           error={!!error}
@@ -163,8 +222,8 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
         >
           <InputLabel>{column.headerName}</InputLabel>
           <Select
-            value={value || ''}
-            onChange={(e) => handleChange(e.target.value)}
+            value={localValue || ''}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
             onBlur={handleBlur}
             label={column.headerName}
             inputRef={inputRef}
@@ -183,8 +242,8 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       // Default to text input
       return (
         <TextField
-          value={value || ''}
-          onChange={(e) => handleChange(e.target.value)}
+          value={localValue || ''}
+          onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
           onBlur={handleBlur}
           error={!!error}
           helperText={error?.message}

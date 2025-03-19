@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Enhanced Data Grid
 
-## Getting Started
+A React-based data grid with advanced editing, validation, and form management capabilities.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Core Components
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **EnhancedDataGrid.tsx**: Main component that wraps MUI X Data Grid with custom functionality.
+- **GridFormContext.tsx**: Context provider that manages form state for all rows being edited.
+- **EditCellRenderer.tsx**: Custom cell renderer for edit mode with real-time validation.
+- **CellRenderer.tsx**: Custom cell renderer for view mode.
+- **StatusPanel.tsx**: Floating panel that appears when editing, showing validation status and save/cancel buttons.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Key Utilities
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **GridFormProvider**: Custom form management system that replaces React Hook Form.
+- **SimpleFormMethods**: Interface that mimics React Hook Form's API for compatibility.
+- **CellEditHandler**: Manages cell edit events and synchronizes with the form context.
 
-## Learn More
+## Data Flow
 
-To learn more about Next.js, take a look at the following resources:
+### Row/Cell Editing Flow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Cell Click**: When a cell is clicked, `EnhancedDataGrid` calls `api.startCellEditMode()`.
+2. **Edit Start**: `CellEditHandler` subscribes to the `cellEditStart` event and calls `startEditingCell()`.
+3. **Form Creation**: If no form exists for the row, `startEditingRow()` creates a form instance using `createFormInstance()`.
+4. **Render Edit Mode**: `EditCellRenderer` renders the appropriate input based on field type.
+5. **Local State Management**: `EditCellRenderer` maintains local state for immediate UI updates while editing.
+6. **Value Changes**: Changes are tracked in both local state and form state via `handleChangeWithLocalUpdate()`.
+7. **Validation**: Changes trigger validation in the form context.
+8. **Status Updates**: `StatusPanel` polls for editing status and shows save/cancel options.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Tab Navigation
 
-## Deploy on Vercel
+1. When tabbing between cells, the grid automatically calls `stopCellEditMode()` for the current cell.
+2. `CellEditHandler` captures this via the `cellEditStop` event and calls `stopEditingCell()`.
+3. The grid then calls `startCellEditMode()` for the next cell.
+4. The process repeats from step 2 in the editing flow.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Saving Changes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. When clicking "Save" in the `StatusPanel`, `saveChanges()` is called.
+2. Form values are collected from all edited rows.
+3. Changes are compared against original values to create a diff.
+4. The `onSave` callback is called with the changes.
+5. Row state is updated in the grid.
+6. Editing state is cleared.
+
+## Technical Implementation Details
+
+### Custom Form Management
+
+- **SimpleFormMethods**: Interface that provides a subset of React Hook Form's API.
+- **createFormInstance**: Factory function that creates form instances without hooks.
+- Form instances are stored in a Map using row IDs as keys.
+- Original row data is preserved for comparison when saving.
+
+### Hook Rules Compliance
+
+- All React hooks are called at the top level of components.
+- `useCallback` hooks for event handlers are defined before any conditional returns.
+- State initialization happens early to ensure consistent hook calls between renders.
+- `useEffect` hooks handle side effects like form creation and value synchronization.
+
+### Error Handling
+
+- Try/catch blocks around critical operations.
+- Fallback UI states for loading and error conditions.
+- Detailed error logging with context information.
+
+### Text Selection
+
+- When entering edit mode for text fields, all text is automatically selected.
+- This is implemented using a combination of `inputRef` and a `setTimeout` in `EditCellRenderer`.
+
+### Validation
+
+- Field-level validation happens in real-time as values change.
+- Row-level validation can be provided via the `validateRow` prop.
+- Validation errors are displayed inline and summarized in the `StatusPanel`.
