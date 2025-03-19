@@ -2,6 +2,8 @@
 
 A React-based data grid with advanced editing, validation, and form management capabilities.
 
+Overall vision: to be able to edit multiple rows in a very friendly and intuitive way.
+
 ## Architecture
 
 ### Core Components
