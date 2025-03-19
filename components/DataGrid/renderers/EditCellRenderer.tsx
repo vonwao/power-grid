@@ -38,9 +38,8 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
       // This is needed because the form state update might not trigger a re-render
       setTimeout(() => {
         if (api && id && field) {
-          // Use a different approach to force a refresh since setCellMode doesn't exist
           try {
-            // Try to refresh the cell
+            // Force a refresh of the grid to ensure all cells reflect the latest data
             api.forceUpdate();
           } catch (error) {
             console.error('Error forcing update:', error);
@@ -62,7 +61,20 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
     // Stop editing this cell
     if (api && id && field) {
       try {
+        // Ensure the form value is up to date before stopping edit mode
+        const formMethods = getFormMethods(id);
+        if (formMethods) {
+          const currentValue = formMethods.getValues()[field];
+          updateCellValue(id, field, currentValue);
+        }
+        
+        // Stop edit mode and force a refresh to ensure the grid displays the latest value
         api.stopCellEditMode({ id, field });
+        setTimeout(() => {
+          if (api) {
+            api.forceUpdate();
+          }
+        }, 0);
       } catch (error) {
         console.error('Error stopping cell edit mode:', error);
         // If there's an error, try to force a refresh
@@ -73,7 +85,7 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
         }
       }
     }
-  }, [api, field, id]);
+  }, [api, field, id, getFormMethods, updateCellValue]);
   
   // If we don't have a form for this row yet, create one
   React.useEffect(() => {

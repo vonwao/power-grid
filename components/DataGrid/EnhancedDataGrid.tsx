@@ -204,14 +204,24 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
 
 // Wrapper for CellRenderer that gets validation state from context
 const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {
-  const { isFieldDirty, getRowErrors } = useGridForm();
+  const { isFieldDirty, getRowErrors, getFormMethods } = useGridForm();
   const isDirty = isFieldDirty(params.id, params.field);
   const errors = getRowErrors(params.id);
   const error = errors?.[params.field];
   
+  // Get the latest value from the form state if available
+  const formMethods = getFormMethods(params.id);
+  const formValue = formMethods ? formMethods.getValues()[params.field] : undefined;
+  
+  // Create a new params object with the updated value from form state
+  const updatedParams = {
+    ...params,
+    value: formValue !== undefined ? formValue : params.value
+  };
+  
   return (
     <CellRenderer
-      params={params}
+      params={updatedParams}
       column={column}
       isDirty={isDirty}
       error={error}
