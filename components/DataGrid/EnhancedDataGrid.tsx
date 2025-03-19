@@ -1,45 +1,64 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   DataGrid,
   GridColDef,
   GridRowId,
-  GridValueGetterParams,
-  GridValueSetterParams,
+  GridValueGetter,
+  GridValueSetter,
   useGridApiRef,
-  GridRowModel,
+  GridRenderCellParams,
 } from '@mui/x-data-grid';
 import { Box, Paper, Typography } from '@mui/material';
-import { FieldTypeConfig } from './fieldTypes/types';
-import { ValidationRule, FieldValidator } from './validation/types';
+import { RegisterOptions } from 'react-hook-form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
-import { GridEditingProvider, useGridEditing } from './context/GridEditingContext';
+import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { StatusPanel } from './components/StatusPanel';
 import { AddRowButton } from './components/AddRowButton';
 
+// Field configuration for React Hook Form integration
+export interface FieldConfig<T = any> {
+  // Basic properties
+  type: 'string' | 'number' | 'date' | 'boolean' | 'select';
+  
+  // For select fields
+  options?: Array<{value: any, label: string}>;
+  
+  // Rendering (optional - can use defaults)
+  renderViewMode?: (value: T | null, row: any) => React.ReactNode;
+  renderEditMode?: (props: any) => React.ReactNode;
+  
+  // Validation
+  validation?: RegisterOptions;
+  
+  // Transform functions (optional)
+  parse?: (value: any) => T | null;
+  format?: (value: T | null) => string;
+}
+
 // Enhanced column configuration
 export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
-  // Field type configuration
-  fieldType: FieldTypeConfig<T>;
+  // Field configuration for React Hook Form
+  fieldConfig: FieldConfig<T>;
   
-  // Special case for required fields (simplified configuration)
+  // Legacy field type (for backward compatibility)
+  fieldType?: any;
+  
+  // Legacy validation (for backward compatibility)
   required?: boolean;
-  
-  // Custom validation rules (in addition to required)
-  validationRules?: ValidationRule<T>[];
-  
-  // Custom validator (overrides validationRules if provided)
-  validator?: FieldValidator<T>;
+  validationRules?: any[];
+  validator?: any;
   
   // Value accessors
-  valueGetter?: (params: GridValueGetterParams) => T | null;
-  valueSetter?: (params: GridValueSetterParams) => T | null;
+  valueGetter?: GridValueGetter;
+  valueSetter?: GridValueSetter;
 }
 
 export interface EnhancedDataGridProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
   onSave?: (changes: { edits: any[], additions: any[] }) => void;
+  validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
   className?: string;
   autoHeight?: boolean;
   density?: 'compact' | 'standard' | 'comfortable';
@@ -63,6 +82,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   columns, 
   rows,
   onSave,
+  validateRow,
   className,
   autoHeight,
   density = 'standard',
@@ -86,15 +106,13 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   
   // Convert enhanced columns to MUI X Data Grid columns
   const gridColumns: GridColDef[] = columns.map(column => {
-    const { fieldType, required, validationRules, validator, ...rest } = column;
-    
     return {
-      ...rest,
+      ...column,
       renderCell: (params) => {
         return (
           <CellRendererWrapper 
             params={params} 
-            fieldType={fieldType} 
+            column={column}
           />
         );
       },
@@ -102,7 +120,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         return (
           <EditCellRenderer
             params={params}
-            fieldType={fieldType}
+            column={column}
           />
         );
       },
@@ -110,7 +128,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   });
   
   return (
-    <GridEditingProvider columns={columns} initialRows={rows} onSave={onSave}>
+    <GridFormProvider columns={columns} initialRows={rows} onSave={onSave} validateRow={validateRow}>
       <div className={`h-screen w-screen flex flex-col overflow-hidden ${className || ''}`}>
         <Paper elevation={1} className="p-3 shadow-sm">
           <div className="flex justify-between items-center">
@@ -139,11 +157,9 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             disableColumnMenu={disableColumnMenu}
             disableColumnSelector={disableColumnSelector}
             disableDensitySelector={disableDensitySelector}
-            disableSelectionOnClick={disableSelectionOnClick}
+            disableRowSelectionOnClick={disableSelectionOnClick}
             disableVirtualization={disableVirtualization}
             loading={loading}
-            showCellRightBorder={showCellRightBorder}
-            showColumnRightBorder={showColumnRightBorder}
             hideFooter={hideFooter}
             hideFooterPagination={hideFooterPagination}
             hideFooterSelectedRowCount={hideFooterSelectedRowCount}
@@ -154,6 +170,24 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             }}
             pageSizeOptions={rowsPerPageOptions}
             editMode="cell"
+            onCellClick={(params) => {
+              if (params.field !== '__check__' && params.field !== '__actions__') {
+                const { id, field } = params;
+                const column = columns.find(col => col.field === field);
+                if (column?.editable !== false) {
+                  apiRef.current.startCellEditMode({ id, field });
+                }
+              }
+            }}
+            onCellEditStart={(params) => {
+              const { id, field } = params;
+              const gridForm = useGridForm();
+              gridForm.startEditingCell(id, field);
+            }}
+            onCellEditStop={(params) => {
+              const gridForm = useGridForm();
+              gridForm.stopEditingCell();
+            }}
             sx={{ 
               border: 'none',
               '& .MuiDataGrid-cell:focus': {
@@ -166,20 +200,23 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         
         <StatusPanel />
       </div>
-    </GridEditingProvider>
+    </GridFormProvider>
   );
 }
 
 // Wrapper for CellRenderer that gets validation state from context
-const CellRendererWrapper = ({ params, fieldType }: { params: any, fieldType: FieldTypeConfig }) => {
-  const { getValidationState } = useGridEditing();
-  const validationResult = getValidationState(params.id, params.field);
+const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {
+  const { isFieldDirty, getRowErrors } = useGridForm();
+  const isDirty = isFieldDirty(params.id, params.field);
+  const errors = getRowErrors(params.id);
+  const error = errors?.[params.field];
   
   return (
     <CellRenderer
       params={params}
-      fieldType={fieldType}
-      validationResult={validationResult}
+      column={column}
+      isDirty={isDirty}
+      error={error}
     />
   );
 };

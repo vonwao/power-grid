@@ -1,34 +1,44 @@
 import React from 'react';
 import { Tooltip } from '@mui/material';
 import { GridRenderCellParams } from '@mui/x-data-grid';
-import { FieldTypeConfig } from '../fieldTypes/types';
-import { ValidationResult } from '../validation/types';
+import { FieldError } from 'react-hook-form';
+import { EnhancedColumnConfig } from '../EnhancedDataGrid';
 
-interface CellRendererProps {
+export interface CellRendererProps {
   params: GridRenderCellParams;
-  fieldType: FieldTypeConfig;
-  validationResult?: ValidationResult;
+  column: EnhancedColumnConfig;
+  isDirty: boolean;
+  error?: FieldError;
 }
 
 export const CellRenderer: React.FC<CellRendererProps> = ({
   params,
-  fieldType,
-  validationResult,
+  column,
+  isDirty,
+  error,
 }) => {
   const { value, row } = params;
   
-  // Render the cell content using the field type's renderViewMode
-  const content = fieldType.renderViewMode(value, row);
+  // Use the field config's renderViewMode if provided, otherwise use the legacy fieldType
+  let content: React.ReactNode;
+  if (column.fieldConfig?.renderViewMode) {
+    content = column.fieldConfig.renderViewMode(value, row);
+  } else if (column.fieldType?.renderViewMode) {
+    content = column.fieldType.renderViewMode(value, row);
+  } else {
+    // Default rendering
+    content = value != null ? String(value) : '';
+  }
   
-  // If there's no validation result, just return the content
-  if (!validationResult) {
-    return content;
+  // If the field is not dirty, just return the content without styling
+  if (!isDirty) {
+    return <>{content}</>;
   }
   
   // Apply validation styling if needed
   const style: React.CSSProperties = {};
   
-  if (!validationResult.valid) {
+  if (error) {
     // Invalid field styling
     style.border = '1px solid red';
     style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
@@ -44,7 +54,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
   }
   
   return (
-    <Tooltip title={validationResult.valid ? 'Valid' : validationResult.message || 'Invalid'}>
+    <Tooltip title={error ? error.message || 'Invalid' : 'Valid'}>
       <div style={style}>{content}</div>
     </Tooltip>
   );

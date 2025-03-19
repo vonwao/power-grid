@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@mui/material';
-import { useGridEditing } from '../context/GridEditingContext';
+import { useGridForm } from '../context/GridFormContext';
 
 // Add icon component
 const AddIcon = () => (
@@ -11,7 +11,7 @@ const AddIcon = () => (
 );
 
 export const AddRowButton: React.FC = () => {
-  const { addRow } = useGridEditing();
+  const { addRow } = useGridForm();
   
   return (
     <Button

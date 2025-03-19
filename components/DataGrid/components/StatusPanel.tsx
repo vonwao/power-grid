@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Typography, Button, IconButton, Tooltip } from '@mui/material';
-import { useGridEditing } from '../context/GridEditingContext';
+import { useGridForm } from '../context/GridFormContext';
 
 // Icons
 const SaveIcon = () => (
@@ -33,9 +33,41 @@ const CloseIcon = () => (
 );
 
 export const StatusPanel: React.FC = () => {
-  const { editingState, saveChanges, cancelChanges, hasValidationErrors } = useGridEditing();
-  const { mode, pendingChanges } = editingState;
-  const changeCount = pendingChanges.size;
+  const { saveChanges, cancelChanges, hasValidationErrors } = useGridForm();
+  
+  // Get all editing rows
+  const [editingRows, setEditingRows] = React.useState<Set<any>>(new Set());
+  const [mode, setMode] = React.useState<'add' | 'edit' | 'none'>('none');
+  
+  // Use effect to get the editing rows
+  React.useEffect(() => {
+    const { isRowEditing, isRowDirty } = useGridForm();
+    
+    // Check if any rows are being edited
+    const editingRowsSet = new Set<any>();
+    let hasAddedRow = false;
+    
+    // This is a simplified approach - in a real implementation, we would
+    // track this information in the GridFormContext
+    document.querySelectorAll('[role="row"]').forEach(row => {
+      const id = row.getAttribute('data-id');
+      if (id && isRowEditing(id) && isRowDirty(id)) {
+        editingRowsSet.add(id);
+        
+        // Check if this is a newly added row
+        // This is a simplified approach - in a real implementation, we would
+        // track this information in the GridFormContext
+        if (id.toString().startsWith('new-')) {
+          hasAddedRow = true;
+        }
+      }
+    });
+    
+    setEditingRows(editingRowsSet);
+    setMode(hasAddedRow ? 'add' : editingRowsSet.size > 0 ? 'edit' : 'none');
+  }, []);
+  
+  const changeCount = editingRows.size;
   
   // Only show when there are pending changes
   if (changeCount === 0 || mode === 'none') return null;

@@ -1,86 +1,102 @@
 import React from 'react';
-import { 
-  EnhancedDataGrid, 
-  StringFieldType, 
-  NumberFieldType,
-  DateFieldType,
-  BooleanFieldType,
-  SelectFieldType,
-  PatternRule,
-  MinRule,
-  MaxRule
-} from './DataGrid';
+import { EnhancedDataGrid } from './DataGrid';
 import { employees, departments } from './data/mockData';
 
 export default function EnhancedDataGridDemo() {
-  // Create field type instances
-  const stringField = new StringFieldType();
-  const numberField = new NumberFieldType();
-  const dateField = new DateFieldType();
-  const booleanField = new BooleanFieldType();
-  
-  // Create a select field for departments
-  const departmentField = new SelectFieldType({
-    options: departments,
-    labelKey: 'label',
-    valueKey: 'id'
-  });
-  
-  // Column definitions
+  // Column definitions with React Hook Form field configs
   const columns = [
     { 
       field: 'id', 
       headerName: 'ID', 
-      width: 70, 
-      fieldType: numberField,
-      editable: false 
+      width: 70,
+      editable: false,
+      fieldConfig: {
+        type: 'number' as const
+      }
     },
     { 
       field: 'name', 
       headerName: 'Name', 
-      width: 180, 
-      fieldType: stringField,
-      required: true, // Special case for required fields
-      validationRules: [
-        new PatternRule(/^[A-Za-z\s]+$/, 'Name must contain only letters')
-      ],
-      editable: true
+      width: 180,
+      editable: true,
+      fieldConfig: {
+        type: 'string' as const,
+        validation: {
+          required: 'Name is required',
+          pattern: {
+            value: /^[A-Za-z\s]+$/,
+            message: 'Name must contain only letters'
+          }
+        }
+      }
     },
     { 
       field: 'age', 
       headerName: 'Age', 
-      width: 100, 
-      fieldType: numberField,
-      required: true,
-      validationRules: [
-        new MinRule(18, 'Age must be at least 18'),
-        new MaxRule(100, 'Age must be at most 100')
-      ],
-      editable: true
+      width: 100,
+      editable: true,
+      fieldConfig: {
+        type: 'number' as const,
+        validation: {
+          required: 'Age is required',
+          min: {
+            value: 18,
+            message: 'Age must be at least 18'
+          },
+          max: {
+            value: 100,
+            message: 'Age must be at most 100'
+          }
+        }
+      }
     },
     { 
       field: 'birthday', 
       headerName: 'Birthday', 
-      width: 150, 
-      fieldType: dateField,
-      editable: true
+      width: 150,
+      editable: true,
+      fieldConfig: {
+        type: 'date' as const
+      }
     },
     { 
       field: 'active', 
       headerName: 'Active', 
-      width: 120, 
-      fieldType: booleanField,
-      editable: true
+      width: 120,
+      editable: true,
+      fieldConfig: {
+        type: 'boolean' as const
+      }
     },
     { 
       field: 'departmentId', 
       headerName: 'Department', 
-      width: 220, 
-      fieldType: departmentField,
-      required: true,
-      editable: true
+      width: 220,
+      editable: true,
+      fieldConfig: {
+        type: 'select' as const,
+        options: departments.map(dept => ({
+          value: dept.id,
+          label: dept.label
+        })),
+        validation: {
+          required: 'Department is required'
+        }
+      }
     },
   ];
+
+  // Row-level validation example
+  const validateEmployeeRow = (values: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Example: If department is Engineering (id: 1), age must be at least 21
+    if (values.departmentId === 1 && values.age < 21) {
+      errors.age = 'Engineering department requires age 21+';
+    }
+    
+    return errors;
+  };
 
   // Handle save
   const handleSave = (changes: { edits: any[], additions: any[] }) => {
@@ -93,6 +109,7 @@ export default function EnhancedDataGridDemo() {
       columns={columns}
       rows={employees}
       onSave={handleSave}
+      validateRow={validateEmployeeRow}
     />
   );
 }

@@ -1,25 +1,27 @@
 import React from 'react';
 import { Tooltip } from '@mui/material';
-import { ValidationResult } from '../validation/types';
+import { FieldError } from 'react-hook-form';
 
 interface ValidationIndicatorProps {
-  validationResult: ValidationResult;
+  error?: FieldError;
+  isDirty: boolean;
   children: React.ReactNode;
 }
 
 export const ValidationIndicator: React.FC<ValidationIndicatorProps> = ({
-  validationResult,
+  error,
+  isDirty,
   children,
 }) => {
-  // If there's no validation result, just return the children
-  if (!validationResult) {
+  // If the field is not dirty, just return the children without styling
+  if (!isDirty) {
     return <>{children}</>;
   }
   
   // Apply validation styling if needed
   const style: React.CSSProperties = {};
   
-  if (!validationResult.valid) {
+  if (error) {
     // Invalid field styling
     style.border = '1px solid red';
     style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
@@ -35,7 +37,7 @@ export const ValidationIndicator: React.FC<ValidationIndicatorProps> = ({
   }
   
   return (
-    <Tooltip title={validationResult.valid ? 'Valid' : validationResult.message || 'Invalid'}>
+    <Tooltip title={error ? error.message || 'Invalid' : 'Valid'}>
       <div style={style}>{children}</div>
     </Tooltip>
   );
