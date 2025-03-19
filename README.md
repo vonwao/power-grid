@@ -81,3 +81,25 @@ Overall vision: to be able to edit multiple rows in a very friendly and intuitiv
 - Field-level validation happens in real-time as values change.
 - Row-level validation can be provided via the `validateRow` prop.
 - Validation errors are displayed inline and summarized in the `StatusPanel`.
+
+### Change Tracking and Dirty Fields
+
+- **pendingChanges**: A Map in GridFormContext explicitly tracks all modified fields and their values.
+- **isFieldDirty/isRowDirty**: Methods use the pendingChanges Map to determine if a field or row has been modified.
+- **ValidationIndicator**: Component that wraps fields and applies visual styling (green for valid, red for invalid) to indicate dirty state.
+- Changes persist even when clicking away from a cell, ensuring users always know which fields have been modified.
+
+### Status Panel Behavior
+
+- Always visible to provide consistent UI for saving changes.
+- Shows the number of rows being modified.
+- Displays validation error indicators when needed.
+- Save button is only enabled when there are changes to save and no validation errors.
+- Uses console log interception to track changes in real-time.
+
+### Data Persistence
+
+- The `updateCellValue` method maintains the pendingChanges state.
+- New rows are automatically marked as dirty in pendingChanges.
+- The saveChanges and cancelChanges methods clear the pendingChanges state.
+- Original values are preserved for comparison to determine if a field has been modified.
