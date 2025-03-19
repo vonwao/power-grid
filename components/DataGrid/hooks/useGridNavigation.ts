@@ -5,9 +5,15 @@ export interface UseGridNavigationProps {
   api: GridApi;
   columns?: GridColDef[];
   rows?: Array<{ id: GridRowId }>;
+  onNavigate?: (id: GridRowId, field: string) => void;
 }
 
-export const useGridNavigation = ({ api, columns = [], rows = [] }: UseGridNavigationProps) => {
+export const useGridNavigation = ({
+  api,
+  columns = [],
+  rows = [],
+  onNavigate
+}: UseGridNavigationProps) => {
   // Add diagnostic logging
   useEffect(() => {
     console.log('useGridNavigation hook initialized with api:', api);
@@ -91,10 +97,19 @@ export const useGridNavigation = ({ api, columns = [], rows = [] }: UseGridNavig
   // Navigate to a specific cell and enter edit mode
   const navigateToCell = useCallback((id: GridRowId, field: string) => {
     console.log('navigateToCell called with id:', id, 'field:', field);
-    api.setCellFocus(id, field);
-    // Use startCellEditMode instead of setCellMode
-    api.startCellEditMode({ id, field });
-  }, [api]);
+    
+    if (onNavigate) {
+      // Use the callback provided by the parent component
+      onNavigate(id, field);
+    } else {
+      try {
+        // Fallback to using the API directly
+        api.startCellEditMode({ id, field });
+      } catch (error) {
+        console.error('Error navigating to cell:', error);
+      }
+    }
+  }, [api, onNavigate]);
   
   return {
     handleKeyDown,

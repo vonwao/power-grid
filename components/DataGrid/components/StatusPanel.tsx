@@ -1,5 +1,5 @@
-import React from 'react';
-import { Paper, Typography, Button, IconButton, Tooltip } from '@mui/material';
+import React, { useState } from 'react';
+import { Paper, Typography, Button, IconButton, Tooltip, Modal, Box } from '@mui/material';
 import { useGridForm } from '../context/GridFormContext';
 
 // Icons
@@ -34,9 +34,9 @@ const CloseIcon = () => (
 
 export const StatusPanel: React.FC = () => {
   // Get all form context values we need
-  const { 
-    saveChanges, 
-    cancelChanges, 
+  const {
+    saveChanges,
+    cancelChanges,
     hasValidationErrors,
     isRowEditing
   } = useGridForm();
@@ -45,6 +45,10 @@ export const StatusPanel: React.FC = () => {
   const pendingChangesRef = React.useRef<Map<any, Record<string, any>>>(new Map());
   const [changeCount, setChangeCount] = React.useState(0);
   const [mode, setMode] = React.useState<'add' | 'edit' | 'none'>('none');
+  
+  // State for the save changes modal
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [changesJson, setChangesJson] = useState('');
   
   // Use effect to monitor the console logs for pending changes
   React.useEffect(() => {
@@ -85,46 +89,68 @@ export const StatusPanel: React.FC = () => {
     };
   }, []);
   
+  // Function to handle opening the save modal
+  const handleOpenSaveModal = () => {
+    // Convert the pending changes to a format suitable for display
+    const changesArray = Array.from(pendingChangesRef.current.entries()).map(([rowId, changes]) => ({
+      rowId,
+      changes
+    }));
+    
+    // Convert to pretty JSON
+    setChangesJson(JSON.stringify(changesArray, null, 2));
+    setSaveModalOpen(true);
+  };
+  
+  // Function to handle the actual save
+  const handleSave = () => {
+    saveChanges();
+    setSaveModalOpen(false);
+  };
+  
   // Always show the panel, with different states based on editing status
   const hasDirtyFields = changeCount > 0 && mode !== 'none';
   const canSave = hasDirtyFields && !hasValidationErrors;
   
   return (
     <div className="fixed bottom-4 right-4 z-50 transition-all duration-300 ease-in-out">
-      <Paper 
-        elevation={3} 
+      <Paper
+        elevation={3}
         className={`
-          rounded-full px-4 py-2 flex items-center space-x-2
+          rounded-lg px-4 py-3 flex flex-col space-y-2
           ${mode === 'add' ? 'bg-green-50' : hasDirtyFields ? 'bg-blue-50' : 'bg-gray-50'}
           hover:shadow-lg transition-shadow
         `}
       >
-        {/* Status icon */}
-        <div className={`
-          rounded-full w-8 h-8 flex items-center justify-center
-          ${mode === 'add' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}
-        `}>
-          {mode === 'add' ? <AddIcon /> : <EditIcon />}
+        {/* Status header */}
+        <div className="flex items-center space-x-2">
+          {/* Status icon */}
+          <div className={`
+            rounded-full w-8 h-8 flex items-center justify-center
+            ${mode === 'add' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}
+          `}>
+            {mode === 'add' ? <AddIcon /> : <EditIcon />}
+          </div>
+          
+          {/* Status text */}
+          <Typography variant="body2" className="font-medium">
+            {mode === 'add'
+              ? 'Adding new record'
+              : hasDirtyFields
+                ? `Editing ${changeCount} record${changeCount > 1 ? 's' : ''}`
+                : 'No changes'}
+          </Typography>
         </div>
-        
-        {/* Status text */}
-        <Typography variant="body2" className="font-medium">
-          {mode === 'add' 
-            ? 'Adding new record' 
-            : hasDirtyFields 
-              ? `Editing ${changeCount} record${changeCount > 1 ? 's' : ''}` 
-              : 'No changes'}
-        </Typography>
-        
+
         {/* Validation warning if needed */}
         {hasValidationErrors && (
-          <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+          <div className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-md text-xs font-medium">
             Validation errors
           </div>
         )}
         
         {/* Action buttons */}
-        <div className="flex space-x-1">
+        <div className="flex space-x-2 justify-end pt-1">
           <Tooltip title={hasValidationErrors ? "Fix validation errors before saving" : "Save changes"}>
             <span>
               <Button
@@ -132,7 +158,7 @@ export const StatusPanel: React.FC = () => {
                 size="small"
                 color="primary"
                 startIcon={<SaveIcon />}
-                onClick={saveChanges}
+                onClick={handleOpenSaveModal}
                 className="min-w-0 px-3"
                 disabled={!canSave}
               >
@@ -140,15 +166,80 @@ export const StatusPanel: React.FC = () => {
               </Button>
             </span>
           </Tooltip>
-          <IconButton 
-            size="small" 
-            onClick={cancelChanges}
-            className="text-gray-500"
+          
+          <Button
+            variant="outlined"
+            size="small"
+            color="error"
+            startIcon={<CloseIcon />}
+            onClick={(e) => {
+              if (window.confirm('Are you sure you want to discard changes?')) {
+                cancelChanges();
+              }
+            }}
+            className="min-w-0 px-3"
           >
-            <CloseIcon />
-          </IconButton>
+            Cancel
+          </Button>
         </div>
       </Paper>
+      
+      {/* Save Changes Modal */}
+      <Modal
+        open={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        aria-labelledby="save-changes-modal"
+        aria-describedby="modal-showing-changes-to-save"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '80%',
+          maxWidth: 800,
+          maxHeight: '80vh',
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+          overflow: 'auto'
+        }}>
+          <Typography id="save-changes-modal" variant="h6" component="h2" gutterBottom>
+            Changes to Save
+          </Typography>
+          
+          <Box sx={{
+            mt: 2,
+            mb: 3,
+            p: 2,
+            bgcolor: '#f5f5f5',
+            borderRadius: 1,
+            overflow: 'auto',
+            maxHeight: '50vh'
+          }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+              {changesJson}
+            </pre>
+          </Box>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={() => setSaveModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              color="primary"
+            >
+              Confirm Save
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </div>
   );
 };

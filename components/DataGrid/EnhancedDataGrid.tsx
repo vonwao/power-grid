@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   DataGrid,
   GridColDef,
@@ -105,11 +105,25 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
 }: EnhancedDataGridProps<T>) {
   const apiRef = useGridApiRef();
   
+  // Define a navigation handler that uses the correct API methods
+  const handleNavigate = useCallback((id: GridRowId, field: string) => {
+    try {
+      // Check if the cell is already in edit mode
+      const cellMode = apiRef.current.getCellMode(id, field);
+      if (cellMode === 'view') {
+        apiRef.current.startCellEditMode({ id, field });
+      }
+    } catch (error) {
+      console.error('Error navigating to cell:', error);
+    }
+  }, [apiRef]);
+
   // Initialize grid navigation hook
   const { handleKeyDown } = useGridNavigation({
     api: apiRef.current,
     columns,
-    rows
+    rows,
+    onNavigate: handleNavigate
   });
   
   // Create SelectFieldType instances for select fields
