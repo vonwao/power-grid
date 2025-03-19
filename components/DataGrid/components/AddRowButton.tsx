@@ -13,15 +13,17 @@ const AddIcon = () => (
 export const AddRowButton: React.FC = () => {
   const { addRow } = useGridForm();
   
-  return (
-    <Button
-      variant="contained"
-      color="primary"
-      startIcon={<AddIcon />}
-      onClick={addRow}
-      className="ml-auto"
-    >
-      Add New Record
-    </Button>
-  );
+  // return (
+  //   <Button
+  //     variant="contained"
+  //     color="primary"
+  //     startIcon={<AddIcon />}
+  //     onClick={addRow}
+  //     className="ml-auto"
+  //   >
+  //     Add New Record
+  //   </Button>
+  // );
+
+  return (<div>add row feature deferred</div>)
 };
