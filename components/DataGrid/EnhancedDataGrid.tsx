@@ -14,6 +14,7 @@ import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { StatusPanel, AddRowButton, CellEditHandler } from './components';
+import { SelectFieldType } from './fieldTypes/SelectField';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -102,6 +103,17 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   ...props
 }: EnhancedDataGridProps<T>) {
   const apiRef = useGridApiRef();
+  
+  // Create SelectFieldType instances for select fields
+  columns.forEach(column => {
+    if (column.fieldConfig?.type === 'select' && !column.fieldType) {
+      column.fieldType = new SelectFieldType({
+        options: column.fieldConfig.options || [],
+        valueKey: 'value',
+        labelKey: 'label'
+      });
+    }
+  });
   
   // Convert enhanced columns to MUI X Data Grid columns
   const gridColumns: GridColDef[] = columns.map(column => {

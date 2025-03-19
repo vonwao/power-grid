@@ -25,16 +25,16 @@ export class SelectFieldType<T = any> implements FieldTypeConfig<T> {
   private isOptionEqualToValueFn: (option: SelectOption, value: SelectOption) => boolean;
   
   constructor(config: SelectFieldTypeOptions<T>) {
-    this.options = config.options;
-    this.valueKey = config.valueKey;
-    this.labelKey = config.labelKey;
-    
-    this.getOptionLabelFn = config.getOptionLabel || 
-      ((option) => option[this.labelKey] || '');
+      this.options = config.options;
+      this.valueKey = config.valueKey || 'value';
+      this.labelKey = config.labelKey || 'label';
       
-    this.isOptionEqualToValueFn = config.isOptionEqualToValue || 
-      ((option, value) => option[this.valueKey] === value[this.valueKey]);
-  }
+      this.getOptionLabelFn = config.getOptionLabel ||
+        ((option) => option[this.labelKey] || '');
+        
+      this.isOptionEqualToValueFn = config.isOptionEqualToValue ||
+        ((option, value) => option[this.valueKey] === value[this.valueKey]);
+    }
   
   renderViewMode(value: T | null, row: any) {
     if (value === null || value === undefined) return <span></span>;
