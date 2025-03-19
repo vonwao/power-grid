@@ -17,6 +17,22 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   const { getFormMethods, updateCellValue, startEditingRow } = useGridForm();
   const inputRef = useRef<HTMLInputElement>(null);
   
+  // Define callbacks at the top level, before any conditional returns
+  // Handle change event
+  const handleChange = useCallback((newValue: any) => {
+    if (id && field) {
+      updateCellValue(id, field, newValue);
+    }
+  }, [updateCellValue, id, field]);
+  
+  // Handle blur event
+  const handleBlur = useCallback(() => {
+    // Stop editing this cell
+    if (api && id && field) {
+      api.stopCellEditMode({ id, field });
+    }
+  }, [api, field, id]);
+  
   // If we don't have a form for this row yet, create one
   React.useEffect(() => {
     const formMethods = getFormMethods(id);
@@ -34,17 +50,6 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
   const values = formMethods.getValues();
   const value = values[field];
   const error = formMethods.formState.errors[field];
-  
-  // Handle change event
-  const handleChange = useCallback((newValue: any) => {
-    updateCellValue(id, field, newValue);
-  }, [updateCellValue, id, field]);
-  
-  // Handle blur event
-  const handleBlur = useCallback(() => {
-    // Stop editing this cell
-    api.stopCellEditMode({ id, field });
-  }, [api, field, id]);
   
   // Determine which renderer to use based on field config
   const fieldConfig = column.fieldConfig;
