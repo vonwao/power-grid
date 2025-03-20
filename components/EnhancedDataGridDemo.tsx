@@ -5,18 +5,34 @@ import { employees, departments } from './data/mockData';
 export default function EnhancedDataGridDemo() {
   // Column definitions with React Hook Form field configs
   const columns = [
-    { 
-      field: 'id', 
-      headerName: 'ID', 
+    {
+      field: 'id',
+      headerName: 'ID',
       width: 70,
       editable: false,
       fieldConfig: {
         type: 'number' as const
       }
     },
-    { 
-      field: 'name', 
-      headerName: 'Name', 
+    {
+      field: 'email',
+      headerName: 'Email',
+      width: 200,
+      editable: true,
+      fieldConfig: {
+        type: 'string' as const,
+        validation: {
+          required: 'Email is required',
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: 'Invalid email address'
+          }
+        }
+      }
+    },
+    {
+      field: 'name',
+      headerName: 'Name',
       width: 180,
       editable: true,
       fieldConfig: {
@@ -25,7 +41,16 @@ export default function EnhancedDataGridDemo() {
           required: 'Name is required',
           pattern: {
             value: /^[A-Za-z\s]+$/,
-            message: 'Name must contain only letters'
+            message: 'Name must contain only letters and spaces'
+          },
+          validate: (value: string) => {
+            if (value && value.length < 3) {
+              return 'Name must be at least 3 characters long';
+            }
+            if (value && value.length > 50) {
+              return 'Name must be at most 50 characters long';
+            }
+            return true;
           }
         }
       }
@@ -110,7 +135,7 @@ export default function EnhancedDataGridDemo() {
       rows={employees}
       onSave={handleSave}
       validateRow={validateEmployeeRow}
-      rowHeight={26} // Set to half the default height (approximately)
+      rowHeight={30} // Set to half the default height (approximately)
     />
   );
 }

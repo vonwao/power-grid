@@ -71,7 +71,7 @@ interface GridFormProviderProps {
 export const GridFormContext = createContext<GridFormContextType | undefined>(undefined);
 
 // Create a form instance factory
-const createFormInstance = (defaultValues: Record<string, any>): FormMethods => {
+const createFormInstance = (defaultValues: Record<string, any>, columns: EnhancedColumnConfig[]): FormMethods => {
   try {
     // Create a form state
     const formState: FormState = {
@@ -109,15 +109,57 @@ const createFormInstance = (defaultValues: Record<string, any>): FormMethods => 
         
         // Validate if needed
         if (options?.shouldValidate) {
-          // Simple validation - just check if required fields are filled
-          // In a real implementation, you would add more validation logic here
-          if (value === undefined || value === null || value === '') {
-            formState.errors[name] = { type: 'required', message: 'This field is required' };
-            formState.isValid = false;
-          } else {
-            delete formState.errors[name];
-            formState.isValid = Object.keys(formState.errors).length === 0;
+          // Find the column configuration for this field
+          const column = columns.find(col => col.field === name);
+          const validation = column?.fieldConfig?.validation;
+          
+          // Clear previous errors for this field
+          delete formState.errors[name];
+          
+          // Check if required
+          if (validation?.required && (value === undefined || value === null || value === '')) {
+            const message = typeof validation.required === 'string'
+              ? validation.required
+              : 'This field is required';
+            formState.errors[name] = { type: 'required', message };
           }
+          
+          // Check pattern validation for string values
+          else if (validation?.pattern && typeof value === 'string') {
+            const { value: pattern, message } = validation.pattern;
+            if (!pattern.test(value)) {
+              formState.errors[name] = { type: 'pattern', message };
+            }
+          }
+          
+          // Check min validation for number values
+          else if (validation?.min && typeof value === 'number') {
+            const { value: min, message } = validation.min;
+            if (value < min) {
+              formState.errors[name] = { type: 'min', message };
+            }
+          }
+          
+          // Check max validation for number values
+          else if (validation?.max && typeof value === 'number') {
+            const { value: max, message } = validation.max;
+            if (value > max) {
+              formState.errors[name] = { type: 'max', message };
+            }
+          }
+          
+          // Check custom validation function if provided
+          else if (validation?.validate && typeof validation.validate === 'function') {
+            const result = validation.validate(value);
+            if (typeof result === 'string') {
+              formState.errors[name] = { type: 'validate', message: result };
+            } else if (result === false) {
+              formState.errors[name] = { type: 'validate', message: 'Invalid value' };
+            }
+          }
+          
+          // Update form validity state
+          formState.isValid = Object.keys(formState.errors).length === 0;
         }
       },
       setError: (name, error) => {
@@ -129,7 +171,62 @@ const createFormInstance = (defaultValues: Record<string, any>): FormMethods => 
         formState.isValid = true;
       },
       trigger: async () => {
-        // In a real implementation, you would add validation logic here
+        // Clear all errors first
+        formState.errors = {};
+        
+        // Validate each field
+        for (const field in formState.values) {
+          const value = formState.values[field];
+          const column = columns.find(col => col.field === field);
+          const validation = column?.fieldConfig?.validation;
+          
+          if (!validation) continue;
+          
+          // Check if required
+          if (validation.required && (value === undefined || value === null || value === '')) {
+            const message = typeof validation.required === 'string'
+              ? validation.required
+              : 'This field is required';
+            formState.errors[field] = { type: 'required', message };
+          }
+          
+          // Check pattern validation for string values
+          else if (validation.pattern && typeof value === 'string') {
+            const { value: pattern, message } = validation.pattern;
+            if (!pattern.test(value)) {
+              formState.errors[field] = { type: 'pattern', message };
+            }
+          }
+          
+          // Check min validation for number values
+          else if (validation.min && typeof value === 'number') {
+            const { value: min, message } = validation.min;
+            if (value < min) {
+              formState.errors[field] = { type: 'min', message };
+            }
+          }
+          
+          // Check max validation for number values
+          else if (validation.max && typeof value === 'number') {
+            const { value: max, message } = validation.max;
+            if (value > max) {
+              formState.errors[field] = { type: 'max', message };
+            }
+          }
+          
+          // Check custom validation function if provided
+          else if (validation.validate && typeof validation.validate === 'function') {
+            const result = validation.validate(value);
+            if (typeof result === 'string') {
+              formState.errors[field] = { type: 'validate', message: result };
+            } else if (result === false) {
+              formState.errors[field] = { type: 'validate', message: 'Invalid value' };
+            }
+          }
+        }
+        
+        // Update form validity state
+        formState.isValid = Object.keys(formState.errors).length === 0;
         return formState.isValid;
       },
     };
@@ -194,7 +291,7 @@ export function GridFormProvider({
           originalDataRef.current.set(rowId, { ...row });
           
           // Create a form instance using our factory function
-          const formMethods = createFormInstance({ ...row });
+          const formMethods = createFormInstance({ ...row }, columns);
           
           formInstancesRef.current.set(rowId, formMethods);
         } else {
@@ -542,7 +639,7 @@ export function GridFormProvider({
       });
       
       // Create a form instance for the new row using our factory function
-      const formMethods = createFormInstance(newRow);
+      const formMethods = createFormInstance(newRow, columns);
       
       formInstancesRef.current.set(newId, formMethods);
       
