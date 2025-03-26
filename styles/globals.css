@@ -20,7 +20,6 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
 }
 
 /* Additional global styles */
@@ -31,7 +30,8 @@ html, body {
 #__next {
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 a {

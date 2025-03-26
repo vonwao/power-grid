@@ -173,7 +173,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       validateRow={validateRow}
       isCompact={isCompact}
     >
-      <div className={`h-screen w-screen flex flex-col overflow-hidden ${className || ''}`}>
+      <div className={`h-full w-full flex flex-col ${className || ''}`}>
         <Paper elevation={1} className="p-3 shadow-sm">
           <div className="flex justify-between items-center">
             <Typography variant="h5">
@@ -190,7 +190,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
           </Box>
         </Paper>
 
-        <Paper elevation={0} className="flex-grow w-full">
+        <Paper elevation={0} className="flex-grow w-full overflow-auto">
           <CellEditHandler apiRef={apiRef} />
           <DataGrid
             apiRef={apiRef}
@@ -241,11 +241,15 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
                 </div>
               )
             }}
-            sx={{ 
+            sx={{
               border: 'none',
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
               },
+              height: '100%',
+              '& .MuiDataGrid-main': {
+                overflow: 'auto',
+              }
             }}
             {...props}
           />

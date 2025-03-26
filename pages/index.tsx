@@ -21,7 +21,9 @@ export default function Home() {
         </Link>
       </Box>
       
-      <EnhancedDataGridDemo />
+      <Box className="h-full flex-grow">
+        <EnhancedDataGridDemo />
+      </Box>
     </>
   );
 }
