@@ -1,5 +1,7 @@
 import React from 'react';
+import { Box, Typography } from '@mui/material';
 import { EnhancedDataGrid } from './DataGrid';
+import { DataGridToolbar } from './DataGridToolbar';
 import { employees, departments } from './data/mockData';
 
 export default function EnhancedDataGridDemo() {
@@ -123,19 +125,59 @@ export default function EnhancedDataGridDemo() {
     return errors;
   };
 
-  // Handle save
+  // Handle toolbar actions
   const handleSave = (changes: { edits: any[], additions: any[] }) => {
     console.log('Saving changes:', changes);
     // Send to API, etc.
   };
 
+  const handleFilter = () => {
+    console.log('Filter clicked');
+  };
+
+  const handleRefresh = () => {
+    console.log('Refresh clicked');
+  };
+
+  const handleExport = () => {
+    console.log('Export clicked');
+  };
+
+  const handleUpload = () => {
+    console.log('Upload clicked');
+  };
+
+  const handleHelp = () => {
+    console.log('Help clicked');
+  };
+
   return (
-    <EnhancedDataGrid
-      columns={columns}
-      rows={employees}
-      onSave={handleSave}
-      validateRow={validateEmployeeRow}
-      rowHeight={30} // Set to half the default height (approximately)
-    />
+    <Box sx={{ width: '100%', height: '100%' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        padding: 2
+      }}>
+        <Typography variant="h6" component="div">
+          Employee Management
+        </Typography>
+        <DataGridToolbar 
+          onSave={() => handleSave({ edits: [], additions: [] })}
+          onFilter={handleFilter}
+          onRefresh={handleRefresh}
+          onExport={handleExport}
+          onUpload={handleUpload}
+          onHelp={handleHelp}
+        />
+      </Box>
+      <EnhancedDataGrid
+        columns={columns}
+        rows={employees}
+        onSave={handleSave}
+        validateRow={validateEmployeeRow}
+        rowHeight={30}
+      />
+    </Box>
   );
 }
