@@ -1,105 +1,116 @@
-# Enhanced Data Grid
+# Dual Grid Implementation Demo
 
-A React-based data grid with advanced editing, validation, and form management capabilities.
+This project demonstrates two different implementations of a data grid component with shared core functionality:
 
-Overall vision: to be able to edit multiple rows in a very friendly and intuitive way.
+1. **MUI X Grid Implementation**: Using the Material UI X Data Grid component
+2. **ag-Grid Implementation**: Using the ag-Grid Community Edition component
 
-## Architecture
+## Features
 
-### Core Components
+Both implementations share the following features:
 
-- **EnhancedDataGrid.tsx**: Main component that wraps MUI X Data Grid with custom functionality.
-- **GridFormContext.tsx**: Context provider that manages form state for all rows being edited.
-- **EditCellRenderer.tsx**: Custom cell renderer for edit mode with real-time validation.
-- **CellRenderer.tsx**: Custom cell renderer for view mode.
-- **StatusPanel.tsx**: Floating panel that appears when editing, showing validation status and save/cancel buttons.
+- **Form Integration**: Seamless integration with form state management
+- **Validation**: Field-level and row-level validation
+- **Server-Side Operations**: Support for server-side pagination, sorting, and filtering
+- **Multi-Row Selection**: Support for selecting multiple rows
+- **Inline Editing**: Cell-based editing with validation
+- **Large Dataset Support**: Efficient handling of large datasets (10K+ rows)
 
-### Key Utilities
+## Project Structure
 
-- **GridFormProvider**: Custom form management system that replaces React Hook Form.
-- **SimpleFormMethods**: Interface that mimics React Hook Form's API for compatibility.
-- **CellEditHandler**: Manages cell edit events and synchronizes with the form context.
+The project is organized to maximize code reuse between the two implementations:
 
-## Data Flow
+```
+my-app/components/DataGrid/
+├── core/                           # Shared code between implementations
+│   ├── types/                      # Common type definitions
+│   ├── hooks/                      # Shared hooks
+│   ├── context/                    # Shared context providers
+│   ├── utils/                      # Shared utilities
+│   └── fieldTypes/                 # Field type definitions
+├── mui-grid/                       # MUI X Grid implementation
+│   ├── components/                 # MUI-specific components
+│   ├── adapters/                   # Adapters for MUI Grid
+│   └── EnhancedDataGrid.tsx        # MUI implementation
+├── ag-grid/                        # ag-Grid implementation
+│   ├── components/                 # ag-Grid-specific components
+│   ├── adapters/                   # Adapters for ag-Grid
+│   └── EnhancedDataGrid.tsx        # ag-Grid implementation
+└── index.tsx                       # Main export with implementation selector
+```
 
-### Row/Cell Editing Flow
+## Implementation Selector
 
-1. **Cell Click**: When a cell is clicked, `EnhancedDataGrid` calls `api.startCellEditMode()`.
-2. **Edit Start**: `CellEditHandler` subscribes to the `cellEditStart` event and calls `startEditingCell()`.
-3. **Form Creation**: If no form exists for the row, `startEditingRow()` creates a form instance using `createFormInstance()`.
-4. **Render Edit Mode**: `EditCellRenderer` renders the appropriate input based on field type.
-5. **Local State Management**: `EditCellRenderer` maintains local state for immediate UI updates while editing.
-6. **Value Changes**: Changes are tracked in both local state and form state via `handleChangeWithLocalUpdate()`.
-7. **Validation**: Changes trigger validation in the form context.
-8. **Status Updates**: `StatusPanel` polls for editing status and shows save/cancel options.
+The main `EnhancedDataGrid` component accepts an `implementation` prop that allows switching between the two implementations:
 
-### Tab Navigation
+```tsx
+<EnhancedDataGrid
+  implementation="mui" // or "ag-grid"
+  columns={columns}
+  rows={rows}
+  // ... other props
+/>
+```
 
-1. When tabbing between cells, the grid automatically calls `stopCellEditMode()` for the current cell.
-2. `CellEditHandler` captures this via the `cellEditStop` event and calls `stopEditingCell()`.
-3. The grid then calls `startCellEditMode()` for the next cell.
-4. The process repeats from step 2 in the editing flow.
+## Server-Side Operations
 
-### Saving Changes
+Both implementations support server-side operations through a common interface:
 
-1. When clicking "Save" in the `StatusPanel`, `saveChanges()` is called.
-2. Form values are collected from all edited rows.
-3. Changes are compared against original values to create a diff.
-4. The `onSave` callback is called with the changes.
-5. Row state is updated in the grid.
-6. Editing state is cleared.
+```tsx
+<EnhancedDataGrid
+  serverSide={true}
+  dataUrl="/api/employees"
+  pageSize={25}
+  // ... other props
+/>
+```
 
-## Technical Implementation Details
+The server-side API follows a standard format for pagination, sorting, and filtering.
 
-### Custom Form Management
+## Form Integration
 
-- **SimpleFormMethods**: Interface that provides a subset of React Hook Form's API.
-- **createFormInstance**: Factory function that creates form instances without hooks.
-- Form instances are stored in a Map using row IDs as keys.
-- Original row data is preserved for comparison when saving.
+Both implementations use a shared form context that manages:
 
-### Hook Rules Compliance
+- Form state for each row
+- Validation state
+- Dirty state tracking
+- Row-level validation
 
-- All React hooks are called at the top level of components.
-- `useCallback` hooks for event handlers are defined before any conditional returns.
-- State initialization happens early to ensure consistent hook calls between renders.
-- `useEffect` hooks handle side effects like form creation and value synchronization.
+## Comparison
 
-### Error Handling
+### MUI X Grid Advantages
 
-- Try/catch blocks around critical operations.
-- Fallback UI states for loading and error conditions.
-- Detailed error logging with context information.
+- Seamless integration with Material UI
+- Simpler API for basic use cases
+- Lighter weight
 
-### Text Selection
+### ag-Grid Advantages
 
-- When entering edit mode for text fields, all text is automatically selected.
-- This is implemented using a combination of `inputRef` and a `setTimeout` in `EditCellRenderer`.
+- Better performance with large datasets
+- More advanced features (even in the free version)
+- Better server-side support
+- More customization options
 
-### Validation
+## Getting Started
 
-- Field-level validation happens in real-time as values change.
-- Row-level validation can be provided via the `validateRow` prop.
-- Validation errors are displayed inline and summarized in the `StatusPanel`.
+1. Install dependencies:
+   ```
+   npm install
+   ```
 
-### Change Tracking and Dirty Fields
+2. Run the development server:
+   ```
+   npm run dev
+   ```
 
-- **pendingChanges**: A Map in GridFormContext explicitly tracks all modified fields and their values.
-- **isFieldDirty/isRowDirty**: Methods use the pendingChanges Map to determine if a field or row has been modified.
-- **ValidationIndicator**: Component that wraps fields and applies visual styling (green for valid, red for invalid) to indicate dirty state.
-- Changes persist even when clicking away from a cell, ensuring users always know which fields have been modified.
+3. Open [http://localhost:3000](http://localhost:3000) to see the demo.
 
-### Status Panel Behavior
+## Pages
 
-- Always visible to provide consistent UI for saving changes.
-- Shows the number of rows being modified.
-- Displays validation error indicators when needed.
-- Save button is only enabled when there are changes to save and no validation errors.
-- Uses console log interception to track changes in real-time.
+- `/`: Home page with links to demos
+- `/original-demo`: Original implementation using MUI X Grid
+- `/grid-demo`: Dual implementation demo with switcher
 
-### Data Persistence
+## License
 
-- The `updateCellValue` method maintains the pendingChanges state.
-- New rows are automatically marked as dirty in pendingChanges.
-- The saveChanges and cancelChanges methods clear the pendingChanges state.
-- Original values are preserved for comparison to determine if a field has been modified.
+This project is licensed under the MIT License.

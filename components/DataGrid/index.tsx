@@ -1,3 +1,4 @@
+import React from 'react';
 import { MuiEnhancedDataGrid } from './mui-grid';
 import { AgGridEnhancedDataGrid } from './ag-grid';
 import { CoreDataGridProps } from './core/types';
@@ -26,7 +27,15 @@ export function EnhancedDataGrid<T extends { id: any }>(props: EnhancedDataGridP
 // Export both implementations directly as well
 export { MuiEnhancedDataGrid, AgGridEnhancedDataGrid };
 
-// Export types and utilities
+// Export types
 export * from './core/types';
+
+// Export hooks
 export * from './core/hooks';
-export * from './core/context';
+
+// Export context (without re-exporting ValidationHelpers)
+export { 
+  GridFormContext, 
+  GridFormProvider, 
+  useGridForm 
+} from './core/context';
