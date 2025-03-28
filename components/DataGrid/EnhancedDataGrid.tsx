@@ -110,13 +110,20 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   // Define a navigation handler that uses the correct API methods
   const handleNavigate = useCallback((id: GridRowId, field: string) => {
     try {
-      // Check if the cell is already in edit mode
-      const cellMode = apiRef.current.getCellMode(id, field);
-      if (cellMode === 'view') {
-        apiRef.current.startCellEditMode({ id, field });
-      }
+      // Wrap in setTimeout to avoid the "not in view mode" error
+      setTimeout(() => {
+        try {
+          // Check if the cell is already in edit mode
+          const cellMode = apiRef.current.getCellMode(id, field);
+          if (cellMode === 'view') {
+            apiRef.current.startCellEditMode({ id, field });
+          }
+        } catch (innerError) {
+          console.error('Error navigating to cell:', innerError);
+        }
+      }, 0);
     } catch (error) {
-      console.error('Error navigating to cell:', error);
+      console.error('Error in navigation handler:', error);
     }
   }, [apiRef]);
 
@@ -222,13 +229,20 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
                 const column = columns.find(col => col.field === field);
                 if (column?.editable !== false) {
                   try {
-                    // Check if the cell is already in edit mode
-                    const cellMode = apiRef.current.getCellMode(id, field);
-                    if (cellMode === 'view') {
-                      apiRef.current.startCellEditMode({ id, field });
-                    }
+                    // Wrap in setTimeout to avoid the "not in view mode" error
+                    setTimeout(() => {
+                      try {
+                        // Check if the cell is already in edit mode
+                        const cellMode = apiRef.current.getCellMode(id, field);
+                        if (cellMode === 'view') {
+                          apiRef.current.startCellEditMode({ id, field });
+                        }
+                      } catch (innerError) {
+                        console.error('Error starting cell edit mode:', innerError);
+                      }
+                    }, 0);
                   } catch (error) {
-                    console.error('Error starting cell edit mode:', error);
+                    console.error('Error in cell click handler:', error);
                   }
                 }
               }

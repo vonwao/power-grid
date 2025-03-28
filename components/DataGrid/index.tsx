@@ -15,13 +15,13 @@ export interface EnhancedDataGridProps<T = any> extends CoreDataGridProps<T> {
  * @returns EnhancedDataGrid component with the selected implementation
  */
 export function EnhancedDataGrid<T extends { id: any }>(props: EnhancedDataGridProps<T>) {
-  const { implementation = 'mui', ...restProps } = props;
+  const { implementation = 'ag-grid', ...restProps } = props;
   
-  if (implementation === 'ag-grid') {
-    return <AgGridEnhancedDataGrid {...restProps} />;
+  if (implementation === 'mui') {
+    return <MuiEnhancedDataGrid {...restProps} />;
   }
   
-  return <MuiEnhancedDataGrid {...restProps} />;
+  return <AgGridEnhancedDataGrid {...restProps} />;
 }
 
 // Export both implementations directly as well

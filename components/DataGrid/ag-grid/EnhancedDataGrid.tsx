@@ -45,7 +45,7 @@ export function AgGridEnhancedDataGrid<T extends { id: any }>({
   rows: initialRows,
   onSave,
   validateRow,
-  serverSide = false,
+  serverSide = true,
   dataUrl,
   pageSize = 25,
   autoHeight,

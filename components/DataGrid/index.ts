@@ -1,3 +1,4 @@
+import React from 'react';
 import { MuiEnhancedDataGrid } from './mui-grid';
 import { AgGridEnhancedDataGrid } from './ag-grid';
 import { CoreDataGridProps } from './core/types';
@@ -14,19 +15,27 @@ export interface EnhancedDataGridProps<T = any> extends CoreDataGridProps<T> {
  * @returns EnhancedDataGrid component with the selected implementation
  */
 export function EnhancedDataGrid<T extends { id: any }>(props: EnhancedDataGridProps<T>) {
-  const { implementation = 'mui', ...restProps } = props;
+  const { implementation = 'ag-grid', ...restProps } = props;
   
-  if (implementation === 'ag-grid') {
-    return <AgGridEnhancedDataGrid {...restProps} />;
+  if (implementation === 'mui') {
+    return React.createElement(MuiEnhancedDataGrid, restProps);
   }
   
-  return <MuiEnhancedDataGrid {...restProps} />;
+  return React.createElement(AgGridEnhancedDataGrid, restProps);
 }
 
-// Export both implementations directly as well
+// Export both implementations directly
 export { MuiEnhancedDataGrid, AgGridEnhancedDataGrid };
 
-// Export types and utilities
+// Export types
 export * from './core/types';
+
+// Export hooks
 export * from './core/hooks';
-export * from './core/context';
+
+// Export context (without re-exporting ValidationHelpers)
+export { 
+  GridFormContext, 
+  GridFormProvider, 
+  useGridForm 
+} from './core/context';
