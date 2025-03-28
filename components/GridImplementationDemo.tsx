@@ -154,14 +154,14 @@ export default function GridImplementationDemo() {
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Paper sx={{ mb: 2, p: 2 }}>
-        <Typography variant="h4" gutterBottom>
+        {/* <Typography variant="h6" gutterBottom>
           Enhanced Data Grid Demo
         </Typography>
         <Typography variant="body1" paragraph>
           This demo showcases two different implementations of the EnhancedDataGrid component:
           MUI X Grid and ag-Grid. Both implementations share the same form integration, validation,
           and server-side capabilities.
-        </Typography>
+        </Typography> */}
         
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs 

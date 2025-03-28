@@ -1,7 +1,12 @@
 import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import type { 
-  GridReadyEvent, 
+import {
+  ClientSideRowModelModule,
+  InfiniteRowModelModule,
+  ModuleRegistry
+} from 'ag-grid-community';
+import type {
+  GridReadyEvent,
   CellValueChangedEvent,
   SelectionChangedEvent,
   PaginationChangedEvent,
@@ -9,6 +14,12 @@ import type {
   FilterChangedEvent,
   GridOptions,
 } from 'ag-grid-community';
+
+// Register required modules
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  InfiniteRowModelModule
+]);
 
 // Import ag-Grid styles
 import 'ag-grid-community/styles/ag-grid.css';
@@ -62,28 +73,23 @@ export function AgGridEnhancedDataGrid<T extends { id: any }>({
 }: CoreDataGridProps<T>) {
   const gridRef = useRef<AgGridReact>(null);
   
-  // Use server-side data if enabled
+  // Always call the hook, but only use its results if serverSide and dataUrl are true
   const {
-    rows,
-    totalRows,
+    rows: serverRows,
+    totalRows: serverTotalRows,
     loading: serverLoading,
     setPage,
     setSortModel,
     setFilterModel,
-  } = serverSide && dataUrl
-    ? useServerSideData<T>({
-        url: dataUrl,
-        pageSize,
-        initialPage: 0,
-      })
-    : { 
-        rows: initialRows, 
-        totalRows: initialRows.length, 
-        loading: false, 
-        setPage: () => {}, 
-        setSortModel: () => {}, 
-        setFilterModel: () => {} 
-      };
+  } = useServerSideData<T>({
+    url: dataUrl || '', // Provide a default empty string
+    pageSize,
+    initialPage: 0,
+  });
+
+  // Use server data or client data based on the serverSide flag
+  const rows = (serverSide && dataUrl) ? serverRows : initialRows;
+  const totalRows = (serverSide && dataUrl) ? serverTotalRows : initialRows.length;
   
   // Combine external loading state with server loading state
   const loading = externalLoading || serverLoading;
@@ -193,6 +199,7 @@ export function AgGridEnhancedDataGrid<T extends { id: any }>({
     rowModelType: serverSide ? 'infinite' : 'clientSide',
     cacheBlockSize: serverSide ? pageSize : undefined,
     infiniteInitialRowCount: serverSide ? pageSize : undefined,
+    // Note: Modules are registered globally at the top of the file
     
     // Events
     onGridReady,

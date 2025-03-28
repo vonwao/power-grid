@@ -57,28 +57,23 @@ export function MuiEnhancedDataGrid<T extends { id: GridRowId }>({
 }: CoreDataGridProps<T>) {
   const apiRef = useGridApiRef();
   
-  // Use server-side data if enabled
+  // Always call the hook, but only use its results if serverSide and dataUrl are true
   const {
-    rows,
-    totalRows,
+    rows: serverRows,
+    totalRows: serverTotalRows,
     loading: serverLoading,
     setPage,
     setSortModel,
     setFilterModel,
-  } = serverSide && dataUrl
-    ? useServerSideData<T>({
-        url: dataUrl,
-        pageSize,
-        initialPage: 0,
-      })
-    : { 
-        rows: initialRows, 
-        totalRows: initialRows.length, 
-        loading: false, 
-        setPage: () => {}, 
-        setSortModel: () => {}, 
-        setFilterModel: () => {} 
-      };
+  } = useServerSideData<T>({
+    url: dataUrl || '', // Provide a default empty string
+    pageSize,
+    initialPage: 0,
+  });
+
+  // Use server data or client data based on the serverSide flag
+  const rows = (serverSide && dataUrl) ? serverRows : initialRows;
+  const totalRows = (serverSide && dataUrl) ? serverTotalRows : initialRows.length;
   
   // Combine external loading state with server loading state
   const loading = externalLoading || serverLoading;
