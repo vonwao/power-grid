@@ -1,10 +1,13 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, FormControlLabel, Switch, Chip } from '@mui/material';
 import { EnhancedDataGrid } from './DataGrid';
 import { DataGridToolbar } from './DataGridToolbar';
 import { employees, departments } from './data/mockData';
 
 export default function EnhancedDataGridDemo() {
+  // State for server-side mode and selection
+  const [serverSide, setServerSide] = useState(false);
+  const [selectionModel, setSelectionModel] = useState<any[]>([]);
   // Column definitions with React Hook Form field configs
   const columns = [
     {
@@ -153,16 +156,43 @@ export default function EnhancedDataGridDemo() {
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         padding: 2
       }}>
-        <Typography variant="h6" component="div">
-          Employee Management
-        </Typography>
-        <DataGridToolbar 
+        <Box>
+          <Typography variant="h6" component="div">
+            Employee Management
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={serverSide}
+                  onChange={(e) => setServerSide(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Server-side data"
+            />
+            
+            {selectionModel.length > 0 && (
+              <Box sx={{ ml: 2 }}>
+                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                  Selected:
+                </Typography>
+                <Chip
+                  label={`${selectionModel.length} rows`}
+                  onDelete={() => setSelectionModel([])}
+                  size="small"
+                />
+              </Box>
+            )}
+          </Box>
+        </Box>
+        <DataGridToolbar
           onSave={() => handleSave({ edits: [], additions: [] })}
           onFilter={handleFilter}
           onRefresh={handleRefresh}
@@ -176,7 +206,15 @@ export default function EnhancedDataGridDemo() {
         rows={employees}
         onSave={handleSave}
         validateRow={validateEmployeeRow}
+        // Server-side options
+        dataUrl={serverSide ? '/api/employees' : undefined}
+        // Selection options
+        checkboxSelection={true}
+        selectionModel={selectionModel}
+        onSelectionModelChange={setSelectionModel}
+        // UI options
         rowHeight={30}
+        pageSize={25}
       />
     </Box>
   );

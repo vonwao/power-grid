@@ -271,7 +271,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             disableDensitySelector={disableDensitySelector}
             disableRowSelectionOnClick={disableSelectionOnClick}
             disableVirtualization={disableVirtualization}
-            loading={externalLoading}
+            loading={loading}
             hideFooter={hideFooter}
             hideFooterPagination={hideFooterPagination}
             hideFooterSelectedRowCount={hideFooterSelectedRowCount}

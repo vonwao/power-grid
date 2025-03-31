@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useState, useRef, useEffect } from 'react';
-import { 
-  FieldValues, 
-  FieldError, 
+import {
+  FieldValues,
+  FieldError,
   ValidationOptions,
   FieldPath,
   FormState,
@@ -262,6 +262,24 @@ export function GridFormProvider({
   // Track rows that were added (not in the original data)
   const addedRowsRef = useRef<Set<GridRowId>>(new Set());
   
+  // Update rows when initialRows changes (for server-side data)
+  useEffect(() => {
+    // Only update if not in the middle of editing
+    if (editingRows.size === 0) {
+      setRows(initialRows);
+      
+      // Clear form instances for rows that no longer exist
+      const newRowIds = new Set(initialRows.map(row => row.id));
+      
+      formInstancesRef.current.forEach((_, rowId) => {
+        if (!newRowIds.has(rowId) && !addedRowsRef.current.has(rowId)) {
+          formInstancesRef.current.delete(rowId);
+          originalDataRef.current.delete(rowId);
+        }
+      });
+    }
+  }, [initialRows, editingRows]);
+  
   // Log pending changes whenever they change
   useEffect(() => {
     console.log('Pending changes:', Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
@@ -294,6 +312,8 @@ export function GridFormProvider({
           const formMethods = createFormInstance({ ...row }, columns);
           
           formInstancesRef.current.set(rowId, formMethods);
+          
+          console.log(`Created form instance for row ${rowId}`);
         } else {
           console.warn(`Row with ID ${rowId} not found`);
           return;
@@ -312,7 +332,7 @@ export function GridFormProvider({
     } catch (error) {
       console.error(`Error starting edit for row ${rowId}:`, error);
     }
-  }, [rows]);
+  }, [rows, columns]);
   
   // Stop editing a row
   const stopEditingRow = useCallback((rowId: GridRowId) => {
