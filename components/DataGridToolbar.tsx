@@ -73,22 +73,22 @@ export const DataGridToolbar: React.FC<DataGridToolbarProps> = ({
       {/* Filter Options */}
       <Tooltip title="Filter">
         <IconButton onClick={onFilter}>
-          <FilterListIcon />
-          {/* Alternative icons:
+          {/* <FilterListIcon /> */}
+          {/* Alternative icons: */}
           <FilterAltIcon />
-          <TuneIcon /> */}
+          {/* <TuneIcon />  */}
         </IconButton>
       </Tooltip>
 
       {/* Refresh Options */}
-      <Tooltip title="Refresh">
+      {/* <Tooltip title="Refresh">
         <IconButton onClick={onRefresh}>  
           <RefreshIcon />
-          {/* Alternative icons:
+          Alternative icons:
           <SyncIcon />
-          <CachedIcon /> */}
+          <CachedIcon /> 
         </IconButton>
-      </Tooltip>
+      </Tooltip> */}
 
       {/* Export Options */}
       <Tooltip title="Export">

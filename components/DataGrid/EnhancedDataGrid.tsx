@@ -15,10 +15,11 @@ import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
-import { StatusPanel, AddRowButton, CellEditHandler } from './components';
+import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useServerSideData, useSelectionModel } from './hooks';
+import { useGridNavigation, useServerSideData, useSelectionModel, usePagination } from './hooks';
 import { ServerSideResult } from './types';
+import { ToolbarModeProvider, useToolbarMode, ToolbarMode } from './context/ToolbarModeContext';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -218,152 +219,152 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   
   // Determine if we're in compact mode based on row height
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
+
+  // Create a wrapper component for DataGrid that uses the toolbar mode
+  const DataGridWithModeControl = () => {
+    const { mode } = useToolbarMode();
+    
+    // Determine if row selection should be disabled
+    const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+    
+    // Handle cell click based on mode
+    const handleCellClick = (params: any) => {
+      // Disable cell editing when in add mode for existing rows
+      if (mode === 'add' && !params.id.toString().startsWith('new-')) {
+        return;
+      }
+      
+      // Original cell click handler
+      if (params.field !== '__check__' && params.field !== '__actions__') {
+        const { id, field } = params;
+        const column = columns.find(col => col.field === field);
+        if (column?.editable !== false) {
+          try {
+            const cellMode = apiRef.current.getCellMode(id, field);
+            if (cellMode === 'view') {
+              apiRef.current.startCellEditMode({ id, field });
+            }
+          } catch (error) {
+            console.error('Error starting cell edit mode:', error);
+          }
+        }
+      }
+    };
+    
+    return (
+      <DataGrid
+        apiRef={apiRef}
+        rows={displayRows}
+        columns={gridColumns}
+        autoHeight={autoHeight}
+        density={density}
+        disableColumnFilter={disableColumnFilter}
+        disableColumnMenu={disableColumnMenu}
+        disableColumnSelector={disableColumnSelector}
+        disableDensitySelector={disableDensitySelector}
+        disableRowSelectionOnClick={isInEditOrAddMode || disableSelectionOnClick}
+        disableVirtualization={disableVirtualization}
+        loading={loading}
+        hideFooter={hideFooter}
+        hideFooterPagination={hideFooterPagination}
+        hideFooterSelectedRowCount={hideFooterSelectedRowCount}
+        // Pagination
+        initialState={{
+          pagination: {
+            paginationModel: { pageSize },
+          },
+        }}
+        pageSizeOptions={rowsPerPageOptions}
+        paginationMode={useServerSide ? 'server' : 'client'}
+        rowCount={totalRows}
+        onPaginationModelChange={(model) => {
+          if (useServerSide) {
+            setPage(model.page);
+          }
+        }}
+        
+        // Sorting and filtering
+        sortingMode={useServerSide ? 'server' : 'client'}
+        filterMode={useServerSide ? 'server' : 'client'}
+        onSortModelChange={(model) => {
+          if (useServerSide) {
+            setSortModel(model.map(item => ({
+              field: item.field,
+              sort: item.sort as 'asc' | 'desc'
+            })));
+          }
+        }}
+        onFilterModelChange={(model) => {
+          if (useServerSide) {
+            const filterModel: Record<string, any> = {};
+            model.items.forEach(item => {
+              if (item.field && item.value !== undefined) {
+                filterModel[item.field] = item.value;
+              }
+            });
+            setFilterModel(filterModel);
+          }
+        }}
+        
+        // Row selection
+        checkboxSelection={checkboxSelection && !isInEditOrAddMode}
+        rowSelectionModel={selectionModel}
+        onRowSelectionModelChange={handleSelectionModelChange}
+        disableMultipleRowSelection={disableMultipleSelection}
+        
+        // Editing
+        editMode="cell"
+        rowHeight={rowHeight}
+        onCellClick={handleCellClick}
+        onCellKeyDown={handleKeyDown}
+        slots={{
+          noRowsOverlay: () => (
+            <div className="flex items-center justify-center h-full">
+              <Typography>No rows</Typography>
+            </div>
+          )
+        }}
+        sx={{
+          border: 'none',
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+          height: '100%',
+          '& .MuiDataGrid-main': {
+            overflow: 'auto',
+          }
+        }}
+        {...props}
+      />
+    );
+  };
   
   return (
-    <GridFormProvider
-      columns={columns}
-      initialRows={displayRows}
-      onSave={onSave}
-      validateRow={validateRow}
-      isCompact={isCompact}
-    >
-      <div className={`h-full w-full flex flex-col ${className || ''}`}>
-        <Paper elevation={1} className="p-3 shadow-sm">
-          <div className="flex justify-between items-center">
-            <Typography variant="h5">
-              Enhanced Data Grid
-            </Typography>
-            
-            <AddRowButton />
-          </div>
-          
-          <Box className="flex items-center mt-2">
-            <Typography variant="body2" className="text-gray-600">
-              Click to edit • Tab to navigate
-            </Typography>
-            
-            {selectionModel.length > 0 && (
-              <Box sx={{ ml: 2 }}>
-                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                  Selected:
-                </Typography>
-                <Chip
-                  label={`${selectionModel.length} rows`}
-                  onDelete={() => handleSelectionModelChange([], { api: apiRef.current })}
-                  size="small"
-                />
-              </Box>
-            )}
-          </Box>
-        </Paper>
-
-        <Paper elevation={0} className="flex-grow w-full overflow-auto">
-          <CellEditHandler apiRef={apiRef} />
-          <DataGrid
-            apiRef={apiRef}
-            rows={displayRows}
-            columns={gridColumns}
-            autoHeight={autoHeight}
-            density={density}
-            disableColumnFilter={disableColumnFilter}
-            disableColumnMenu={disableColumnMenu}
-            disableColumnSelector={disableColumnSelector}
-            disableDensitySelector={disableDensitySelector}
-            disableRowSelectionOnClick={disableSelectionOnClick}
-            disableVirtualization={disableVirtualization}
-            loading={loading}
-            hideFooter={hideFooter}
-            hideFooterPagination={hideFooterPagination}
-            hideFooterSelectedRowCount={hideFooterSelectedRowCount}
-            // Pagination
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize },
-              },
-            }}
-            pageSizeOptions={rowsPerPageOptions}
-            paginationMode={useServerSide ? 'server' : 'client'}
-            rowCount={totalRows}
-            onPaginationModelChange={(model) => {
-              if (useServerSide) {
-                setPage(model.page);
-              }
-            }}
-            
-            // Sorting and filtering
-            sortingMode={useServerSide ? 'server' : 'client'}
-            filterMode={useServerSide ? 'server' : 'client'}
-            onSortModelChange={(model) => {
-              if (useServerSide) {
-                setSortModel(model.map(item => ({
-                  field: item.field,
-                  sort: item.sort as 'asc' | 'desc'
-                })));
-              }
-            }}
-            onFilterModelChange={(model) => {
-              if (useServerSide) {
-                const filterModel: Record<string, any> = {};
-                model.items.forEach(item => {
-                  if (item.field && item.value !== undefined) {
-                    filterModel[item.field] = item.value;
-                  }
-                });
-                setFilterModel(filterModel);
-              }
-            }}
-            
-            // Row selection
-            checkboxSelection={checkboxSelection}
-            rowSelectionModel={selectionModel}
-            onRowSelectionModelChange={handleSelectionModelChange}
-            disableMultipleRowSelection={disableMultipleSelection}
-            
-            // Editing
-            editMode="cell"
-            rowHeight={rowHeight}
-            onCellClick={(params) => {
-              if (params.field !== '__check__' && params.field !== '__actions__') {
-                const { id, field } = params;
-                const column = columns.find(col => col.field === field);
-                if (column?.editable !== false) {
-                  try {
-                    // Check if the cell is already in edit mode
-                    const cellMode = apiRef.current.getCellMode(id, field);
-                    if (cellMode === 'view') {
-                      apiRef.current.startCellEditMode({ id, field });
-                    }
-                  } catch (error) {
-                    console.error('Error starting cell edit mode:', error);
-                  }
-                }
-              }
-            }}
-            onCellKeyDown={handleKeyDown}
-            slots={{
-              noRowsOverlay: () => (
-                <div className="flex items-center justify-center h-full">
-                  <Typography>No rows</Typography>
-                </div>
-              )
-            }}
-            sx={{
-              border: 'none',
-              '& .MuiDataGrid-cell:focus': {
-                outline: 'none',
-              },
-              height: '100%',
-              '& .MuiDataGrid-main': {
-                overflow: 'auto',
-              }
-            }}
-            {...props}
+    <ToolbarModeProvider totalRows={totalRows} initialMode="none">
+      <GridFormProvider
+        columns={columns}
+        initialRows={displayRows}
+        onSave={onSave}
+        validateRow={validateRow}
+        isCompact={isCompact}
+      >
+        <div className={`h-full w-full flex flex-col ${className || ''}`}>
+          {/* Unified Toolbar */}
+          <UnifiedDataGridToolbar
+            onSave={() => onSave && onSave({ edits: [], additions: [] })}
+            onFilter={() => console.log('Filter clicked')}
+            onExport={() => console.log('Export clicked')}
+            onUpload={() => console.log('Upload clicked')}
+            onHelp={() => console.log('Help clicked')}
           />
-        </Paper>
-        
-        <StatusPanel />
-      </div>
-    </GridFormProvider>
+
+          <Paper elevation={0} className="flex-grow w-full overflow-auto">
+            <CellEditHandler apiRef={apiRef} />
+            <DataGridWithModeControl />
+          </Paper>
+        </div>
+      </GridFormProvider>
+    </ToolbarModeProvider>
   );
 }
 
