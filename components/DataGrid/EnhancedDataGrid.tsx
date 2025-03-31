@@ -7,15 +7,18 @@ import {
   GridValueSetter,
   useGridApiRef,
   GridRenderCellParams,
+  GridRowSelectionModel,
+  GridCallbackDetails,
 } from '@mui/x-data-grid';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, Chip } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { StatusPanel, AddRowButton, CellEditHandler } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation } from './hooks';
+import { useGridNavigation, useServerSideData, useSelectionModel } from './hooks';
+import { ServerSideResult } from './types';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -60,6 +63,18 @@ export interface EnhancedDataGridProps<T = any> {
   rows: T[];
   onSave?: (changes: { edits: any[], additions: any[] }) => void;
   validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
+  
+  // Server-side options
+  dataUrl?: string;
+  forceClientSide?: boolean; // Escape hatch - not recommended for large datasets
+  
+  // Selection options
+  checkboxSelection?: boolean;
+  selectionModel?: any[];
+  onSelectionModelChange?: (selectionModel: any[]) => void;
+  disableMultipleSelection?: boolean;
+  
+  // UI options
   className?: string;
   autoHeight?: boolean;
   density?: 'compact' | 'standard' | 'comfortable';
@@ -85,6 +100,15 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   rows,
   onSave,
   validateRow,
+  // Server-side options
+  dataUrl,
+  forceClientSide = false,
+  // Selection options
+  checkboxSelection = false,
+  selectionModel: initialSelectionModel,
+  onSelectionModelChange,
+  disableMultipleSelection = false,
+  // UI options
   className,
   autoHeight,
   density = 'standard',
@@ -94,7 +118,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   disableDensitySelector,
   disableSelectionOnClick = true,
   disableVirtualization,
-  loading,
+  loading: externalLoading,
   pageSize = 25,
   rowsPerPageOptions = [10, 25, 50, 100],
   showCellRightBorder = true,
@@ -106,6 +130,36 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   ...props
 }: EnhancedDataGridProps<T>) {
   const apiRef = useGridApiRef();
+  
+  // Use server-side data if dataUrl is provided and not forcing client-side
+  const useServerSide = dataUrl && !forceClientSide;
+  
+  // Always call the hook, but only use its results if useServerSide is true
+  const {
+    rows: serverRows,
+    totalRows: serverTotalRows,
+    loading: serverLoading,
+    setPage,
+    setSortModel,
+    setFilterModel,
+  } = useServerSideData<T>({
+    url: dataUrl || '', // Provide a default empty string
+    pageSize,
+    initialPage: 0,
+  });
+  
+  // Use server data or client data based on the useServerSide flag
+  const displayRows = useServerSide ? serverRows : rows;
+  const totalRows = useServerSide ? serverTotalRows : rows.length;
+  
+  // Combine external loading state with server loading state
+  const loading = externalLoading || serverLoading;
+  
+  // Initialize selection model hook
+  const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
+    selectionModel: initialSelectionModel,
+    onSelectionModelChange,
+  });
   
   // Define a navigation handler that uses the correct API methods
   const handleNavigate = useCallback((id: GridRowId, field: string) => {
@@ -124,7 +178,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   const { handleKeyDown } = useGridNavigation({
     api: apiRef.current,
     columns,
-    rows,
+    rows: displayRows,
     onNavigate: handleNavigate
   });
   
@@ -168,7 +222,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   return (
     <GridFormProvider
       columns={columns}
-      initialRows={rows}
+      initialRows={displayRows}
       onSave={onSave}
       validateRow={validateRow}
       isCompact={isCompact}
@@ -187,6 +241,19 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             <Typography variant="body2" className="text-gray-600">
               Click to edit • Tab to navigate
             </Typography>
+            
+            {selectionModel.length > 0 && (
+              <Box sx={{ ml: 2 }}>
+                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                  Selected:
+                </Typography>
+                <Chip
+                  label={`${selectionModel.length} rows`}
+                  onDelete={() => handleSelectionModelChange([], { api: apiRef.current })}
+                  size="small"
+                />
+              </Box>
+            )}
           </Box>
         </Paper>
 
@@ -194,7 +261,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
           <CellEditHandler apiRef={apiRef} />
           <DataGrid
             apiRef={apiRef}
-            rows={rows}
+            rows={displayRows}
             columns={gridColumns}
             autoHeight={autoHeight}
             density={density}
@@ -204,16 +271,55 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             disableDensitySelector={disableDensitySelector}
             disableRowSelectionOnClick={disableSelectionOnClick}
             disableVirtualization={disableVirtualization}
-            loading={loading}
+            loading={externalLoading}
             hideFooter={hideFooter}
             hideFooterPagination={hideFooterPagination}
             hideFooterSelectedRowCount={hideFooterSelectedRowCount}
+            // Pagination
             initialState={{
               pagination: {
                 paginationModel: { pageSize },
               },
             }}
             pageSizeOptions={rowsPerPageOptions}
+            paginationMode={useServerSide ? 'server' : 'client'}
+            rowCount={totalRows}
+            onPaginationModelChange={(model) => {
+              if (useServerSide) {
+                setPage(model.page);
+              }
+            }}
+            
+            // Sorting and filtering
+            sortingMode={useServerSide ? 'server' : 'client'}
+            filterMode={useServerSide ? 'server' : 'client'}
+            onSortModelChange={(model) => {
+              if (useServerSide) {
+                setSortModel(model.map(item => ({
+                  field: item.field,
+                  sort: item.sort as 'asc' | 'desc'
+                })));
+              }
+            }}
+            onFilterModelChange={(model) => {
+              if (useServerSide) {
+                const filterModel: Record<string, any> = {};
+                model.items.forEach(item => {
+                  if (item.field && item.value !== undefined) {
+                    filterModel[item.field] = item.value;
+                  }
+                });
+                setFilterModel(filterModel);
+              }
+            }}
+            
+            // Row selection
+            checkboxSelection={checkboxSelection}
+            rowSelectionModel={selectionModel}
+            onRowSelectionModelChange={handleSelectionModelChange}
+            disableMultipleRowSelection={disableMultipleSelection}
+            
+            // Editing
             editMode="cell"
             rowHeight={rowHeight}
             onCellClick={(params) => {

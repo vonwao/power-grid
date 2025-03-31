@@ -13,9 +13,14 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       
-      <Box className="fixed top-4 right-4 z-10">
-        <Link href="/csv-import" passHref>
+      <Box className="fixed top-4 right-4 z-10 flex gap-2">
+        <Link href="/original-demo" passHref>
           <Button variant="contained" color="primary">
+            Try Enhanced Grid Demo
+          </Button>
+        </Link>
+        <Link href="/csv-import" passHref>
+          <Button variant="contained" color="secondary">
             Try CSV Import Demo
           </Button>
         </Link>
