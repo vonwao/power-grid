@@ -13,14 +13,6 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       
-      <Box className="fixed top-4 right-4 z-10">
-        <Link href="/csv-import" passHref>
-          <Button variant="contained" color="primary">
-            Try CSV Import Demo
-          </Button>
-        </Link>
-      </Box>
-      
       <Box className="h-full flex-grow">
         <EnhancedDataGridDemo />
       </Box>
