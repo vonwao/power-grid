@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
-import { useGridForm } from './GridFormContext';
 import { useSelectionModel } from '../hooks/useSelectionModel';
 import { usePagination } from '../hooks/usePagination';
 
@@ -43,29 +42,33 @@ interface ToolbarModeProviderProps {
   children: React.ReactNode;
   totalRows: number;
   initialMode?: ToolbarMode;
+  // Form state and actions
+  saveChanges: () => void;
+  cancelChanges: () => void;
+  addRow: () => void;
+  hasValidationErrors: boolean;
+  isRowEditing?: (rowId: GridRowId) => boolean;
+  isRowDirty?: (rowId: GridRowId) => boolean;
 }
 
 // Provider component
-export const ToolbarModeProvider: React.FC<ToolbarModeProviderProps> = ({ 
+export const ToolbarModeProvider: React.FC<ToolbarModeProviderProps> = ({
   children,
   totalRows,
-  initialMode = 'none'
+  initialMode = 'none',
+  // Form state and actions
+  saveChanges: formSaveChanges,
+  cancelChanges: formCancelChanges,
+  addRow: formAddRow,
+  hasValidationErrors,
+  isRowEditing = () => false,
+  isRowDirty = () => false
 }) => {
   // State for the current mode
   const [mode, setMode] = useState<ToolbarMode>(initialMode);
   
-  // Get form context
-  const { 
-    saveChanges: formSaveChanges,
-    cancelChanges: formCancelChanges,
-    addRow: formAddRow,
-    hasValidationErrors,
-    isRowEditing,
-    isRowDirty
-  } = useGridForm();
-  
   // Get selection model
-  const { 
+  const {
     selectionModel,
     onSelectionModelChange
   } = useSelectionModel();

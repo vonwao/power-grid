@@ -339,6 +339,33 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     );
   };
   
+  // Get the GridFormContext functions and state
+  const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
+    const {
+      saveChanges,
+      cancelChanges,
+      addRow,
+      hasValidationErrors,
+      isRowEditing,
+      isRowDirty
+    } = useGridForm();
+
+    return (
+      <ToolbarModeProvider
+        totalRows={totalRows}
+        initialMode="none"
+        saveChanges={saveChanges}
+        cancelChanges={cancelChanges}
+        addRow={addRow}
+        hasValidationErrors={hasValidationErrors}
+        isRowEditing={isRowEditing}
+        isRowDirty={isRowDirty}
+      >
+        {children}
+      </ToolbarModeProvider>
+    );
+  };
+
   return (
     <GridFormProvider
       columns={columns}
@@ -347,7 +374,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       validateRow={validateRow}
       isCompact={isCompact}
     >
-      <ToolbarModeProvider totalRows={totalRows} initialMode="none">
+      <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           {/* Unified Toolbar */}
           <UnifiedDataGridToolbar
@@ -363,7 +390,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             <DataGridWithModeControl />
           </Paper>
         </div>
-      </ToolbarModeProvider>
+      </GridFormWrapper>
     </GridFormProvider>
   );
 }
