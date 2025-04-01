@@ -79,7 +79,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   } = useGridMode();
 
   // Get grid form context
-  const { getRowErrors, editingRows } = useGridForm();
+  const { getRowErrors, isRowEditing } = useGridForm();
 
   // State for dialogs
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
@@ -455,37 +455,15 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
             The following validation errors need to be fixed before saving:
           </DialogContentText>
           <Box component="ul" sx={{ mt: 2 }}>
-            {useMemo(() => {
-              // Collect all validation errors from editing rows
-              const allErrors: Array<{field: string, message: string}> = [];
-              
-              // Iterate through all editing rows
-              editingRows.forEach(rowId => {
-                const errors = getRowErrors(rowId);
-                if (errors) {
-                  // Add each error to the list
-                  Object.entries(errors).forEach(([field, error]) => {
-                    if (error) {
-                      allErrors.push({
-                        field,
-                        message: error.message || 'Invalid value'
-                      });
-                    }
-                  });
-                }
-              });
-              
-              // Return error list items
-              return allErrors.length > 0 ? (
-                allErrors.map((error, index) => (
-                  <Typography component="li" key={index}>
-                    <strong>{error.field}:</strong> {error.message}
-                  </Typography>
-                ))
+            <Typography component="li">
+              {mode === 'edit' && editingRowCount > 0 ? (
+                "There are validation errors in the current editing session. Please check highlighted fields for specific issues."
+              ) : mode === 'add' && isAddingRow ? (
+                "There are validation errors in the new row. Please check highlighted fields for specific issues."
               ) : (
-                <Typography component="li">No specific validation details available</Typography>
-              );
-            }, [editingRows, getRowErrors])}
+                "No specific validation details available"
+              )}
+            </Typography>
           </Box>
         </DialogContent>
         <DialogActions>
