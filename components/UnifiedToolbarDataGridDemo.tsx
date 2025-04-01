@@ -113,6 +113,7 @@ export const UnifiedToolbarDataGridDemo: React.FC = () => {
           canEditRows={true}
           canAddRows={true}
           canSelectRows={true}
+          dataUrl="/api/employees"
         />
       </div>
     </div>

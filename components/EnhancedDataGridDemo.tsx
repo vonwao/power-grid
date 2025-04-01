@@ -6,7 +6,7 @@ import { employees, departments } from './data/mockData';
 
 export default function EnhancedDataGridDemo() {
   // State for server-side mode and selection
-  const [serverSide, setServerSide] = useState(false);
+  const [serverSide, setServerSide] = useState(true);
   const [selectionModel, setSelectionModel] = useState<any[]>([]);
   // Column definitions with React Hook Form field configs
   const columns = [

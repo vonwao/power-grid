@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   IconButton,
@@ -35,6 +35,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 
 // Context and hooks
 import { useGridMode, GridMode } from '../context/GridModeContext';
+import { useGridForm } from '../context/GridFormContext';
 
 interface UnifiedDataGridToolbarProps {
   onSave?: () => void;
@@ -77,12 +78,14 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     setPageSize
   } = useGridMode();
 
-  // State for confirmation dialog
+  // Get grid form context
+  const { getRowErrors, editingRows } = useGridForm();
+
+  // State for dialogs
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
   const [targetMode, setTargetMode] = useState<GridMode>('none');
-  
-  // State for help dialog
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
 
   // Handle mode switching with confirmation when needed
   const handleModeSwitch = (newMode: GridMode) => {
@@ -192,11 +195,12 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
                   Editing {editingRowCount} record{editingRowCount !== 1 ? 's' : ''}
                 </Typography>
                 {hasValidationErrors && (
-                  <Chip 
-                    label="Validation errors" 
-                    size="small" 
-                    color="warning" 
-                    sx={{ height: 24 }}
+                  <Chip
+                    label="Validation errors"
+                    size="small"
+                    color="warning"
+                    sx={{ height: 24, cursor: 'pointer' }}
+                    onClick={() => setValidationDialogOpen(true)}
                   />
                 )}
               </>
@@ -208,27 +212,28 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
                   Adding new record
                 </Typography>
                 {hasValidationErrors && (
-                  <Chip 
-                    label="Validation errors" 
-                    size="small" 
-                    color="warning" 
-                    sx={{ height: 24 }}
+                  <Chip
+                    label="Validation errors"
+                    size="small"
+                    color="warning"
+                    sx={{ height: 24, cursor: 'pointer' }}
+                    onClick={() => setValidationDialogOpen(true)}
                   />
                 )}
               </>
             )}
             
             {mode === 'select' && (
-              <>
-                <Typography variant="body2">
-                  {selectedRowCount} row{selectedRowCount !== 1 ? 's' : ''} selected
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                  Selected:
                 </Typography>
-                <Tooltip title="Clear selection">
-                  <IconButton size="small" onClick={clearSelection}>
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </>
+                <Chip
+                  label={`${selectedRowCount} rows`}
+                  onDelete={clearSelection}
+                  size="small"
+                />
+              </Box>
             )}
           </Paper>
         )}
@@ -433,6 +438,58 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHelpDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Validation Errors Dialog */}
+      <Dialog
+        open={validationDialogOpen}
+        onClose={() => setValidationDialogOpen(false)}
+        maxWidth="md"
+      >
+        <DialogTitle>Validation Errors</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            The following validation errors need to be fixed before saving:
+          </DialogContentText>
+          <Box component="ul" sx={{ mt: 2 }}>
+            {useMemo(() => {
+              // Collect all validation errors from editing rows
+              const allErrors: Array<{field: string, message: string}> = [];
+              
+              // Iterate through all editing rows
+              editingRows.forEach(rowId => {
+                const errors = getRowErrors(rowId);
+                if (errors) {
+                  // Add each error to the list
+                  Object.entries(errors).forEach(([field, error]) => {
+                    if (error) {
+                      allErrors.push({
+                        field,
+                        message: error.message || 'Invalid value'
+                      });
+                    }
+                  });
+                }
+              });
+              
+              // Return error list items
+              return allErrors.length > 0 ? (
+                allErrors.map((error, index) => (
+                  <Typography component="li" key={index}>
+                    <strong>{error.field}:</strong> {error.message}
+                  </Typography>
+                ))
+              ) : (
+                <Typography component="li">No specific validation details available</Typography>
+              );
+            }, [editingRows, getRowErrors])}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setValidationDialogOpen(false)} color="primary">
             Close
           </Button>
         </DialogActions>
