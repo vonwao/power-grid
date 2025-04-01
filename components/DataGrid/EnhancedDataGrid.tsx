@@ -327,11 +327,12 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             setFilterModel(filterModel);
           }
         }}
-        
         // Row selection
-        checkboxSelection={checkboxSelection && !isInEditOrAddMode && canSelectRows}
+        checkboxSelection={checkboxSelection && canSelectRows}
         rowSelectionModel={selectionModel}
         onRowSelectionModelChange={handleSelectionModelChange}
+        disableMultipleRowSelection={disableMultipleSelection}
+        isRowSelectable={() => !isInEditOrAddMode}
         disableMultipleRowSelection={disableMultipleSelection}
         
         // Editing
