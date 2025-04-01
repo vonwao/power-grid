@@ -19,7 +19,7 @@ import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
 import { useGridNavigation, useServerSideData, useSelectionModel, usePagination } from './hooks';
 import { ServerSideResult } from './types';
-import { ToolbarModeProvider, useToolbarMode, ToolbarMode } from './context/ToolbarModeContext';
+import { GridModeProvider, useGridMode, GridMode } from './context/GridModeContext';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -75,6 +75,11 @@ export interface EnhancedDataGridProps<T = any> {
   onSelectionModelChange?: (selectionModel: any[]) => void;
   disableMultipleSelection?: boolean;
   
+  // Grid capabilities
+  canEditRows?: boolean;
+  canAddRows?: boolean;
+  canSelectRows?: boolean;
+  
   // UI options
   className?: string;
   autoHeight?: boolean;
@@ -109,6 +114,10 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   selectionModel: initialSelectionModel,
   onSelectionModelChange,
   disableMultipleSelection = false,
+  // Grid capabilities
+  canEditRows = true,
+  canAddRows = true,
+  canSelectRows = true,
   // UI options
   className,
   autoHeight,
@@ -220,33 +229,46 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   // Determine if we're in compact mode based on row height
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
 
-  // Create a wrapper component for DataGrid that uses the toolbar mode
+  // Create a wrapper component for DataGrid that uses the grid mode
   const DataGridWithModeControl = () => {
-    const { mode } = useToolbarMode();
+    const { mode, setMode } = useGridMode();
     
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
     
-    // Handle cell click based on mode
-    const handleCellClick = (params: any) => {
+    // Handle cell click (single click does nothing)
+    const handleCellClick = () => {
+      // Do nothing on single click - we'll use double click for editing
+    };
+    
+    // Handle cell double click to enter edit mode
+    const handleCellDoubleClick = (params: any) => {
       // Disable cell editing when in add mode for existing rows
       if (mode === 'add' && !params.id.toString().startsWith('new-')) {
         return;
       }
       
-      // Original cell click handler
-      if (params.field !== '__check__' && params.field !== '__actions__') {
-        const { id, field } = params;
-        const column = columns.find(col => col.field === field);
-        if (column?.editable !== false) {
-          try {
-            const cellMode = apiRef.current.getCellMode(id, field);
-            if (cellMode === 'view') {
-              apiRef.current.startCellEditMode({ id, field });
-            }
-          } catch (error) {
-            console.error('Error starting cell edit mode:', error);
+      // Don't handle double clicks on checkboxes or action columns
+      if (params.field === '__check__' || params.field === '__actions__') {
+        return;
+      }
+      
+      const { id, field } = params;
+      const column = columns.find(col => col.field === field);
+      
+      // Only allow editing if the column is editable and editing is enabled
+      if (column?.editable !== false && canEditRows) {
+        try {
+          // Set the grid mode to edit
+          setMode('edit');
+          
+          // Start cell edit mode
+          const cellMode = apiRef.current.getCellMode(id, field);
+          if (cellMode === 'view') {
+            apiRef.current.startCellEditMode({ id, field });
           }
+        } catch (error) {
+          console.error('Error starting cell edit mode:', error);
         }
       }
     };
@@ -307,7 +329,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         }}
         
         // Row selection
-        checkboxSelection={checkboxSelection && !isInEditOrAddMode}
+        checkboxSelection={checkboxSelection && !isInEditOrAddMode && canSelectRows}
         rowSelectionModel={selectionModel}
         onRowSelectionModelChange={handleSelectionModelChange}
         disableMultipleRowSelection={disableMultipleSelection}
@@ -316,6 +338,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         editMode="cell"
         rowHeight={rowHeight}
         onCellClick={handleCellClick}
+        onCellDoubleClick={handleCellDoubleClick}
         onCellKeyDown={handleKeyDown}
         slots={{
           noRowsOverlay: () => (
@@ -351,7 +374,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     } = useGridForm();
 
     return (
-      <ToolbarModeProvider
+      <GridModeProvider
         totalRows={totalRows}
         initialMode="none"
         saveChanges={saveChanges}
@@ -360,12 +383,15 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         hasValidationErrors={hasValidationErrors}
         isRowEditing={isRowEditing}
         isRowDirty={isRowDirty}
+        canEditRows={canEditRows}
+        canAddRows={canAddRows}
+        canSelectRows={canSelectRows}
       >
         {children}
-      </ToolbarModeProvider>
+      </GridModeProvider>
     );
   };
-
+  
   return (
     <GridFormProvider
       columns={columns}
@@ -383,6 +409,9 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             onExport={() => console.log('Export clicked')}
             onUpload={() => console.log('Upload clicked')}
             onHelp={() => console.log('Help clicked')}
+            canEditRows={canEditRows}
+            canAddRows={canAddRows}
+            canSelectRows={canSelectRows}
           />
 
           <Paper elevation={0} className="flex-grow w-full overflow-auto">

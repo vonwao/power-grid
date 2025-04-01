@@ -110,6 +110,9 @@ export const UnifiedToolbarDataGridDemo: React.FC = () => {
           onSave={handleSave}
           checkboxSelection
           autoHeight={false}
+          canEditRows={true}
+          canAddRows={true}
+          canSelectRows={true}
         />
       </div>
     </div>

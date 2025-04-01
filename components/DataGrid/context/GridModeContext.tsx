@@ -56,7 +56,7 @@ interface GridModeProviderProps {
 }
 
 // Provider component
-export const GridModeProvider: React.FC<GridModeProviderProps> = ({
+export const GridModeProvider: React.FC<GridModeProviderProps> = ({ 
   children,
   totalRows,
   initialMode = 'none',
@@ -76,7 +76,7 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   const [mode, setMode] = useState<GridMode>(initialMode);
   
   // Get selection model
-  const {
+  const { 
     selectionModel,
     onSelectionModelChange
   } = useSelectionModel();
