@@ -141,6 +141,12 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
 }: EnhancedDataGridProps<T>) {
   const apiRef = useGridApiRef();
   
+  // Initialize pagination model
+  const [paginationModel, setPaginationModel] = React.useState({
+    page: 0,
+    pageSize: pageSize,
+  });
+  
   // Use server-side data if dataUrl is provided and not forcing client-side
   const useServerSide = dataUrl && !forceClientSide;
   
@@ -164,6 +170,12 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   
   // Combine external loading state with server loading state
   const loading = externalLoading || serverLoading;
+  
+  // Initialize pagination model
+  const [paginationModel, setPaginationModel] = React.useState({
+    page: 0,
+    pageSize: pageSize,
+  });
   
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
@@ -231,10 +243,19 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
 
   // Create a wrapper component for DataGrid that uses the grid mode
   const DataGridWithModeControl = () => {
-    const { mode, setMode } = useGridMode();
+    // Get the current mode and pagination from context
+    const { mode, setMode, page, setPage: setContextPage, pageSize: contextPageSize, setPageSize: setContextPageSize } = useGridMode();
     
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+    
+    // Sync pagination model with context
+    React.useEffect(() => {
+      setPaginationModel({
+        page: page,
+        pageSize: contextPageSize,
+      });
+    }, [page, contextPageSize]);
     
     // Handle cell click (single click does nothing)
     const handleCellClick = () => {
@@ -299,7 +320,16 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         pageSizeOptions={rowsPerPageOptions}
         paginationMode={useServerSide ? 'server' : 'client'}
         rowCount={totalRows}
+        paginationModel={paginationModel}
         onPaginationModelChange={(model) => {
+          // Update our local state
+          setPaginationModel(model);
+          
+          // Update context state
+          setContextPage(model.page);
+          setContextPageSize(model.pageSize);
+          
+          // For server-side pagination, also fetch the data
           if (useServerSide) {
             setPage(model.page);
           }

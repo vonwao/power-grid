@@ -102,7 +102,15 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
 
   // Handle page size change
   const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
-    setPageSize(Number(event.target.value));
+    const newPageSize = Number(event.target.value);
+    setPageSize(newPageSize);
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < Math.ceil(totalRows / pageSize)) {
+      setPage(newPage);
+    }
   };
 
   // Handle add button click
@@ -290,15 +298,15 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         </Typography>
         <IconButton 
           size="small"
-          disabled={page === 0} 
-          onClick={() => setPage(page - 1)}
+          disabled={page === 0}
+          onClick={() => handlePageChange(page - 1)}
         >
           <ChevronLeftIcon fontSize="small" />
         </IconButton>
-        <IconButton 
+        <IconButton
           size="small"
-          disabled={page >= Math.ceil(totalRows / pageSize) - 1} 
-          onClick={() => setPage(page + 1)}
+          disabled={page >= Math.ceil(totalRows / pageSize) - 1}
+          onClick={() => handlePageChange(page + 1)}
         >
           <ChevronRightIcon fontSize="small" />
         </IconButton>
