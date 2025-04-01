@@ -340,14 +340,14 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   };
   
   return (
-    <ToolbarModeProvider totalRows={totalRows} initialMode="none">
-      <GridFormProvider
-        columns={columns}
-        initialRows={displayRows}
-        onSave={onSave}
-        validateRow={validateRow}
-        isCompact={isCompact}
-      >
+    <GridFormProvider
+      columns={columns}
+      initialRows={displayRows}
+      onSave={onSave}
+      validateRow={validateRow}
+      isCompact={isCompact}
+    >
+      <ToolbarModeProvider totalRows={totalRows} initialMode="none">
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           {/* Unified Toolbar */}
           <UnifiedDataGridToolbar
@@ -363,8 +363,8 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
             <DataGridWithModeControl />
           </Paper>
         </div>
-      </GridFormProvider>
-    </ToolbarModeProvider>
+      </ToolbarModeProvider>
+    </GridFormProvider>
   );
 }
 
