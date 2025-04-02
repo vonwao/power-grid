@@ -179,26 +179,28 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         alignItems: 'center',
         gap: 1
       }}>
-        {/* Add button */}
-        <Tooltip title={canAdd ? "Add new record" : "Cannot add while editing"}>
-          <span>
-            <Button
-              variant="contained"
-              size="small"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={handleAddClick}
-              disabled={!canAdd}
-              sx={{ 
-                minWidth: 0, 
-                px: 1,
-                opacity: canAdd ? 1 : 0.5
-              }}
-            >
-              Add
-            </Button>
-          </span>
-        </Tooltip>
+        {/* Add button - only show if canAddRows is true */}
+        {canAddRows && (
+          <Tooltip title={canAdd ? "Add new record" : "Cannot add while editing"}>
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddClick}
+                disabled={!canAdd}
+                sx={{ 
+                  minWidth: 0, 
+                  px: 1,
+                  opacity: canAdd ? 1 : 0.5
+                }}
+              >
+                Add
+              </Button>
+            </span>
+          </Tooltip>
+        )}
 
         {/* Status section */}
         {mode !== 'none' && (

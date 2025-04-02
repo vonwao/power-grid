@@ -119,7 +119,7 @@ export const UnifiedToolbarDataGridDemo: React.FC = () => {
           checkboxSelection
           autoHeight={false}
           canEditRows={true}
-          canAddRows={true}
+          canAddRows={false}
           canSelectRows={true}
           dataUrl="/api/employees"
           selectionModel={selectionModel}

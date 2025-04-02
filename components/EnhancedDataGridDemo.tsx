@@ -156,51 +156,6 @@ export default function EnhancedDataGridDemo() {
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
-      <Box sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 2
-      }}>
-        <Box>
-          <Typography variant="h6" component="div">
-            Employee Management
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={serverSide}
-                  onChange={(e) => setServerSide(e.target.checked)}
-                  size="small"
-                />
-              }
-              label="Server-side data"
-            />
-            
-            {selectionModel.length > 0 && (
-              <Box sx={{ ml: 2 }}>
-                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                  Selected:
-                </Typography>
-                <Chip
-                  label={`${selectionModel.length} rows`}
-                  onDelete={() => setSelectionModel([])}
-                  size="small"
-                />
-              </Box>
-            )}
-          </Box>
-        </Box>
-        <DataGridToolbar
-          onSave={() => handleSave({ edits: [], additions: [] })}
-          onFilter={handleFilter}
-          onRefresh={handleRefresh}
-          onExport={handleExport}
-          onUpload={handleUpload}
-          onHelp={handleHelp}
-        />
-      </Box>
       <EnhancedDataGrid
         columns={columns}
         rows={employees}
