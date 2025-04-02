@@ -48,12 +48,22 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
   const [birthdayMonthYear, setBirthdayMonthYear] = useState<Dayjs | null>(null);
   const [department, setDepartment] = useState('');
   const [name, setName] = useState('');
+  const [birthdayError, setBirthdayError] = useState(false); // State for validation error
 
   const handleApply = () => {
+    // Validation check
+    if (!birthdayMonthYear) {
+      setBirthdayError(true);
+      return; // Prevent submission
+    }
+    
+    // Clear error if validation passes
+    setBirthdayError(false); 
+    
     // Pass the state directly
     onApply({ birthdayMonthYear, department, name });
     // Optionally reset state after applying if needed
-    // setBirthdayMonthYear(null);
+    // setBirthdayMonthYear(null); 
     // setDepartment('');
     // setName('');
   };
@@ -66,6 +76,10 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
   // Handler for the DatePicker change
   const handleBirthdayChange = (newValue: Dayjs | null) => {
     setBirthdayMonthYear(newValue);
+    // Clear error when user selects a date
+    if (newValue) {
+      setBirthdayError(false);
+    }
   };
 
   const handleDepartmentChange = (event: SelectChangeEvent<string>) => {
@@ -94,6 +108,12 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
+        {/* Display validation error message */}
+        {birthdayError && (
+          <Typography color="error" variant="body2" sx={{ mb: 1, ml: 1 }}>
+            Birthday month/year is required.
+          </Typography>
+        )}
         {/* Wrap content with LocalizationProvider */}
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Box component="form" noValidate autoComplete="off" sx={{ mt: 1 }}>
