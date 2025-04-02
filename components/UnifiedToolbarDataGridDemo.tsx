@@ -95,6 +95,14 @@ const columns: EnhancedColumnConfig[] = [
 ];
 
 export const UnifiedToolbarDataGridDemo: React.FC = () => {
+  // State for selection model
+  const [selectionModel, setSelectionModel] = React.useState<any[]>([]);
+  
+  // Debug: Log selection model changes
+  React.useEffect(() => {
+    console.log('UnifiedToolbarDataGridDemo - selectionModel:', selectionModel);
+  }, [selectionModel]);
+  
   // Handle save changes
   const handleSave = (changes: { edits: any[], additions: any[] }) => {
     console.log('Changes saved:', changes);
@@ -114,6 +122,8 @@ export const UnifiedToolbarDataGridDemo: React.FC = () => {
           canAddRows={true}
           canSelectRows={true}
           dataUrl="/api/employees"
+          selectionModel={selectionModel}
+          onSelectionModelChange={setSelectionModel}
         />
       </div>
     </div>

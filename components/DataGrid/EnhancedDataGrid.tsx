@@ -387,7 +387,6 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       />
     );
   };
-  
   // Get the GridFormContext functions and state
   const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
     const {
@@ -398,6 +397,9 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       isRowEditing,
       isRowDirty
     } = useGridForm();
+
+    // Debug: Log selection model
+    console.log('EnhancedDataGrid - selectionModel:', selectionModel);
 
     return (
       <GridModeProvider
@@ -412,10 +414,13 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         canEditRows={canEditRows}
         canAddRows={canAddRows}
         canSelectRows={canSelectRows}
+        selectionModel={selectionModel}
+        onSelectionModelChange={handleSelectionModelChange}
       >
         {children}
       </GridModeProvider>
     );
+  };
   };
   
   // Get the saveChanges function from GridFormContext
@@ -457,7 +462,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       <GridFormWithToolbar />
     </GridFormProvider>
   );
-}
+};
 
 // Wrapper for CellRenderer that gets validation state from context
 const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {

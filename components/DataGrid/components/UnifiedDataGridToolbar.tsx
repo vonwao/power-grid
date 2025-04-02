@@ -76,16 +76,20 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     pageSize,
     totalRows,
     setPage,
-    setPageSize
+    setPageSize,
+    // Get selection model from context
+    selectionModel,
+    onSelectionModelChange,
+    clearSelection
   } = useGridMode();
   
-  // Get selection model directly
-  const { selectionModel, onSelectionModelChange } = useSelectionModel();
+  // Debug: Log selection model changes
+  console.log('UnifiedDataGridToolbar - selectionModel from context:', selectionModel);
   
-  // Clear selection function
-  const clearSelection = () => {
-    onSelectionModelChange([], {} as any);
-  };
+  // Add a visual indicator for debugging
+  if (!selectionModel || selectionModel.length === 0) {
+    console.log('No selection model or empty selection model');
+  }
 
   // Get grid form context
   const { 
@@ -108,7 +112,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   // Handle mode switching with confirmation when needed
   const handleModeSwitch = (newMode: GridMode) => {
     // If in selection mode with multiple rows selected, show confirmation
-    if (mode === 'select' && selectedRowCount > 1 && newMode !== 'select') {
+    if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
       setConfirmationDialogOpen(true);
       setTargetMode(newMode);
       return;
@@ -125,7 +129,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
 
   // Handle add button click
   const handleAddClick = () => {
-    if (selectedRowCount > 1) {
+    if (selectionModel.length > 1) {
       setConfirmationDialogOpen(true);
       setTargetMode('add');
       return;
@@ -319,7 +323,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         gap: 1
       }}>
         {/* Selection Status */}
-        {selectionModel.length > 0 && (
+        {selectionModel && selectionModel.length > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
             <Typography variant="body2" component="span" sx={{ mr: 1 }}>
               Selected:

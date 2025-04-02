@@ -15,6 +15,8 @@ interface GridModeContextType {
   // Selection state
   selectedRowCount: number;
   clearSelection: () => void;
+  selectionModel: any[]; // Add selectionModel
+  onSelectionModelChange: (selectionModel: any[]) => void; // Add onSelectionModelChange with correct type
   
   // Edit state
   editingRowCount: number;
@@ -53,10 +55,13 @@ interface GridModeProviderProps {
   canEditRows?: boolean;
   canAddRows?: boolean;
   canSelectRows?: boolean;
+  // Selection model
+  selectionModel?: any[];
+  onSelectionModelChange?: (selectionModel: any[]) => void;
 }
 
 // Provider component
-export const GridModeProvider: React.FC<GridModeProviderProps> = ({ 
+export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   children,
   totalRows,
   initialMode = 'none',
@@ -70,16 +75,36 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   // Grid capabilities
   canEditRows = true,
   canAddRows = true,
-  canSelectRows = true
+  canSelectRows = true,
+  // Selection model
+  selectionModel: externalSelectionModel,
+  onSelectionModelChange: externalOnSelectionModelChange
 }) => {
   // State for the current mode
   const [mode, setMode] = useState<GridMode>(initialMode);
   
-  // Get selection model
-  const { 
-    selectionModel,
-    onSelectionModelChange
-  } = useSelectionModel();
+  // Get selection model - use props if provided, otherwise use hook
+  const {
+    selectionModel: hookSelectionModel,
+    onSelectionModelChange: hookOnSelectionModelChange
+  } = useSelectionModel({
+    selectionModel: externalSelectionModel,
+    onSelectionModelChange: externalOnSelectionModelChange ?
+      (newModel) => externalOnSelectionModelChange(newModel) :
+      undefined
+  });
+  
+  // Create a wrapper function that adapts between the different types
+  const adaptedOnSelectionModelChange = useCallback((newModel: any[], details?: any) => {
+    if (externalOnSelectionModelChange) {
+      externalOnSelectionModelChange(newModel);
+    } else {
+      hookOnSelectionModelChange(newModel, details || {} as any);
+    }
+  }, [externalOnSelectionModelChange, hookOnSelectionModelChange]);
+  
+  // Use props if provided, otherwise use hook values
+  const selectionModel = externalSelectionModel !== undefined ? externalSelectionModel : hookSelectionModel;
   
   // Get pagination
   const {
@@ -101,14 +126,14 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     if (isRowDirty) {
       // We'll use isRowDirty to determine if a row has actual changes
       // This will only count rows where fields have been modified
-      selectionModel.forEach(rowId => {
+      selectionModel.forEach((rowId: GridRowId) => {
         if (isRowEditing(rowId) && isRowDirty(rowId)) {
           newEditingRows.add(rowId);
         }
       });
     } else {
       // Fallback to the old approach if isRowDirty is not available
-      selectionModel.forEach(rowId => {
+      selectionModel.forEach((rowId: GridRowId) => {
         if (isRowEditing(rowId)) {
           newEditingRows.add(rowId);
         }
@@ -135,9 +160,8 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   // Clear selection
   const clearSelection = useCallback(() => {
     // Just pass an empty array to clear the selection
-    // We don't need to pass the details parameter since it's optional
-    onSelectionModelChange([], {} as any);
-  }, [onSelectionModelChange]);
+    adaptedOnSelectionModelChange([]);
+  }, [adaptedOnSelectionModelChange]);
   
   // Save changes
   const saveChanges = useCallback(() => {
@@ -163,6 +187,8 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     setMode,
     selectedRowCount,
     clearSelection,
+    selectionModel, // Add selectionModel
+    onSelectionModelChange: adaptedOnSelectionModelChange, // Use the adapted function
     editingRowCount,
     isAddingRow,
     hasValidationErrors,
