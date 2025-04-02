@@ -14,32 +14,29 @@ import {
   IconButton,
   Grid,
   Typography,
-  SelectChangeEvent,
+  SelectChangeEvent, // Keep for Department Select
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs'; // Import Dayjs type
+
+// Define the structure for the filters passed to onApply - Export it
+export interface FilterValues {
+  birthdayMonthYear: Dayjs | null; // Store the full Dayjs object or null
+  department: string;
+  name: string;
+}
 
 interface GlobalFilterDialogProps {
   open: boolean;
   onClose: () => void;
-  onApply: (filters: { month: string; department: string; name: string }) => void;
-  // TODO: Add options for month and department if they are selects
+  onApply: (filters: FilterValues) => void; // Update onApply signature
   departmentOptions?: string[]; // Example: ['HR', 'Engineering', 'Sales']
 }
 
-const months = [
-  { value: '1', label: 'January' },
-  { value: '2', label: 'February' },
-  { value: '3', label: 'March' },
-  { value: '4', label: 'April' },
-  { value: '5', label: 'May' },
-  { value: '6', label: 'June' },
-  { value: '7', label: 'July' },
-  { value: '8', label: 'August' },
-  { value: '9', label: 'September' },
-  { value: '10', label: 'October' },
-  { value: '11', label: 'November' },
-  { value: '12', label: 'December' },
-];
+// No longer need the months array
 
 export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
   open,
@@ -47,14 +44,16 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
   onApply,
   departmentOptions = ['HR', 'Engineering', 'Sales', 'Marketing', 'Finance'], // Default example options
 }) => {
-  const [month, setMonth] = useState('');
+  // State for the DatePicker (month and year)
+  const [birthdayMonthYear, setBirthdayMonthYear] = useState<Dayjs | null>(null);
   const [department, setDepartment] = useState('');
   const [name, setName] = useState('');
 
   const handleApply = () => {
-    onApply({ month, department, name });
+    // Pass the state directly
+    onApply({ birthdayMonthYear, department, name });
     // Optionally reset state after applying if needed
-    // setMonth('');
+    // setBirthdayMonthYear(null);
     // setDepartment('');
     // setName('');
   };
@@ -64,8 +63,9 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
     onClose();
   };
 
-  const handleMonthChange = (event: SelectChangeEvent<string>) => {
-    setMonth(event.target.value as string);
+  // Handler for the DatePicker change
+  const handleBirthdayChange = (newValue: Dayjs | null) => {
+    setBirthdayMonthYear(newValue);
   };
 
   const handleDepartmentChange = (event: SelectChangeEvent<string>) => {
@@ -94,36 +94,26 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        <Box component="form" noValidate autoComplete="off" sx={{ mt: 1 }}>
-          {/* Birthday Month */}
-          <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-            <Grid item xs={4} sx={{ textAlign: 'right' }}>
-              <Typography variant="body1">Birthday Month:</Typography>
+        {/* Wrap content with LocalizationProvider */}
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box component="form" noValidate autoComplete="off" sx={{ mt: 1 }}>
+            {/* Birthday Month/Year DatePicker */}
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <Grid item xs={4} sx={{ textAlign: 'right' }}>
+                <Typography variant="body1">Birthday:</Typography>
+              </Grid>
+              <Grid item xs={8}>
+                <DatePicker
+                  label="Select Month & Year"
+                  views={['year', 'month']} // Show only year and month views
+                  value={birthdayMonthYear}
+                  onChange={handleBirthdayChange}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }} // Apply props to the underlying TextField
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={8}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="birthday-month-label">Select Month</InputLabel>
-                <Select
-                  labelId="birthday-month-label"
-                  id="birthday-month-select"
-                  value={month}
-                  label="Select Month"
-                  onChange={handleMonthChange}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {months.map((m) => (
-                    <MenuItem key={m.value} value={m.value}>
-                      {m.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
 
-          {/* Department */}
+            {/* Department */}
           <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
             <Grid item xs={4} sx={{ textAlign: 'right' }}>
               <Typography variant="body1">Department:</Typography>
@@ -168,6 +158,7 @@ export const GlobalFilterDialog: React.FC<GlobalFilterDialogProps> = ({
             </Grid>
           </Grid>
         </Box>
+      </LocalizationProvider> {/* Close LocalizationProvider */}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel}>Cancel</Button>

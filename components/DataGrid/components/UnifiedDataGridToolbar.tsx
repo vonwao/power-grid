@@ -19,7 +19,9 @@ import {
   TextField, // Added for potential future use in filter dialog if needed directly here
 } from '@mui/material';
 import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
-import { GlobalFilterDialog } from './GlobalFilterDialog'; // Import the new filter dialog
+// Import the filter dialog and its types
+import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog'; 
+import { Dayjs } from 'dayjs'; // Import Dayjs type
 
 // Action icons
 import AddIcon from '@mui/icons-material/Add';
@@ -43,9 +45,16 @@ import { useGridForm } from '../context/GridFormContext';
 import { useSelectionModel } from '../hooks/useSelectionModel';
 import { GridRowId } from '@mui/x-data-grid';
 
+// Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
+// interface FilterValues { // Or import from GlobalFilterDialog as done above
+//   birthdayMonthYear: Dayjs | null; 
+//   department: string;
+//   name: string;
+// }
+
 interface UnifiedDataGridToolbarProps {
   onSave?: () => void;
-  onFilter?: (filters: { month: string; department: string; name: string }) => void; // Updated to accept filters
+  onFilter?: (filters: FilterValues) => void; // Use the imported/defined FilterValues type
   onExport?: () => void;
   onUpload?: () => void;
   onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
@@ -162,11 +171,16 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     setFilterDialogOpen(true);
   };
 
-  // Handle applying filters from the dialog
-  const handleApplyFilters = (filters: { month: string; department: string; name: string }) => {
-    console.log('Applying filters:', filters);
+  // Handle applying filters from the dialog - update parameter type
+  const handleApplyFilters = (filters: FilterValues) => {
+    // Log the Dayjs object directly, or format it if needed
+    console.log('Applying filters:', {
+      ...filters,
+      // Example: Format the date for logging or sending elsewhere
+      birthday: filters.birthdayMonthYear ? filters.birthdayMonthYear.format('YYYY-MM') : null, 
+    });
     if (onFilter) {
-      // Pass the filters object or specific values as needed by the parent
+      // Pass the filters object (containing the Dayjs object) to the parent
       // For now, let's assume the parent expects the filters object
       onFilter(filters); 
     }
