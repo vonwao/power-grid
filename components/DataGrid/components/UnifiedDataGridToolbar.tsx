@@ -16,8 +16,10 @@ import {
   Paper,
   SelectChangeEvent,
   Divider,
+  TextField, // Added for potential future use in filter dialog if needed directly here
 } from '@mui/material';
-import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the new help dialog
+import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
+import { GlobalFilterDialog } from './GlobalFilterDialog'; // Import the new filter dialog
 
 // Action icons
 import AddIcon from '@mui/icons-material/Add';
@@ -43,13 +45,13 @@ import { GridRowId } from '@mui/x-data-grid';
 
 interface UnifiedDataGridToolbarProps {
   onSave?: () => void;
-  onFilter?: () => void;
+  onFilter?: (filters: { month: string; department: string; name: string }) => void; // Updated to accept filters
   onExport?: () => void;
   onUpload?: () => void;
-  onHelp?: () => void;
+  onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
   // Grid capabilities
   canEditRows?: boolean;
-  canAddRows?: boolean;
+  canAddRows?: boolean; // Removed default value = true
   canSelectRows?: boolean;
 }
 
@@ -107,6 +109,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
   const [targetMode, setTargetMode] = useState<GridMode>('none');
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false); // State for filter dialog
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
 
@@ -152,6 +155,22 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   // Handle help button click
   const handleHelpClick = () => {
     setHelpDialogOpen(true);
+  };
+
+  // Handle filter button click - opens the dialog
+  const handleFilterClick = () => {
+    setFilterDialogOpen(true);
+  };
+
+  // Handle applying filters from the dialog
+  const handleApplyFilters = (filters: { month: string; department: string; name: string }) => {
+    console.log('Applying filters:', filters);
+    if (onFilter) {
+      // Pass the filters object or specific values as needed by the parent
+      // For now, let's assume the parent expects the filters object
+      onFilter(filters); 
+    }
+    setFilterDialogOpen(false); // Close dialog after applying
   };
   
   // Handle debug button click
@@ -338,10 +357,10 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
             />
           </Box>
         )}
-        {/* Filter Options */}
+        {/* Filter Options - Updated onClick */}
         <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
           <span>
-            <IconButton onClick={onFilter} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+            <IconButton onClick={handleFilterClick} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
               <FilterAltIcon />
             </IconButton>
           </span>
@@ -406,7 +425,16 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
       {/* Use the imported DataGridHelpDialog */}
       <DataGridHelpDialog 
         open={helpDialogOpen} 
-        onClose={() => setHelpDialogOpen(false)} 
+        onClose={() => setHelpDialogOpen(false)}
+      />
+
+      {/* Global Filter Dialog */}
+      <GlobalFilterDialog
+        open={filterDialogOpen}
+        onClose={() => setFilterDialogOpen(false)}
+        onApply={handleApplyFilters}
+        // Pass department options if available/needed from parent or context
+        // departmentOptions={...} 
       />
 
       {/* Validation Errors Dialog */}
