@@ -17,6 +17,7 @@ import {
   SelectChangeEvent,
   Divider,
 } from '@mui/material';
+import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the new help dialog
 
 // Action icons
 import AddIcon from '@mui/icons-material/Add';
@@ -59,7 +60,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   onUpload,
   onHelp,
   canEditRows = true,
-  canAddRows = false,
+  canAddRows, // Removed default value = true
   canSelectRows = true
 }) => {
   // Get grid mode context
@@ -402,69 +403,11 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* Help Dialog */}
-      <Dialog
-        open={helpDialogOpen}
-        onClose={() => setHelpDialogOpen(false)}
-        maxWidth="md"
-      >
-        <DialogTitle>Data Grid Help</DialogTitle>
-        <DialogContent>
-          <Typography variant="h6" gutterBottom>Basic Operations</Typography>
-          <Typography paragraph>
-            <strong>Editing:</strong> Double-click any cell to edit its content. The grid will enter edit mode.
-          </Typography>
-          <Typography paragraph>
-            <strong>Adding:</strong> Click the "Add" button to add a new row. You cannot add while editing.
-          </Typography>
-          <Typography paragraph>
-            <strong>Selecting:</strong> Click the checkbox next to rows to select them. Multiple selections are allowed.
-          </Typography>
-          <Typography paragraph>
-            <strong>Saving:</strong> Click the "Save" button to save your changes after editing or adding.
-          </Typography>
-          <Typography paragraph>
-            <strong>Canceling:</strong> Click the "Cancel" button to discard your changes.
-          </Typography>
-          
-          <Divider sx={{ my: 2 }} />
-          
-          <Typography variant="h6" gutterBottom>Modal Behavior</Typography>
-          <Typography paragraph>
-            The grid operates in a modal fashion, meaning you can only perform one type of operation at a time:
-          </Typography>
-          <Typography paragraph>
-            <strong>Edit Mode:</strong> Activated by double-clicking a cell. You cannot add new rows in this mode.
-          </Typography>
-          <Typography paragraph>
-            <strong>Add Mode:</strong> Activated by clicking the "Add" button. You cannot edit existing rows in this mode.
-          </Typography>
-          <Typography paragraph>
-            <strong>Select Mode:</strong> Activated by selecting rows. You can switch to other modes, but will lose your selection.
-          </Typography>
-          
-          <Divider sx={{ my: 2 }} />
-          
-          <Typography variant="h6" gutterBottom>Additional Features</Typography>
-          <Typography paragraph>
-            <strong>Filtering:</strong> Click the filter button to filter rows.
-          </Typography>
-          <Typography paragraph>
-            <strong>Exporting:</strong> Click the export button to export data.
-          </Typography>
-          <Typography paragraph>
-            <strong>Uploading:</strong> Click the upload button to import data.
-          </Typography>
-          <Typography paragraph>
-            <strong>Pagination:</strong> Use the pagination controls to navigate between pages.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setHelpDialogOpen(false)} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Use the imported DataGridHelpDialog */}
+      <DataGridHelpDialog 
+        open={helpDialogOpen} 
+        onClose={() => setHelpDialogOpen(false)} 
+      />
 
       {/* Validation Errors Dialog */}
       <Dialog

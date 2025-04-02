@@ -219,6 +219,43 @@ graph TD
    - New data is fetched with updated parameters
    - Grid updates with new data
 
+## Grid Capabilities Flow
+
+```mermaid
+graph TD
+    A[EnhancedDataGridDemo] -->|canAddRows, canEditRows, canSelectRows| B[EnhancedDataGrid]
+    B -->|Pass to GridModeProvider| C[GridModeProvider]
+    C -->|Store capabilities| D[GridModeContext]
+    B -->|Pass to UnifiedDataGridToolbar| E[UnifiedDataGridToolbar]
+    E -->|Read from context & props| F[Render UI Controls]
+    
+    G[canAddRows=false] -->|Hide Add button| H[Toolbar UI]
+    I[canEditRows=false] -->|Disable editing| J[Cell interactions]
+    K[canSelectRows=false] -->|Hide checkboxes| L[Row selection]
+```
+
+### Detailed Steps:
+
+1. **Capability Configuration**:
+   - `EnhancedDataGridDemo` sets capability flags like `canAddRows={false}`
+   - These flags control which features are available to users
+   - Default values in `EnhancedDataGrid` are overridden by explicit props
+
+2. **Toolbar Button Visibility**:
+   - `canAddRows` controls whether the Add button appears in the toolbar
+   - When `false`, the Add button is completely hidden (not just disabled)
+   - This is implemented with conditional rendering: `{canAddRows && (...)}`
+
+3. **Edit Capability**:
+   - `canEditRows` controls whether cells can be edited
+   - When `false`, double-clicking cells doesn't enter edit mode
+   - Edit mode is disabled for all cells
+
+4. **Selection Capability**:
+   - `canSelectRows` controls whether row selection is enabled
+   - When `false`, checkboxes are hidden and rows can't be selected
+   - Selection-related UI elements are hidden
+
 ## Component Interaction
 
 The following diagram shows how the different components interact with each other:

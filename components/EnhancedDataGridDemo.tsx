@@ -198,7 +198,11 @@ export default function EnhancedDataGridDemo() {
    *    - selectionModel: Currently selected rows
    *    - onSelectionModelChange: Updates selection state when user selects rows
    *
-   * 4. UI Configuration:
+   * 4. Grid Capabilities:
+   *    - canAddRows: Set to false to hide the Add button in the toolbar
+   *      This prevents users from adding new rows to the grid
+   *
+   * 5. UI Configuration:
    *    - rowHeight: Compact row height for dense data display
    *    - pageSize: Number of rows per page
    */
@@ -219,6 +223,9 @@ export default function EnhancedDataGridDemo() {
         checkboxSelection={true}
         selectionModel={selectionModel}
         onSelectionModelChange={setSelectionModel}
+        
+        // Grid capabilities
+        canAddRows={false} // Explicitly disable the Add button
         
         // UI options
         rowHeight={30}

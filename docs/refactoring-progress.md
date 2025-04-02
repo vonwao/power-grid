@@ -29,6 +29,14 @@ This document tracks the progress of the refactoring effort to make the React Da
   - Modified `pages/unified-toolbar.tsx` to use `EnhancedDataGridDemo`
   - Removed unused imports from `EnhancedDataGridDemo.tsx`
 
+## Fixes Implemented
+
+### Bug Fixes
+- ✅ Fixed issue with "Add" button not being hidden when `canAddRows` is set to `false`
+  - Problem: The Add button was always showing in the toolbar even when `canAddRows` was set to `false`
+  - Solution: Explicitly set `canAddRows={false}` in `EnhancedDataGridDemo.tsx`
+  - Added documentation about the Grid Capabilities flow in `docs/data-flow-documentation.md`
+
 ## Issues Encountered
 
 ### Type Compatibility Issues
