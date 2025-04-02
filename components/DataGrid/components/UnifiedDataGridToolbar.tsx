@@ -238,7 +238,22 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
                 )}
               </>
             )}
-            
+
+            // working implementation (but need selection model)
+            {selectionModel.length > 0 && (
+                          <Box sx={{ ml: 2 }}>
+                            <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                              Selected:
+                            </Typography>
+                            <Chip
+                              label={`${selectionModel.length} rows`}
+                              onDelete={() => setSelectionModel([])}
+                              size="small"
+                            />
+                          </Box>
+                        )}
+
+            // not working
             {mode === 'select' && (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Typography variant="body2" component="span" sx={{ mr: 1 }}>
@@ -311,12 +326,6 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
           </Tooltip>
         )}
 
-        {/* Help button */}
-        <Tooltip title="Help">
-          <IconButton size="small" onClick={handleHelpClick}>
-            <HelpIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
       </Box>
 
       {/* Middle Section - Pagination removed in favor of built-in DataGrid pagination */}
@@ -354,6 +363,14 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
             </IconButton>
           </span>
         </Tooltip>
+
+                {/* Help button */}
+                <Tooltip title="Help">
+          <IconButton size="small" onClick={handleHelpClick}>
+            <HelpIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+
       </Box>
 
       {/* Confirmation Dialog */}
