@@ -59,7 +59,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   onUpload,
   onHelp,
   canEditRows = true,
-  canAddRows = true,
+  canAddRows = false,
   canSelectRows = true
 }) => {
   // Get grid mode context

@@ -1,10 +1,10 @@
 import React from 'react';
-import { UnifiedToolbarDataGridDemo } from '../components/UnifiedToolbarDataGridDemo';
+import EnhancedDataGridDemo from '../components/EnhancedDataGridDemo';
 
 export default function UnifiedToolbarPage() {
   return (
     <div className="container mx-auto">
-      <UnifiedToolbarDataGridDemo />
+      <EnhancedDataGridDemo />
     </div>
   );
 }
