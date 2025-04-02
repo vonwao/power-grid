@@ -37,6 +37,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 // Context and hooks
 import { useGridMode, GridMode } from '../context/GridModeContext';
 import { useGridForm } from '../context/GridFormContext';
+import { useSelectionModel } from '../hooks/useSelectionModel';
 import { GridRowId } from '@mui/x-data-grid';
 
 interface UnifiedDataGridToolbarProps {
@@ -65,8 +66,6 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   const {
     mode,
     setMode,
-    selectedRowCount,
-    clearSelection,
     editingRowCount,
     isAddingRow,
     hasValidationErrors,
@@ -79,6 +78,14 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     setPage,
     setPageSize
   } = useGridMode();
+  
+  // Get selection model directly
+  const { selectionModel, onSelectionModelChange } = useSelectionModel();
+  
+  // Clear selection function
+  const clearSelection = () => {
+    onSelectionModelChange([], {} as any);
+  };
 
   // Get grid form context
   const { 
@@ -239,33 +246,6 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
               </>
             )}
 
-            // working implementation (but need selection model)
-            {selectionModel.length > 0 && (
-                          <Box sx={{ ml: 2 }}>
-                            <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                              Selected:
-                            </Typography>
-                            <Chip
-                              label={`${selectionModel.length} rows`}
-                              onDelete={() => setSelectionModel([])}
-                              size="small"
-                            />
-                          </Box>
-                        )}
-
-            // not working
-            {mode === 'select' && (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                  Selected:
-                </Typography>
-                <Chip
-                  label={`${selectedRowCount} rows`}
-                  onDelete={clearSelection}
-                  size="small"
-                />
-              </Box>
-            )}
           </Paper>
         )}
 
@@ -331,12 +311,26 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
       {/* Middle Section - Pagination removed in favor of built-in DataGrid pagination */}
       <Box sx={{ flex: 1 }} />
 
-      {/* Right Section: Action Buttons */}
-      <Box sx={{ 
-        display: 'flex', 
+      {/* Right Section: Selection Status + Action Buttons */}
+      <Box sx={{
+        display: 'flex',
         justifyContent: 'flex-end',
+        alignItems: 'center',
         gap: 1
       }}>
+        {/* Selection Status */}
+        {selectionModel.length > 0 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+            <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+              Selected:
+            </Typography>
+            <Chip
+              label={`${selectionModel.length} rows`}
+              onDelete={clearSelection}
+              size="small"
+            />
+          </Box>
+        )}
         {/* Filter Options */}
         <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
           <span>
@@ -381,7 +375,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         <DialogTitle>Confirm Mode Switch</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            You have {selectedRowCount} rows selected. Switching to {targetMode} mode will clear your selection. Do you want to continue?
+            You have {selectionModel.length} rows selected. Switching to {targetMode} mode will clear your selection. Do you want to continue?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
