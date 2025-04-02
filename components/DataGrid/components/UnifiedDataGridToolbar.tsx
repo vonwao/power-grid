@@ -100,18 +100,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     setMode(newMode);
   };
 
-  // Handle page size change
-  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
-    const newPageSize = Number(event.target.value);
-    setPageSize(newPageSize);
-  };
-
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 0 && newPage < Math.ceil(totalRows / pageSize)) {
-      setPage(newPage);
-    }
-  };
+  // No pagination handlers needed - using built-in DataGrid pagination
 
   // Handle add button click
   const handleAddClick = () => {
@@ -291,38 +280,8 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         </Tooltip>
       </Box>
 
-      {/* Middle Section: Pagination Controls */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="body2">
-          Page {page + 1} of {Math.max(1, Math.ceil(totalRows / pageSize))}
-        </Typography>
-        <IconButton 
-          size="small"
-          disabled={page === 0}
-          onClick={() => handlePageChange(page - 1)}
-        >
-          <ChevronLeftIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          disabled={page >= Math.ceil(totalRows / pageSize) - 1}
-          onClick={() => handlePageChange(page + 1)}
-        >
-          <ChevronRightIcon fontSize="small" />
-        </IconButton>
-        <Select
-          value={pageSize}
-          onChange={handlePageSizeChange}
-          size="small"
-          sx={{ height: 28, minWidth: 80 }}
-        >
-          {[10, 25, 50, 100].map((size) => (
-            <MenuItem key={size} value={size}>
-              {size} rows
-            </MenuItem>
-          ))}
-        </Select>
-      </Box>
+      {/* Middle Section - Pagination removed in favor of built-in DataGrid pagination */}
+      <Box sx={{ flex: 1 }} />
 
       {/* Right Section: Action Buttons */}
       <Box sx={{ 
