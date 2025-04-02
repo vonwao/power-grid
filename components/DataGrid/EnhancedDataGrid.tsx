@@ -421,7 +421,6 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       </GridModeProvider>
     );
   };
-  };
   
   // Get the saveChanges function from GridFormContext
   const GridFormWithToolbar = () => {
@@ -462,7 +461,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
       <GridFormWithToolbar />
     </GridFormProvider>
   );
-};
+}
 
 // Wrapper for CellRenderer that gets validation state from context
 const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {
