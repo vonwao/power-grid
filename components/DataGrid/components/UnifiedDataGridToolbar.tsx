@@ -81,7 +81,15 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   } = useGridMode();
 
   // Get grid form context
-  const { getRowErrors, isRowEditing, getPendingChanges, getEditedRowCount, getAllValidationErrors } = useGridForm();
+  const { 
+    getRowErrors, 
+    isRowEditing, 
+    getPendingChanges, 
+    getEditedRowCount, 
+    getAllValidationErrors, 
+    getFormMethods,
+    getOriginalRowData
+  } = useGridForm();
 
   // State for dialogs
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
@@ -501,7 +509,30 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
               maxHeight: '400px'
             }}
           >
-            {JSON.stringify(getPendingChanges(), null, 2)}
+            {JSON.stringify(
+              getPendingChanges().map(item => {
+                const { rowId, changes } = item;
+                
+                // Get the original values for comparison
+                const originalData = getOriginalRowData(rowId);
+                const originalValues: Record<string, any> = {};
+                
+                if (originalData) {
+                  // Extract only the fields that have changed
+                  Object.keys(changes).forEach(field => {
+                    originalValues[field] = originalData[field];
+                  });
+                }
+                
+                return {
+                  rowId,
+                  changes,
+                  originalValues
+                };
+              }), 
+              null, 
+              2
+            )}
           </Box>
         </DialogContent>
         <DialogActions>

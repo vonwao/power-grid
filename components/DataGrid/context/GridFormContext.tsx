@@ -62,6 +62,9 @@ interface GridFormContextType {
   getPendingChanges: () => Array<{ rowId: GridRowId, changes: Record<string, any> }>;
   getEditedRowCount: () => number;
   getAllValidationErrors: () => Array<{ rowId: GridRowId, field: string, message: string }>;
+  
+  // Original data access
+  getOriginalRowData: (rowId: GridRowId) => Record<string, any> | undefined;
 }
 
 interface GridFormProviderProps {
@@ -599,17 +602,18 @@ export function GridFormProvider({
     try {
       // Revert rows to their original state for edits
       setRows(prev => {
-        const newRows = [...prev];
+        let newRows = [...prev];
         
+        // First handle added rows - remove them
+        if (addedRowsRef.current.size > 0) {
+          newRows = newRows.filter(row => !addedRowsRef.current.has(row.id));
+        }
+        
+        // Then handle edited rows - revert to original values
         editingRows.forEach(rowId => {
-          const originalData = originalDataRef.current.get(rowId);
-          
-          if (originalData) {
-            if (addedRowsRef.current.has(rowId)) {
-              // Remove added rows
-              return newRows.filter(row => row.id !== rowId);
-            } else {
-              // Revert edited rows
+          if (!addedRowsRef.current.has(rowId)) {
+            const originalData = originalDataRef.current.get(rowId);
+            if (originalData) {
               const index = newRows.findIndex(row => row.id === rowId);
               if (index >= 0) {
                 newRows[index] = { ...originalData };
@@ -621,17 +625,29 @@ export function GridFormProvider({
         return newRows;
       });
       
+      // Reset form instances with original data
+      editingRows.forEach(rowId => {
+        if (!addedRowsRef.current.has(rowId)) {
+          const originalData = originalDataRef.current.get(rowId);
+          if (originalData && formInstancesRef.current.has(rowId)) {
+            // Create a new form instance with the original data
+            const formMethods = createFormInstance({ ...originalData }, columns);
+            formInstancesRef.current.set(rowId, formMethods);
+          }
+        }
+      });
+      
+      // Clear added rows tracking
+      addedRowsRef.current.clear();
+      
       // Clear editing state
       setEditingRows(new Set());
       setCurrentCell(undefined);
       setPendingChanges(new Map());
-      
-      // Keep form instances and original data for now
-      // They'll be garbage collected when no longer referenced
     } catch (error) {
       console.error('Error canceling changes:', error);
     }
-  }, [editingRows]);
+  }, [editingRows, columns]);
   
   // Add a new row
   const addRow = useCallback(() => {
@@ -754,6 +770,11 @@ export function GridFormProvider({
     return errors;
   }, [editingRows]);
 
+  // Get original data for a row
+  const getOriginalRowData = useCallback((rowId: GridRowId): Record<string, any> | undefined => {
+    return originalDataRef.current.get(rowId);
+  }, []);
+
   // Context value
   const contextValue: GridFormContextType = {
     getFormMethods,
@@ -776,7 +797,8 @@ export function GridFormProvider({
     isCompact,
     getPendingChanges,
     getEditedRowCount,
-    getAllValidationErrors
+    getAllValidationErrors,
+    getOriginalRowData
   };
   
   return (
