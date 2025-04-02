@@ -23,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpIcon from '@mui/icons-material/Help';
+import BugReportIcon from '@mui/icons-material/BugReport';
 
 // Pagination icons
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -36,6 +37,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 // Context and hooks
 import { useGridMode, GridMode } from '../context/GridModeContext';
 import { useGridForm } from '../context/GridFormContext';
+import { GridRowId } from '@mui/x-data-grid';
 
 interface UnifiedDataGridToolbarProps {
   onSave?: () => void;
@@ -79,13 +81,14 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   } = useGridMode();
 
   // Get grid form context
-  const { getRowErrors, isRowEditing } = useGridForm();
+  const { getRowErrors, isRowEditing, getPendingChanges, getEditedRowCount, getAllValidationErrors } = useGridForm();
 
   // State for dialogs
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
   const [targetMode, setTargetMode] = useState<GridMode>('none');
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
+  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
 
   // Handle mode switching with confirmation when needed
   const handleModeSwitch = (newMode: GridMode) => {
@@ -99,6 +102,9 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     // Otherwise, switch mode directly
     setMode(newMode);
   };
+  
+  // Get the actual count of edited rows
+  const actualEditedRowCount = getEditedRowCount();
 
   // No pagination handlers needed - using built-in DataGrid pagination
 
@@ -126,6 +132,11 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   // Handle help button click
   const handleHelpClick = () => {
     setHelpDialogOpen(true);
+  };
+  
+  // Handle debug button click
+  const handleDebugClick = () => {
+    setDebugDialogOpen(true);
   };
 
   // Determine button disabled states based on current mode
@@ -188,9 +199,9 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
             {/* Status content based on mode */}
             {mode === 'edit' && (
               <>
-                <Typography variant="body2">
-                  Editing {editingRowCount} record{editingRowCount !== 1 ? 's' : ''}
-                </Typography>
+            <Typography variant="body2">
+              Editing {actualEditedRowCount} record{actualEditedRowCount !== 1 ? 's' : ''}
+            </Typography>
                 {hasValidationErrors && (
                   <Chip
                     label="Validation errors"
@@ -255,6 +266,26 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
             </Button>
           </span>
         </Tooltip>
+        
+        {/* Debug button - only show when in edit mode */}
+        {mode === 'edit' && (
+          <Tooltip title="Debug Edits (Temporary)">
+            <Button
+              variant="outlined"
+              size="small"
+              color="info"
+              startIcon={<BugReportIcon />}
+              onClick={handleDebugClick}
+              sx={{ 
+                minWidth: 0, 
+                px: 1,
+                ml: 1
+              }}
+            >
+              Debug
+            </Button>
+          </Tooltip>
+        )}
 
         {/* Cancel button */}
         {canCancel && (
@@ -422,19 +453,59 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
             The following validation errors need to be fixed before saving:
           </DialogContentText>
           <Box component="ul" sx={{ mt: 2 }}>
-            <Typography component="li">
-              {mode === 'edit' && editingRowCount > 0 ? (
-                "There are validation errors in the current editing session. Please check highlighted fields for specific issues."
-              ) : mode === 'add' && isAddingRow ? (
-                "There are validation errors in the new row. Please check highlighted fields for specific issues."
-              ) : (
-                "No specific validation details available"
-              )}
-            </Typography>
+            {getAllValidationErrors().map((error, index) => (
+              <Typography component="li" key={index}>
+                Row {error.rowId}: {error.field} - {error.message}
+              </Typography>
+            ))}
+            {getAllValidationErrors().length === 0 && (
+              <Typography component="li">
+                {mode === 'edit' && actualEditedRowCount > 0 ? (
+                  "There are validation errors in the current editing session. Please check highlighted fields for specific issues."
+                ) : mode === 'add' && isAddingRow ? (
+                  "There are validation errors in the new row. Please check highlighted fields for specific issues."
+                ) : (
+                  "No specific validation details available"
+                )}
+              </Typography>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setValidationDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Debug Dialog */}
+      <Dialog
+        open={debugDialogOpen}
+        onClose={() => setDebugDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Debug Edits</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Current edited fields ({actualEditedRowCount} rows with changes):
+          </DialogContentText>
+          <Box 
+            component="pre" 
+            sx={{ 
+              mt: 2, 
+              p: 2, 
+              bgcolor: '#f5f5f5', 
+              borderRadius: 1,
+              overflow: 'auto',
+              maxHeight: '400px'
+            }}
+          >
+            {JSON.stringify(getPendingChanges(), null, 2)}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDebugDialogOpen(false)} color="primary">
             Close
           </Button>
         </DialogActions>

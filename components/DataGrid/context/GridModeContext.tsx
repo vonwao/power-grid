@@ -94,23 +94,38 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   
   // Update editing rows when form state changes
   useEffect(() => {
-    // This is a simplified approach - in a real implementation, you would
-    // need to track this more accurately based on the actual form state
+    // This is a more accurate approach that only counts rows with actual changes
     const newEditingRows = new Set<GridRowId>();
     
-    // Check each row in the selection model to see if it's being edited
-    selectionModel.forEach(rowId => {
-      if (isRowEditing(rowId) || isRowDirty(rowId)) {
-        newEditingRows.add(rowId);
-      }
-    });
+    // Check all rows to see if they're being edited and have actual changes
+    if (isRowDirty) {
+      // We'll use isRowDirty to determine if a row has actual changes
+      // This will only count rows where fields have been modified
+      selectionModel.forEach(rowId => {
+        if (isRowEditing(rowId) && isRowDirty(rowId)) {
+          newEditingRows.add(rowId);
+        }
+      });
+    } else {
+      // Fallback to the old approach if isRowDirty is not available
+      selectionModel.forEach(rowId => {
+        if (isRowEditing(rowId)) {
+          newEditingRows.add(rowId);
+        }
+      });
+    }
     
     setEditingRows(newEditingRows);
   }, [selectionModel, isRowEditing, isRowDirty]);
   
   // Derived state
   const selectedRowCount = selectionModel.length;
-  const editingRowCount = editingRows.size;
+  
+  // Use the form context's getEditedRowCount if available, otherwise fall back to editingRows.size
+  // This ensures we only count rows with actual changes
+  const editingRowCount = isRowDirty ? 
+    Array.from(editingRows).filter(rowId => isRowDirty(rowId)).length : 
+    editingRows.size;
   
   // Check if we're adding a new row
   // This is a simplified approach - in a real implementation, you would

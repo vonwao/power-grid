@@ -57,6 +57,11 @@ interface GridFormContextType {
   
   // UI configuration
   isCompact: boolean;
+  
+  // Pending changes tracking
+  getPendingChanges: () => Array<{ rowId: GridRowId, changes: Record<string, any> }>;
+  getEditedRowCount: () => number;
+  getAllValidationErrors: () => Array<{ rowId: GridRowId, field: string, message: string }>;
 }
 
 interface GridFormProviderProps {
@@ -716,6 +721,39 @@ export function GridFormProvider({
     }
   }, [editingRows]);
   
+  // Get a serializable version of all pending changes
+  const getPendingChanges = useCallback(() => {
+    return Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
+      rowId,
+      changes
+    }));
+  }, [pendingChanges]);
+  
+  // Get the count of rows that have actual changes
+  const getEditedRowCount = useCallback(() => {
+    return pendingChanges.size;
+  }, [pendingChanges]);
+  
+  // Get all validation errors in a structured format
+  const getAllValidationErrors = useCallback(() => {
+    const errors: Array<{ rowId: GridRowId, field: string, message: string }> = [];
+    
+    editingRows.forEach(rowId => {
+      const form = formInstancesRef.current.get(rowId);
+      if (form && form.formState.errors) {
+        Object.entries(form.formState.errors).forEach(([field, error]) => {
+          errors.push({
+            rowId,
+            field,
+            message: error.message || 'Invalid value'
+          });
+        });
+      }
+    });
+    
+    return errors;
+  }, [editingRows]);
+
   // Context value
   const contextValue: GridFormContextType = {
     getFormMethods,
@@ -735,7 +773,10 @@ export function GridFormProvider({
     addRow,
     hasValidationErrors,
     columns,
-    isCompact
+    isCompact,
+    getPendingChanges,
+    getEditedRowCount,
+    getAllValidationErrors
   };
   
   return (

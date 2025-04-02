@@ -238,9 +238,32 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
     
-    // Handle cell click (single click does nothing)
-    const handleCellClick = () => {
-      // Do nothing on single click - we'll use double click for editing
+    // Handle cell click
+    const handleCellClick = (params: any) => {
+      // If we're already in edit mode, allow single click to edit cells
+      if (mode === 'edit') {
+        // Don't handle clicks on checkboxes or action columns
+        if (params.field === '__check__' || params.field === '__actions__') {
+          return;
+        }
+        
+        const { id, field } = params;
+        const column = columns.find(col => col.field === field);
+        
+        // Only allow editing if the column is editable and editing is enabled
+        if (column?.editable !== false && canEditRows) {
+          try {
+            // Start cell edit mode
+            const cellMode = apiRef.current.getCellMode(id, field);
+            if (cellMode === 'view') {
+              apiRef.current.startCellEditMode({ id, field });
+            }
+          } catch (error) {
+            console.error('Error starting cell edit mode:', error);
+          }
+        }
+      }
+      // In other modes, single click does nothing - we'll use double click for initial editing
     };
     
     // Handle cell double click to enter edit mode
@@ -395,19 +418,16 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     );
   };
   
-  return (
-    <GridFormProvider
-      columns={columns}
-      initialRows={displayRows}
-      onSave={onSave}
-      validateRow={validateRow}
-      isCompact={isCompact}
-    >
+  // Get the saveChanges function from GridFormContext
+  const GridFormWithToolbar = () => {
+    const { saveChanges } = useGridForm();
+    
+    return (
       <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           {/* Unified Toolbar */}
           <UnifiedDataGridToolbar
-            onSave={() => onSave && onSave({ edits: [], additions: [] })}
+            onSave={saveChanges}
             onFilter={() => console.log('Filter clicked')}
             onExport={() => console.log('Export clicked')}
             onUpload={() => console.log('Upload clicked')}
@@ -423,6 +443,18 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
           </Paper>
         </div>
       </GridFormWrapper>
+    );
+  };
+  
+  return (
+    <GridFormProvider
+      columns={columns}
+      initialRows={displayRows}
+      onSave={onSave}
+      validateRow={validateRow}
+      isCompact={isCompact}
+    >
+      <GridFormWithToolbar />
     </GridFormProvider>
   );
 }
