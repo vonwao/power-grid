@@ -1,8 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button } from '@mui/material';
-import EnhancedDataGridDemo from '../components/EnhancedDataGridDemo';
+import { Box, Button, Card, CardContent, Typography, Grid } from '@mui/material';
 
 export default function Home() {
   return (
@@ -13,8 +12,60 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       
-      <Box className="h-full flex-grow">
-        <EnhancedDataGridDemo />
+      <Box className="container mx-auto p-4">
+        <Typography variant="h3" component="h1" gutterBottom>
+          Data Grid Demos
+        </Typography>
+        
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  REST API Grid
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Traditional REST API implementation for data fetching with pagination, sorting, and filtering.
+                </Typography>
+                <Link href="/" passHref>
+                  <Button variant="contained" component="a">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  GraphQL Grid
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Modern GraphQL implementation using Apollo Client for data fetching with pagination, sorting, and filtering.
+                </Typography>
+                <Link href="/graphql-grid" passHref>
+                  <Button variant="contained" component="a" color="primary">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Unified Toolbar
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Enhanced grid with a unified toolbar for better user experience.
+                </Typography>
+                <Link href="/unified-toolbar" passHref>
+                  <Button variant="contained" component="a">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </Box>
     </>
   );

@@ -1,4 +1,5 @@
 export * from './EnhancedDataGrid';
+export { EnhancedDataGridGraphQL } from './EnhancedDataGridGraphQL';
 export * from './fieldTypes';
 export * from './validation';
 export * from './renderers';
