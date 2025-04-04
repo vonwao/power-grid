@@ -1,69 +1,67 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   DataGrid,
   GridColDef,
-  GridRowId,
   GridValueGetter,
   GridValueSetter,
-  useGridApiRef,
   GridRenderCellParams,
+  GridCellParams,
+  GridTreeNode,
   GridRowSelectionModel,
-  GridCallbackDetails,
+  GridFilterModel,
 } from '@mui/x-data-grid';
-import { Box, Paper, Typography, Chip } from '@mui/material';
+import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
-import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
+import { GridFormProvider, ValidationHelpers, useGridForm } from './context/GridFormContext';
 import { CellEditHandler, UnifiedDataGridToolbar } from './components';
-import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useServerSideData, useSelectionModel, usePagination } from './hooks';
-import { ServerSideResult } from './types';
-import { GridModeProvider, useGridMode, GridMode } from './context/GridModeContext';
+import { useGridNavigation, useServerSideData, useSelectionModel } from './hooks';
+import { GridModeProvider, useGridMode } from './context/GridModeContext';
 
 // Field configuration for React Hook Form integration
-export interface FieldConfig<T = any> {
+export interface FieldConfig<T = unknown> {
   // Basic properties
   type: 'string' | 'number' | 'date' | 'boolean' | 'select';
   
   // For select fields
-  options?: Array<{value: any, label: string}>;
+  options?: Array<{value: T, label: string}>;
   
   // Rendering (optional - can use defaults)
-  renderViewMode?: (value: T | null, row: any) => React.ReactNode;
-  renderEditMode?: (props: any) => React.ReactNode;
+  renderViewMode?: (value: T | null, row: Record<string, unknown>) => React.ReactNode;
+  renderEditMode?: (props: Record<string, unknown>) => React.ReactNode;
   
   // Validation
   validation?: ValidationOptions;
   
   // Transform functions (optional)
-  parse?: (value: any) => T | null;
+  parse?: (value: unknown) => T | null;
   format?: (value: T | null) => string;
 }
 
 // Enhanced column configuration
-export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
+export interface EnhancedColumnConfig<T = unknown> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
   // Field configuration for React Hook Form
   fieldConfig: FieldConfig<T>;
   
   // Legacy field type (for backward compatibility)
-  fieldType?: any;
+  fieldType?: string;
   
   // Legacy validation (for backward compatibility)
   required?: boolean;
-  validationRules?: any[];
-  validator?: any;
+  validationRules?: Array<Record<string, unknown>>;
+  validator?: (value: unknown) => boolean | string;
   
   // Value accessors
   valueGetter?: GridValueGetter;
   valueSetter?: GridValueSetter;
 }
 
-export interface EnhancedDataGridProps<T = any> {
+export interface EnhancedDataGridProps<T = Record<string, unknown>> {
   columns: EnhancedColumnConfig[];
   rows: T[];
-  onSave?: (changes: { edits: any[], additions: any[] }) => void;
-  validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
+  onSave?: (changes: { edits: T[], additions: T[] }) => void;
+  validateRow?: (values: T, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
   
   // Server-side options
   dataUrl?: string;
@@ -71,8 +69,8 @@ export interface EnhancedDataGridProps<T = any> {
   
   // Selection options
   checkboxSelection?: boolean;
-  selectionModel?: any[];
-  onSelectionModelChange?: (selectionModel: any[]) => void;
+  selectionModel?: Array<string | number>;
+  onSelectionModelChange?: (selectionModel: Array<string | number>) => void;
   disableMultipleSelection?: boolean;
   
   // Grid capabilities
@@ -239,7 +237,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
     
     // Handle cell click
-    const handleCellClick = (params: any) => {
+    const handleCellClick = (params: GridCellParams<any, unknown, unknown, GridTreeNode>) => {
       // If we're already in edit mode, allow single click to edit cells
       if (mode === 'edit') {
         // Don't handle clicks on checkboxes or action columns
@@ -267,14 +265,14 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     };
     
     // Handle cell double click to enter edit mode
-    const handleCellDoubleClick = (params: any) => {
+    const handleCellDoubleClick = (params: GridCellParams<any, unknown, unknown, GridTreeNode>) => {
       // Disable cell editing when in add mode for existing rows
       if (mode === 'add' && !params.id.toString().startsWith('new-')) {
         return;
       }
       
       // Don't handle double clicks on checkboxes or action columns
-      if (params.field === '__check__' || params.field === '__actions__') {
+      if (typeof params.field === 'string' && (params.field === '__check__' || params.field === '__actions__')) {
         return;
       }
       
@@ -356,7 +354,11 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         // Row selection
         checkboxSelection={checkboxSelection && canSelectRows}
         rowSelectionModel={selectionModel}
-        onRowSelectionModelChange={handleSelectionModelChange}
+        onRowSelectionModelChange={(newSelectionModel) => {
+          if (onSelectionModelChange) {
+            onSelectionModelChange(Array.from(newSelectionModel));
+          }
+        }}
         disableMultipleRowSelection={disableMultipleSelection}
         isRowSelectable={() => !isInEditOrAddMode}
         

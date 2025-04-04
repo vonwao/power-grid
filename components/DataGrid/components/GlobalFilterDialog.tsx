@@ -20,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { Dayjs } from 'dayjs'; // Import Dayjs type
+import { Dayjs } from 'dayjs'; // Import Dayjs type only
 
 // Define the structure for the filters passed to onApply - Export it
 export interface FilterValues {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react'; // Removed useMemo
 import {
   Box,
   IconButton,
@@ -11,17 +11,17 @@ import {
   DialogActions,
   Button,
   Chip,
-  Select,
-  MenuItem,
+  // Select, // Removed unused
+  // MenuItem, // Removed unused
   Paper,
-  SelectChangeEvent,
-  Divider,
-  TextField, // Added for potential future use in filter dialog if needed directly here
+  // SelectChangeEvent, // Removed unused
+  // Divider, // Removed unused
+  // TextField, // Removed unused
 } from '@mui/material';
 import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
 // Import the filter dialog and its types
 import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog'; 
-import { Dayjs } from 'dayjs'; // Import Dayjs type
+// import { Dayjs } from 'dayjs'; // Removed unused Dayjs type import here
 
 // Action icons
 import AddIcon from '@mui/icons-material/Add';
@@ -30,9 +30,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import HelpIcon from '@mui/icons-material/Help';
 import BugReportIcon from '@mui/icons-material/BugReport';
 
-// Pagination icons
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+// Pagination icons - Removed unused
+// import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+// import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // Action buttons
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -42,8 +42,8 @@ import UploadIcon from '@mui/icons-material/Upload';
 // Context and hooks
 import { useGridMode, GridMode } from '../context/GridModeContext';
 import { useGridForm } from '../context/GridFormContext';
-import { useSelectionModel } from '../hooks/useSelectionModel';
-import { GridRowId } from '@mui/x-data-grid';
+// import { useSelectionModel } from '../hooks/useSelectionModel'; // Removed unused
+// import { GridRowId } from '@mui/x-data-grid'; // Removed unused
 
 // Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
 // interface FilterValues { // Or import from GlobalFilterDialog as done above
@@ -53,45 +53,45 @@ import { GridRowId } from '@mui/x-data-grid';
 // }
 
 interface UnifiedDataGridToolbarProps {
-  onSave?: () => void;
+  onSave?: () => void; // Re-added prop
   onFilter?: (filters: FilterValues) => void; // Use the imported/defined FilterValues type
   onExport?: () => void;
   onUpload?: () => void;
-  onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
+  onHelp?: () => void; // Re-added prop
   // Grid capabilities
-  canEditRows?: boolean;
+  canEditRows?: boolean; // Re-added prop
   canAddRows?: boolean; // Removed default value = true
-  canSelectRows?: boolean;
+  canSelectRows?: boolean; // Re-added prop
 }
 
 export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
-  onSave,
+  onSave: _onSave, // Prefix unused prop
   onFilter,
   onExport,
   onUpload,
-  onHelp,
-  canEditRows = true,
+  onHelp: _onHelp, // Prefix unused prop
+  canEditRows: _canEditRows = true, // Prefix unused prop
   canAddRows, // Removed default value = true
-  canSelectRows = true
+  canSelectRows: _canSelectRows = true // Prefix unused prop
 }) => {
   // Get grid mode context
   const {
     mode,
     setMode,
-    editingRowCount,
+    // editingRowCount, // Removed unused variable
     isAddingRow,
     hasValidationErrors,
     saveChanges,
     cancelChanges,
     addRow,
-    page,
-    pageSize,
-    totalRows,
-    setPage,
-    setPageSize,
+    // page, // Removed unused variable
+    // pageSize, // Removed unused variable
+    // totalRows, // Removed unused variable
+    // setPage, // Removed unused variable
+    // setPageSize, // Removed unused variable
     // Get selection model from context
     selectionModel,
-    onSelectionModelChange,
+    // onSelectionModelChange, // Removed unused variable
     clearSelection
   } = useGridMode();
   
@@ -105,12 +105,12 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
 
   // Get grid form context
   const { 
-    getRowErrors, 
-    isRowEditing, 
+    // getRowErrors, // Removed unused variable
+    // isRowEditing, // Removed unused variable
     getPendingChanges, 
     getEditedRowCount, 
     getAllValidationErrors, 
-    getFormMethods,
+    // getFormMethods, // Removed unused variable
     getOriginalRowData
   } = useGridForm();
 
@@ -122,18 +122,18 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
 
-  // Handle mode switching with confirmation when needed
-  const handleModeSwitch = (newMode: GridMode) => {
-    // If in selection mode with multiple rows selected, show confirmation
-    if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
-      setConfirmationDialogOpen(true);
-      setTargetMode(newMode);
-      return;
-    }
+  // Handle mode switching with confirmation when needed - Removed unused function
+  // const handleModeSwitch = (newMode: GridMode) => {
+  //   // If in selection mode with multiple rows selected, show confirmation
+  //   if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
+  //     setConfirmationDialogOpen(true);
+  //     setTargetMode(newMode);
+  //     return;
+  //   }
     
-    // Otherwise, switch mode directly
-    setMode(newMode);
-  };
+  //   // Otherwise, switch mode directly
+  //   setMode(newMode);
+  // };
   
   // Get the actual count of edited rows
   const actualEditedRowCount = getEditedRowCount();
@@ -422,7 +422,8 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
           <Button onClick={() => setConfirmationDialogOpen(false)}>Cancel</Button>
           <Button 
             onClick={() => {
-              setMode(targetMode);
+              // Directly set the target mode if confirmed
+              setMode(targetMode); 
               clearSelection();
               setConfirmationDialogOpen(false);
               if (targetMode === 'add') {
@@ -517,7 +518,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
                 
                 // Get the original values for comparison
                 const originalData = getOriginalRowData(rowId);
-                const originalValues: Record<string, any> = {};
+                const originalValues: Record<string, unknown> = {}; // Use unknown instead of any
                 
                 if (originalData) {
                   // Extract only the fields that have changed
