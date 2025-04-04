@@ -7,8 +7,6 @@ import {
   GridRenderCellParams,
   GridCellParams,
   GridTreeNode,
-  GridRowSelectionModel,
-  GridFilterModel,
 } from '@mui/x-data-grid';
 import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
@@ -129,8 +127,6 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   loading: externalLoading,
   pageSize = 25,
   rowsPerPageOptions = [10, 25, 50, 100],
-  showCellRightBorder = true,
-  showColumnRightBorder = true,
   hideFooter,
   hideFooterPagination,
   hideFooterSelectedRowCount,
@@ -237,7 +233,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
     
     // Handle cell click
-    const handleCellClick = (params: GridCellParams<any, unknown, unknown, GridTreeNode>) => {
+    const handleCellClick = (params: GridCellParams<Record<string, unknown>, unknown, unknown, GridTreeNode>) => {
       // If we're already in edit mode, allow single click to edit cells
       if (mode === 'edit') {
         // Don't handle clicks on checkboxes or action columns
@@ -265,7 +261,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     };
     
     // Handle cell double click to enter edit mode
-    const handleCellDoubleClick = (params: GridCellParams<any, unknown, unknown, GridTreeNode>) => {
+    const handleCellDoubleClick = (params: GridCellParams<Record<string, unknown>, unknown, unknown, GridTreeNode>) => {
       // Disable cell editing when in add mode for existing rows
       if (mode === 'add' && !params.id.toString().startsWith('new-')) {
         return;
@@ -356,7 +352,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         rowSelectionModel={selectionModel}
         onRowSelectionModelChange={(newSelectionModel) => {
           if (onSelectionModelChange) {
-            onSelectionModelChange(Array.from(newSelectionModel));
+            onSelectionModelChange(Array.from(newSelectionModel).map(id => id.toString()));
           }
         }}
         disableMultipleRowSelection={disableMultipleSelection}
