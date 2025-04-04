@@ -338,7 +338,7 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
         }}
         onFilterModelChange={(model) => {
           if (useServerSide) {
-            const filterModel: Record<string, any> = {};
+            const filterModel: Record<string, unknown> = {};
             model.items.forEach(item => {
               if (item.field && item.value !== undefined) {
                 filterModel[item.field] = item.value;
