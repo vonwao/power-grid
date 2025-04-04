@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { startServer } from '../../graphql/apollo-server';
+import { getApolloServer } from '../../graphql/apollo-server';
 
 // Disable Next.js body parsing
 export const config = {
@@ -26,11 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   try {
-    // Start Apollo Server
-    const server = await startServer();
-    
-    // Create handler
-    const handler = server.createHandler({ path: '/api/graphql' });
+    // Get Apollo Server and handler
+    const { handler } = await getApolloServer();
     
     // Run the handler
     await handler(req, res);

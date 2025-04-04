@@ -28,7 +28,7 @@ export default function Home() {
                   Traditional REST API implementation for data fetching with pagination, sorting, and filtering.
                 </Typography>
                 <Link href="/" passHref>
-                  <Button variant="contained" component="a">View Demo</Button>
+                  <Button variant="contained">View Demo</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -44,7 +44,7 @@ export default function Home() {
                   Modern GraphQL implementation using Apollo Client for data fetching with pagination, sorting, and filtering.
                 </Typography>
                 <Link href="/graphql-grid" passHref>
-                  <Button variant="contained" component="a" color="primary">View Demo</Button>
+                  <Button variant="contained" color="primary">View Demo</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -60,7 +60,7 @@ export default function Home() {
                   Enhanced grid with a unified toolbar for better user experience.
                 </Typography>
                 <Link href="/unified-toolbar" passHref>
-                  <Button variant="contained" component="a">View Demo</Button>
+                  <Button variant="contained">View Demo</Button>
                 </Link>
               </CardContent>
             </Card>
