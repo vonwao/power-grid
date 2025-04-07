@@ -1,20 +1,19 @@
 import React from 'react';
-import { ToolbarDataGridDemo } from '../components/ToolbarDataGridDemo';
-import { Container, Typography } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
+import { ToolbarDataGridDemo } from '../components/DataGrid/components/toolbar/ToolbarDataGridDemo';
 
-const ToolbarDemoPage: React.FC = () => {
+export default function ToolbarDemoPage() {
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
         DataGrid Toolbar Demo
       </Typography>
-      <Typography paragraph>
-        This page demonstrates the usage of the refactored DataGrid Toolbar components. 
-        You can toggle between the standard toolbar and a customized example using the button below.
+      <Typography variant="body1" paragraph>
+        This demo showcases the new modular DataGrid toolbar components.
       </Typography>
-      <ToolbarDataGridDemo />
+      <Box sx={{ my: 4 }}>
+        <ToolbarDataGridDemo />
+      </Box>
     </Container>
   );
-};
-
-export default ToolbarDemoPage;
+}

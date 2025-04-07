@@ -21,7 +21,8 @@ import { useGridNavigation, useGraphQLData, useSelectionModel, usePagination } f
 import { ServerSideResult } from './types';
 import { GridModeProvider, useGridMode, GridMode } from './context/GridModeContext';
 import { CellRendererWrapper } from './components/graphqlGrid/CellRendererWrapper'; 
-import { DataGridWithModeControl } from './components/graphqlGrid/DataGridWithModeControl'; // Import the new component
+import { DataGridWithModeControl } from './components/graphqlGrid/DataGridWithModeControl'; 
+import { GridFormWrapper } from './components/graphqlGrid/GridFormWrapper';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -233,48 +234,28 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
 
   // Removed DataGridWithModeControl definition
-  // Get the GridFormContext functions and state
-  const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
-    const {
-      saveChanges,
-      cancelChanges,
-      addRow,
-      hasValidationErrors,
-      isRowEditing,
-      isRowDirty
-    } = useGridForm();
-
-    return (
-      <GridModeProvider
+  // Removed GridFormWrapper definition
+  
+  // Get the saveChanges function from GridFormContext for the toolbar
+  const { saveChanges } = useGridForm();
+  
+  return (
+    <GridFormProvider
+      columns={columns}
+      initialRows={displayRows}
+      onSave={onSave}
+      validateRow={validateRow}
+      isCompact={isCompact}
+    >
+      <div>HELLO Demo</div>
+      <GridFormWrapper
         totalRows={totalRows}
-        initialMode="none"
-        saveChanges={saveChanges}
-        cancelChanges={cancelChanges}
-        addRow={addRow}
-        hasValidationErrors={hasValidationErrors}
-        isRowEditing={isRowEditing}
-        isRowDirty={isRowDirty}
+        selectionModel={selectionModel}
+        handleSelectionModelChange={handleSelectionModelChange}
         canEditRows={canEditRows}
         canAddRows={canAddRows}
         canSelectRows={canSelectRows}
-        selectionModel={selectionModel}
-        // Use correct prop name 'onSelectionModelChange' and match expected signature
-        onSelectionModelChange={(
-          newSelectionModel: GridRowSelectionModel
-          // details: GridCallbackDetails // Provider might expect only one argument
-        ) => handleSelectionModelChange(newSelectionModel, {} as GridCallbackDetails)} // Pass empty details if needed
       >
-        {children}
-      </GridModeProvider>
-    );
-  };
-  
-  // Get the saveChanges function from GridFormContext
-  const GridFormWithToolbar = () => {
-    const { saveChanges } = useGridForm();
-    
-    return (
-      <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           {/* Unified Toolbar */}
           <UnifiedDataGridToolbar
@@ -328,19 +309,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
           </Paper>
         </div>
       </GridFormWrapper>
-    );
-  };
-  
-  return (
-    <GridFormProvider
-      columns={columns}
-      initialRows={displayRows}
-      onSave={onSave}
-      validateRow={validateRow}
-      isCompact={isCompact}
-    >
-      <div>HELLO Demo</div>
-      <GridFormWithToolbar />
     </GridFormProvider>
   );
 }
