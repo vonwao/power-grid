@@ -232,163 +232,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // Determine if we're in compact mode based on row height
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
 
-  // Create a wrapper component for DataGrid that uses the grid mode
-  const DataGridWithModeControl = () => {
-    // Get the current mode from context
-    const { mode, setMode } = useGridMode();
-    
-    // Determine if row selection should be disabled
-    const isInEditOrAddMode = mode === 'edit' || mode === 'add';
-    
-    // Handle cell click
-    const handleCellClick = (params: any) => {
-      // If we're already in edit mode, allow single click to edit cells
-      if (mode === 'edit') {
-        // Don't handle clicks on checkboxes or action columns
-        if (params.field === '__check__' || params.field === '__actions__') {
-          return;
-        }
-        
-        const { id, field } = params;
-        const column = columns.find(col => col.field === field);
-        
-        // Only allow editing if the column is editable and editing is enabled
-        if (column?.editable !== false && canEditRows) {
-          try {
-            // Start cell edit mode
-            const cellMode = apiRef.current.getCellMode(id, field);
-            if (cellMode === 'view') {
-              apiRef.current.startCellEditMode({ id, field });
-            }
-          } catch (error) {
-            console.error('Error starting cell edit mode:', error);
-          }
-        }
-      }
-      // In other modes, single click does nothing - we'll use double click for initial editing
-    };
-    
-    // Handle cell double click to enter edit mode
-    const handleCellDoubleClick = (params: any) => {
-      // Disable cell editing when in add mode for existing rows
-      if (mode === 'add' && !params.id.toString().startsWith('new-')) {
-        return;
-      }
-      
-      // Don't handle double clicks on checkboxes or action columns
-      if (params.field === '__check__' || params.field === '__actions__') {
-        return;
-      }
-      
-      const { id, field } = params;
-      const column = columns.find(col => col.field === field);
-      
-      // Only allow editing if the column is editable and editing is enabled
-      if (column?.editable !== false && canEditRows) {
-        try {
-          // Set the grid mode to edit
-          setMode('edit');
-          
-          // Start cell edit mode
-          const cellMode = apiRef.current.getCellMode(id, field);
-          if (cellMode === 'view') {
-            apiRef.current.startCellEditMode({ id, field });
-          }
-        } catch (error) {
-          console.error('Error starting cell edit mode:', error);
-        }
-      }
-    };
-    
-    return (
-      <DataGrid
-        apiRef={apiRef}
-        rows={displayRows}
-        columns={gridColumns}
-        autoHeight={autoHeight}
-        density={density}
-        disableColumnFilter={disableColumnFilter}
-        disableColumnMenu={disableColumnMenu}
-        disableColumnSelector={disableColumnSelector}
-        disableDensitySelector={disableDensitySelector}
-        disableRowSelectionOnClick={isInEditOrAddMode || disableSelectionOnClick}
-        disableVirtualization={disableVirtualization}
-        loading={loading}
-        hideFooter={hideFooter}
-        hideFooterPagination={hideFooterPagination}
-        hideFooterSelectedRowCount={hideFooterSelectedRowCount}
-        // Pagination
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize, page: 0 },
-          },
-        }}
-        pageSizeOptions={rowsPerPageOptions}
-        paginationMode={useGraphQLFetching ? 'server' : 'client'}
-        rowCount={totalRows}
-        onPaginationModelChange={(model) => {
-          // For GraphQL pagination, fetch the data
-          if (useGraphQLFetching) {
-            setPage(model.page);
-          }
-        }}
-        
-        // Sorting and filtering
-        sortingMode={useGraphQLFetching ? 'server' : 'client'}
-        filterMode={useGraphQLFetching ? 'server' : 'client'}
-        onSortModelChange={(model) => {
-          if (useGraphQLFetching) {
-            setSortModel(model.map(item => ({
-              field: item.field,
-              sort: item.sort as 'asc' | 'desc'
-            })));
-          }
-        }}
-        onFilterModelChange={(model) => {
-          if (useGraphQLFetching) {
-            const filterModel: Record<string, any> = {};
-            model.items.forEach(item => {
-              if (item.field && item.value !== undefined) {
-                filterModel[item.field] = item.value;
-              }
-            });
-            setFilterModel(filterModel);
-          }
-        }}
-        // Row selection
-        checkboxSelection={checkboxSelection && canSelectRows}
-        rowSelectionModel={selectionModel}
-        onRowSelectionModelChange={handleSelectionModelChange}
-        disableMultipleRowSelection={disableMultipleSelection}
-        isRowSelectable={() => !isInEditOrAddMode}
-        
-        // Editing
-        editMode="cell"
-        rowHeight={rowHeight}
-        onCellClick={handleCellClick}
-        onCellDoubleClick={handleCellDoubleClick}
-        onCellKeyDown={handleKeyDown}
-        slots={{
-          noRowsOverlay: () => (
-            <div className="flex items-center justify-center h-full">
-              <Typography>No rows</Typography>
-            </div>
-          )
-        }}
-        sx={{
-          border: 'none',
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none',
-          },
-          height: '100%',
-          '& .MuiDataGrid-main': {
-            overflow: 'auto',
-          }
-        }}
-        {...props}
-      />
-    );
-  };
+  // Removed DataGridWithModeControl definition
   // Get the GridFormContext functions and state
   const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
     const {
@@ -446,7 +290,41 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
 
           <Paper elevation={0} className="flex-grow w-full overflow-auto">
             <CellEditHandler apiRef={apiRef} />
-            <DataGridWithModeControl />
+            {/* Use the imported DataGridWithModeControl component */}
+            <DataGridWithModeControl
+              apiRef={apiRef}
+              displayRows={displayRows}
+              gridColumns={gridColumns}
+              columns={columns}
+              autoHeight={autoHeight}
+              density={density}
+              disableColumnFilter={disableColumnFilter}
+              disableColumnMenu={disableColumnMenu}
+              disableColumnSelector={disableColumnSelector}
+              disableDensitySelector={disableDensitySelector}
+              disableSelectionOnClick={disableSelectionOnClick}
+              disableVirtualization={disableVirtualization}
+              loading={loading}
+              hideFooter={hideFooter}
+              hideFooterPagination={hideFooterPagination}
+              hideFooterSelectedRowCount={hideFooterSelectedRowCount}
+              pageSize={pageSize}
+              rowsPerPageOptions={rowsPerPageOptions}
+              useGraphQLFetching={useGraphQLFetching}
+              totalRows={totalRows}
+              setPage={setPage}
+              setSortModel={setSortModel}
+              setFilterModel={setFilterModel}
+              checkboxSelection={checkboxSelection}
+              canSelectRows={canSelectRows}
+              selectionModel={selectionModel}
+              handleSelectionModelChange={handleSelectionModelChange}
+              disableMultipleSelection={disableMultipleSelection}
+              canEditRows={canEditRows}
+              rowHeight={rowHeight}
+              handleKeyDown={handleKeyDown}
+              props={props}
+            />
           </Paper>
         </div>
       </GridFormWrapper>

@@ -216,7 +216,11 @@ export const DataGridWithModeControl = <T extends { id: GridRowId }>({
       rowHeight={rowHeight}
       onCellClick={handleCellClick}
       onCellDoubleClick={handleCellDoubleClick}
-      onCellKeyDown={handleKeyDown}
+      // Wrap handleKeyDown to match the expected signature for onCellKeyDown
+      onCellKeyDown={(params, event, details) => {
+        // Pass only the event to the original handleKeyDown from the hook
+        handleKeyDown(event as React.KeyboardEvent<HTMLDivElement>); 
+      }}
       slots={{
         noRowsOverlay: () => (
           <div className="flex items-center justify-center h-full">
