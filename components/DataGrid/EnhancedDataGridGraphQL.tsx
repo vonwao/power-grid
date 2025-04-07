@@ -457,6 +457,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
       validateRow={validateRow}
       isCompact={isCompact}
     >
+      <div>HELLO Demo</div>
       <GridFormWithToolbar />
     </GridFormProvider>
   );
