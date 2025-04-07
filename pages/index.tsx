@@ -65,6 +65,22 @@ export default function Home() {
               </CardContent>
             </Card>
           </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Toolbar Demo
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Demonstrates the new modular DataGrid Toolbar components and customization options.
+                </Typography>
+                <Link href="/toolbar-demo" passHref>
+                  <Button variant="contained" color="secondary">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
       </Box>
     </>

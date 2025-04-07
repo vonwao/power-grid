@@ -27,8 +27,8 @@ import { DataGridToolbarRight } from './DataGrid/components/toolbar/DataGridTool
 import { AddRowButton } from './DataGrid/components/toolbar/buttons/AddRowButton'; // Example: Using individual buttons for customization
 import { FilterButton } from './DataGrid/components/toolbar/buttons/FilterButton'; // Example: Using individual buttons for customization
 
-// Basic column configuration for the demo
-const columnsConfig: EnhancedColumnConfig<Employee>[] = [
+// Basic column configuration for the demo - Use 'any' for the generic type
+const columnsConfig: EnhancedColumnConfig<any>[] = [
   { 
     field: 'name', 
     headerName: 'Name', 
@@ -91,7 +91,13 @@ export function ToolbarDataGridDemo() {
       }
     } catch (error) { console.error('Error navigating to cell:', error); }
   }, [apiRef]);
-  const { handleKeyDown } = useGridNavigation({ api: apiRef.current, columns: columnsConfig, rows, onNavigate: handleNavigate });
+  // Remove the cast now that columnsConfig uses 'any'
+  const { handleKeyDown } = useGridNavigation({ 
+    api: apiRef.current, 
+    columns: columnsConfig, 
+    rows, 
+    onNavigate: handleNavigate 
+  }); 
 
   // Create SelectFieldType instances
   columnsConfig.forEach(column => {
@@ -236,7 +242,11 @@ export function ToolbarDataGridDemo() {
         canAddRows={true}
         canSelectRows={true}
         selectionModel={selectionModel}
-        onSelectionModelChange={handleSelectionModelChange} // Corrected prop name
+        // Use correct prop name 'onSelectionModelChange' and match expected signature
+        onSelectionModelChange={(
+          newSelectionModel: GridRowSelectionModel
+          // details: GridCallbackDetails // The context provider seems to expect only one argument
+        ) => handleSelectionModelChange(newSelectionModel, {} as GridCallbackDetails)} // Pass empty details object if needed by the hook
       >
         {children}
       </GridModeProvider>

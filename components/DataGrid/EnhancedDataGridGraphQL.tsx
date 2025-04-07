@@ -20,6 +20,8 @@ import { SelectFieldType } from './fieldTypes/SelectField';
 import { useGridNavigation, useGraphQLData, useSelectionModel, usePagination } from './hooks';
 import { ServerSideResult } from './types';
 import { GridModeProvider, useGridMode, GridMode } from './context/GridModeContext';
+import { CellRendererWrapper } from './components/graphqlGrid/CellRendererWrapper'; 
+import { DataGridWithModeControl } from './components/graphqlGrid/DataGridWithModeControl'; // Import the new component
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -412,9 +414,11 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         canAddRows={canAddRows}
         canSelectRows={canSelectRows}
         selectionModel={selectionModel}
-        onRowSelectionModelChange={(newSelectionModel, details) => {
-          handleSelectionModelChange(newSelectionModel, details);
-        }}
+        // Use correct prop name 'onSelectionModelChange' and match expected signature
+        onSelectionModelChange={(
+          newSelectionModel: GridRowSelectionModel
+          // details: GridCallbackDetails // Provider might expect only one argument
+        ) => handleSelectionModelChange(newSelectionModel, {} as GridCallbackDetails)} // Pass empty details if needed
       >
         {children}
       </GridModeProvider>
@@ -463,29 +467,4 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   );
 }
 
-// Wrapper for CellRenderer that gets validation state from context
-const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {
-  const { isFieldDirty, getRowErrors, getFormMethods } = useGridForm();
-  const isDirty = isFieldDirty(params.id, params.field);
-  const errors = getRowErrors(params.id);
-  const error = errors?.[params.field];
-  
-  // Get the latest value from the form state if available
-  const formMethods = getFormMethods(params.id);
-  const formValue = formMethods ? formMethods.getValues()[params.field] : undefined;
-  
-  // Create a new params object with the updated value from form state
-  const updatedParams = {
-    ...params,
-    value: formValue !== undefined ? formValue : params.value
-  };
-  
-  return (
-    <CellRenderer
-      params={updatedParams}
-      column={column}
-      isDirty={isDirty}
-      error={error}
-    />
-  );
-};
+// Removed the inline CellRendererWrapper definition as it's now imported
