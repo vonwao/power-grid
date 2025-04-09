@@ -1,0 +1,33 @@
+{
+  "id": "graphql",
+  "title": "GraphQL Integration",
+  "description": "Demonstrates how to integrate EnhancedDataGrid with a GraphQL backend, including real-time updates and optimistic UI",
+  "features": [
+    {
+      "id": "basic-integration",
+      "title": "Basic GraphQL Setup",
+      "description": "Setting up EnhancedDataGrid with GraphQL queries and mutations",
+      "level": 1
+    },
+    {
+      "id": "optimistic-updates",
+      "title": "Optimistic Updates",
+      "description": "Implementing optimistic UI updates for better user experience",
+      "level": 2
+    },
+    {
+      "id": "error-handling",
+      "title": "Error Handling",
+      "description": "Proper error handling and recovery strategies",
+      "level": 3
+    },
+    {
+      "id": "real-time",
+      "title": "Real-time Updates",
+      "description": "Adding real-time updates using GraphQL subscriptions",
+      "level": 4
+    }
+  ],
+  "order": 3,
+  "tags": ["integration", "graphql", "real-time"]
+}

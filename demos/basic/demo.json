@@ -1,0 +1,39 @@
+{
+  "id": "basic",
+  "title": "Basic Usage with Progressive Features",
+  "description": "A step-by-step guide to EnhancedDataGrid features, from basic to advanced usage",
+  "features": [
+    {
+      "id": "basic-grid",
+      "title": "Basic Grid",
+      "description": "Simple grid with row data display",
+      "level": 1
+    },
+    {
+      "id": "editing",
+      "title": "Row Editing",
+      "description": "Adding CRUD operations",
+      "level": 2
+    },
+    {
+      "id": "validation",
+      "title": "Form Validation",
+      "description": "Adding field validation and error handling",
+      "level": 3
+    },
+    {
+      "id": "toolbar",
+      "title": "Toolbar Integration",
+      "description": "Adding a full-featured toolbar",
+      "level": 4
+    },
+    {
+      "id": "custom-rendering",
+      "title": "Custom Cell Rendering",
+      "description": "Custom cell components and formatting",
+      "level": 5
+    }
+  ],
+  "order": 1,
+  "tags": ["core", "tutorial", "progressive"]
+}

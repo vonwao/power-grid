@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Paper, Box, Tabs, Tab, Typography } from '@mui/material';
 import { useDataGridToolbar } from '../../components/DataGrid/hooks/toolbar/useDataGridToolbar';
 import { DataGridProvider } from '../../components/DataGrid/context/DataGridProvider';
 import { EnhancedDataGrid, EnhancedColumnConfig } from '../../components/DataGrid/EnhancedDataGrid';
-import demoConfig from './demo.json';
+
 
 // Sample data
 const rows = [
@@ -106,8 +106,37 @@ const featureLevels: Record<number, FeatureLevel> = {
 
 export function BasicDemo() {
   const [level, setLevel] = useState(1);
+  const [features, setFeatures] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    level: number;
+  }>>([]);
   const currentFeatures = featureLevels[level];
-  const { features } = demoConfig;
+
+  useEffect(() => {
+    const loadFeatures = async () => {
+      try {
+        const response = await fetch('/demos/basic/demo.json');
+        if (!response.ok) {
+          throw new Error('Failed to load demo features');
+        }
+        const data = await response.json();
+        setFeatures(data.features);
+      } catch (error) {
+        console.error('Error loading demo features:', error);
+      }
+    };
+    loadFeatures();
+  }, []);
+
+  if (features.length === 0) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography>Loading demo features...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -131,7 +160,7 @@ export function BasicDemo() {
 
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
-            {features[level - 1].description}
+            {features[level - 1]?.description}
           </Typography>
 
           <DataGridProvider
@@ -146,7 +175,8 @@ export function BasicDemo() {
               disableSelectionOnClick
               canEditRows={currentFeatures.enableEditing}
               canAddRows={currentFeatures.enableEditing}
-              disableToolbar={!currentFeatures.enableToolbar}
+              disableColumnSelector={!currentFeatures.enableToolbar}
+              disableDensitySelector={!currentFeatures.enableToolbar}
             />
           </DataGridProvider>
         </Box>
