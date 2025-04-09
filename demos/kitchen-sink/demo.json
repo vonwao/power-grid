@@ -1,0 +1,33 @@
+{
+  "id": "kitchen-sink",
+  "title": "Kitchen Sink Demo",
+  "description": "A comprehensive demo showcasing all EnhancedDataGrid features, from basic functionality to advanced integrations",
+  "features": [
+    {
+      "id": "basic",
+      "title": "Core Features",
+      "description": "Basic grid functionality with sorting, filtering, and pagination",
+      "level": 1
+    },
+    {
+      "id": "editing",
+      "title": "Advanced Editing",
+      "description": "Full CRUD operations with validation and custom editors",
+      "level": 2
+    },
+    {
+      "id": "graphql",
+      "title": "GraphQL Integration",
+      "description": "Real-time data with GraphQL subscriptions and optimistic updates",
+      "level": 3
+    },
+    {
+      "id": "custom",
+      "title": "Custom Features",
+      "description": "Custom renderers, toolbar items, and advanced cell components",
+      "level": 4
+    }
+  ],
+  "order": 4,
+  "tags": ["featured", "complete", "integration", "graphql", "real-time"]
+}

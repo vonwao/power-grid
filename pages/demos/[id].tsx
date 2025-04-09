@@ -17,8 +17,12 @@ interface DemoMetadata {
   tags: string[];
 }
 
+// Import demos
+import { KitchenSinkDemo } from '../../demos/kitchen-sink/KitchenSinkDemo';
+
 const demos = {
   basic: BasicDemo,
+  'kitchen-sink': KitchenSinkDemo,
   // Add other demos here as they're implemented
 };
 
