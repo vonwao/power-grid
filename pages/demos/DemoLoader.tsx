@@ -25,11 +25,15 @@ export function DemoLoader() {
     const loadDemos = async () => {
       try {
         // In a real app, we'd use a more robust method to discover demos
-        const demoModules = [
-          '/demos/basic/demo.json',
-          '/demos/graphql/demo.json',
-          '/demos/csv/demo.json'
-        ];
+        // List all demo directories
+        const response = await fetch('/api/demos');
+        if (!response.ok) {
+          throw new Error('Failed to fetch demo list');
+        }
+        const { demos: demoDirs } = await response.json();
+        
+        // Map each directory to its demo.json path
+        const demoModules = demoDirs.map(dir => `/demos/${dir}/demo.json`);
 
         const demoData = await Promise.all(
           demoModules.map(async (path) => {
@@ -75,7 +79,7 @@ export function DemoLoader() {
       <Grid container spacing={3}>
         {demos.map((demo) => (
           <Grid item xs={12} sm={6} md={4} key={demo.id}>
-            <Link href={`/demos/${demo.id}`} passHref>
+            <Link href={`/demos/${demo.id}`} style={{ textDecoration: 'none' }}>
               <Card 
                 sx={{ 
                   height: '100%',
