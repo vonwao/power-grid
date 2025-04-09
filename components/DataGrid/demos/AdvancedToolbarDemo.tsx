@@ -1,7 +1,8 @@
 import React from 'react';
-import { DataGrid } from '@mui/x-data-grid';
 import { Paper, Box } from '@mui/material';
 import { useDataGridToolbar } from '../hooks/toolbar/useDataGridToolbar';
+import { DataGridProvider } from '../context/DataGridProvider';
+import { EnhancedDataGrid, EnhancedColumnConfig } from '../EnhancedDataGrid';
 
 // Sample data
 const rows = [
@@ -10,11 +11,52 @@ const rows = [
   { id: 3, firstName: 'Bob', lastName: 'Johnson', age: 42 },
 ];
 
-const columns = [
-  { field: 'id', headerName: 'ID', width: 90 },
-  { field: 'firstName', headerName: 'First Name', width: 130, editable: true },
-  { field: 'lastName', headerName: 'Last Name', width: 130, editable: true },
-  { field: 'age', headerName: 'Age', type: 'number', width: 90, editable: true },
+const columns: EnhancedColumnConfig[] = [
+  { 
+    field: 'id', 
+    headerName: 'ID', 
+    width: 90,
+    fieldConfig: {
+      type: 'number'
+    }
+  },
+  { 
+    field: 'firstName', 
+    headerName: 'First Name', 
+    width: 130, 
+    editable: true,
+    fieldConfig: {
+      type: 'string',
+      validation: {
+        required: true
+      }
+    }
+  },
+  { 
+    field: 'lastName', 
+    headerName: 'Last Name', 
+    width: 130, 
+    editable: true,
+    fieldConfig: {
+      type: 'string',
+      validation: {
+        required: true
+      }
+    }
+  },
+  { 
+    field: 'age', 
+    headerName: 'Age', 
+    width: 90, 
+    editable: true,
+    fieldConfig: {
+      type: 'number',
+      validation: {
+        min: { value: 0, message: 'Age must be positive' },
+        max: { value: 120, message: 'Age must be less than 120' }
+      }
+    }
+  },
 ];
 
 function AdvancedToolbar() {
@@ -118,17 +160,27 @@ function AdvancedToolbar() {
 }
 
 export function AdvancedToolbarDemo() {
+  const handleSave = (changes: { edits: any[], additions: any[] }) => {
+    console.log('Saving changes:', changes);
+  };
+
   return (
-    <Paper elevation={2}>
-      <AdvancedToolbar />
-      <Box sx={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          checkboxSelection
-          disableRowSelectionOnClick
-        />
-      </Box>
-    </Paper>
+    <DataGridProvider
+      columns={columns}
+      rows={rows}
+      onSave={handleSave}
+    >
+      <Paper elevation={2}>
+        <AdvancedToolbar />
+        <Box sx={{ height: 400, width: '100%' }}>
+          <EnhancedDataGrid
+            rows={rows}
+            columns={columns}
+            checkboxSelection
+            disableSelectionOnClick
+          />
+        </Box>
+      </Paper>
+    </DataGridProvider>
   );
 }
