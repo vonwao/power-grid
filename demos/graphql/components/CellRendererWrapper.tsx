@@ -1,8 +1,8 @@
 import React from 'react';
 import { GridRenderCellParams } from '@mui/x-data-grid';
-import { EnhancedColumnConfig } from '../../EnhancedDataGridGraphQL'; // Adjust path as needed
-import { useGridForm } from '../../context/GridFormContext';
-import { CellRenderer } from '../../renderers/CellRenderer';
+import { EnhancedColumnConfig } from './EnhancedDataGridGraphQL';
+import { useGridForm } from '../../../components/DataGrid/context/GridFormContext';
+import { CellRenderer } from '../../../components/DataGrid/renderers/CellRenderer';
 
 interface CellRendererWrapperProps {
   params: GridRenderCellParams;

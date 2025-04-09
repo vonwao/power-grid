@@ -1,0 +1,33 @@
+{
+  "id": "csv",
+  "title": "CSV Import/Export",
+  "description": "Shows how to handle CSV data import and export with validation and transformation",
+  "features": [
+    {
+      "id": "basic-import",
+      "title": "Basic CSV Import",
+      "description": "Simple CSV file import with basic validation",
+      "level": 1
+    },
+    {
+      "id": "data-mapping",
+      "title": "Data Mapping",
+      "description": "Custom field mapping and data transformation",
+      "level": 2
+    },
+    {
+      "id": "validation",
+      "title": "Advanced Validation",
+      "description": "Complex validation rules and error handling",
+      "level": 3
+    },
+    {
+      "id": "export",
+      "title": "Data Export",
+      "description": "Customizable CSV export with data formatting",
+      "level": 4
+    }
+  ],
+  "order": 2,
+  "tags": ["import", "export", "data-transformation"]
+}

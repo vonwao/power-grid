@@ -1,8 +1,8 @@
 import React from 'react';
 import { Paper, Box } from '@mui/material';
-import { useDataGridToolbar } from '../hooks/toolbar/useDataGridToolbar';
-import { DataGridProvider } from '../context/DataGridProvider';
-import { EnhancedDataGrid, EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { useDataGridToolbar } from '../../components/DataGrid/hooks/toolbar/useDataGridToolbar';
+import { DataGridProvider } from '../../components/DataGrid/context/DataGridProvider';
+import { EnhancedDataGrid, EnhancedColumnConfig } from '../../components/DataGrid/EnhancedDataGrid';
 
 // Sample data
 const rows = [
