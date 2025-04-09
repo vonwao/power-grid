@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, Tabs, Tab, Typography, Alert, Snackbar } from '@mui/material';
+import React, { useState, useCallback } from 'react';
+import { Paper, Box, Typography, Alert, Snackbar, Tabs, Tab } from '@mui/material';
+import { EnhancedDataGridGraphQL, EnhancedColumnConfig } from '../../demos/graphql/components/EnhancedDataGridGraphQL';
 import { useDataGridToolbar } from '../../components/DataGrid/hooks/toolbar/useDataGridToolbar';
-import { DataGridProvider } from '../../components/DataGrid/context/DataGridProvider';
-import { EnhancedDataGrid, EnhancedColumnConfig } from '../../components/DataGrid/EnhancedDataGrid';
+import { useGraphQLData } from '../../components/DataGrid/hooks/useGraphQLData';
+import { useSelectionModel } from '../../components/DataGrid/hooks/useSelectionModel';
+import { Employee, EmployeeInput, GraphQLQueryOptions, GraphQLMutationOptions } from '../../demos/graphql/types';
 import { ValidationHelpers } from '../../components/DataGrid/context/GridFormContext';
 
 // Sample data with more fields for the kitchen sink demo
@@ -131,7 +133,7 @@ const columns: EnhancedColumnConfig[] = [
         max: { value: 500000, message: 'Maximum salary is 500,000' }
       },
       format: (value) => value ? \`\$\${value.toLocaleString()}\` : '',
-      parse: (value) => typeof value === 'string' ? parseInt(value.replace(/[^0-9]/g, ''), 10) : value
+      parse: (value: string | number | null) => typeof value === 'string' ? parseInt(value.replace(/[^0-9]/g, ''), 10) : value
     }
   }
 ];
@@ -148,46 +150,46 @@ interface KitchenSinkState {
 }
 
 export function KitchenSinkDemo() {
-  const [state, setState] = useState<KitchenSinkState>({
-    rows: initialRows,
-    loading: false,
-    error: null,
-    snackbar: {
-      open: false,
-      message: '',
-      severity: 'info'
-    }
+  const [useGraphQL, setUseGraphQL] = useState(true);
+  const [selectionModel, setSelectionModel] = useState<(string | number)[]>([]);
+  const [level, setLevel] = useState(1);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
   });
 
-  // Simulated GraphQL-style data fetching
-  const fetchData = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setState(prev => ({ 
-        ...prev, 
-        rows: initialRows,
-        loading: false 
-      }));
-    } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
-        error: 'Failed to load data',
-        loading: false,
-        snackbar: {
-          open: true,
-          message: 'Failed to load data. Please try again.',
-          severity: 'error'
+  // Use GraphQL data hook
+  const { 
+    data: { employees: rows } = { employees: initialRows },
+    loading,
+    error,
+    mutate
+  } = useGraphQLData<{ employees: Employee[] }>({
+    query: /* GraphQL */ `
+      query GetEmployees {
+        employees {
+          id
+          firstName
+          lastName
+          email
+          age
+          status
+          department
+          salary
         }
-      }));
-    }
-  }, []);
+      }
+    `,
+    variables: {},
+    enabled: useGraphQL,
+    fallbackData: initialRows
+  });
 
-  // Load initial data
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+
 
   // Handle row validation
   const validateRow = useCallback(async (values: any, helpers: ValidationHelpers) => {
@@ -202,17 +204,78 @@ export function KitchenSinkDemo() {
   }, []);
 
   // Handle save
-  const handleSave = useCallback(async ({ edits, additions }: { edits: any[], additions: any[] }) => {
-    setState(prev => ({ ...prev, loading: true }));
+  const handleSave = useCallback(async ({ edits, additions }: { edits: Employee[], additions: Omit<Employee, 'id'>[] }) => {
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (useGraphQL) {
+        // GraphQL mutations for edits
+        for (const edit of edits) {
+          await mutate({
+            mutation: /* GraphQL */ `
+              mutation UpdateEmployee($id: ID!, $input: EmployeeInput!) {
+                updateEmployee(id: $id, input: $input) {
+                  id
+                  firstName
+                  lastName
+                  email
+                  age
+                  status
+                  department
+                  salary
+                }
+              }
+            `,
+            variables: {
+              id: edit.id,
+              input: {
+                firstName: edit.firstName,
+                lastName: edit.lastName,
+                email: edit.email,
+                age: edit.age,
+                status: edit.status,
+                department: edit.department,
+                salary: edit.salary
+              }
+            } as { id: number; input: Record<keyof EmployeeInput, any> },
+            optimisticResponse: {
+              updateEmployee: edit
+            }
+          });
+        }
 
-      // Update local state optimistically
-      setState(prev => {
-        const updatedRows = [...prev.rows];
+        // GraphQL mutations for additions
+        for (const addition of additions) {
+          await mutate({
+            mutation: /* GraphQL */ `
+              mutation CreateEmployee($input: EmployeeInput!) {
+                createEmployee(input: $input) {
+                  id
+                  firstName
+                  lastName
+                  email
+                  age
+                  status
+                  department
+                  salary
+                }
+              }
+            `,
+            variables: {
+              input: {
+                firstName: addition.firstName,
+                lastName: addition.lastName,
+                email: addition.email,
+                age: addition.age,
+                status: addition.status,
+                department: addition.department,
+                salary: addition.salary
+              }
+            } as { input: Record<keyof EmployeeInput, any> }
+          });
+        }
+      } else {
+        // Local state updates
+        const updatedRows = [...rows];
         
-        // Apply edits
         edits.forEach(edit => {
           const index = updatedRows.findIndex(row => row.id === edit.id);
           if (index !== -1) {
@@ -220,49 +283,37 @@ export function KitchenSinkDemo() {
           }
         });
 
-        // Add new rows
         additions.forEach(addition => {
           updatedRows.push({
             ...addition,
             id: Math.max(...updatedRows.map(r => r.id)) + 1
           });
         });
+      }
 
-        return {
-          ...prev,
-          rows: updatedRows,
-          loading: false,
-          snackbar: {
-            open: true,
-            message: 'Changes saved successfully',
-            severity: 'success'
-          }
-        };
+      setSnackbar({
+        open: true,
+        message: 'Changes saved successfully',
+        severity: 'success'
       });
     } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        snackbar: {
-          open: true,
-          message: 'Failed to save changes',
-          severity: 'error'
-        }
-      }));
+      console.error('Save error:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to save changes',
+        severity: 'error'
+      });
     }
-  }, []);
+  }, [useGraphQL, mutate, rows]);
 
   const handleCloseSnackbar = () => {
-    setState(prev => ({
-      ...prev,
-      snackbar: { ...prev.snackbar, open: false }
-    }));
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  if (state.error) {
+  if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        {state.error}
+        {error.message}
       </Alert>
     );
   }
@@ -278,40 +329,38 @@ export function KitchenSinkDemo() {
             This demo showcases all available features of the EnhancedDataGrid component.
           </Typography>
 
-          <DataGridProvider
+          <EnhancedDataGridGraphQL
             columns={columns}
-            rows={state.rows}
+            rows={rows}
             onSave={handleSave}
             validateRow={validateRow}
-          >
-            <EnhancedDataGrid
-              rows={state.rows}
-              columns={columns}
-              loading={state.loading}
-              checkboxSelection
-              disableSelectionOnClick
-              canEditRows
-              canAddRows
-              autoHeight
-              density="standard"
-              pageSize={10}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-            />
-          </DataGridProvider>
+            loading={loading}
+            checkboxSelection
+            disableSelectionOnClick
+            selectionModel={selectionModel}
+            onSelectionModelChange={setSelectionModel}
+            canEditRows
+            canAddRows
+            autoHeight
+            density="standard"
+            pageSize={10}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            useGraphQL={useGraphQL}
+          />
         </Box>
       </Paper>
 
       <Snackbar
-        open={state.snackbar.open}
+        open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
       >
         <Alert 
           onClose={handleCloseSnackbar} 
-          severity={state.snackbar.severity}
+          severity={snackbar.severity}
           sx={{ width: '100%' }}
         >
-          {state.snackbar.message}
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Box>
