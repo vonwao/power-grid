@@ -274,7 +274,7 @@ export function GridFormProvider({
   useEffect(() => {
     // Only update if not in the middle of editing
     if (editingRows.size === 0) {
-      setRows(initialRows);
+      setRows(initialRows || []); // Ensure initialRows is defined
       
       // Clear form instances for rows that no longer exist
       const newRowIds = new Set(initialRows.map(row => row.id));

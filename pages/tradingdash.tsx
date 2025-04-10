@@ -268,7 +268,7 @@ export default function TradeAdjustmentsGrid() {
     <div className="h-full w-full flex flex-col">
       <Paper elevation={0} className="flex-grow w-full overflow-auto">
         <GridModeProvider
-          totalRows={totalRows}
+          totalRows={displayRows.length} // Set totalRows to the length of displayRows
           saveChanges={() => handleSave({ edits: [], additions: [] })}
           cancelChanges={() => console.log('Cancelling changes')}
           addRow={() => console.log('Adding row')}
@@ -297,7 +297,7 @@ export default function TradeAdjustmentsGrid() {
               pageSize={25}
               rowsPerPageOptions={[10, 25, 50, 100]}
               useGraphQLFetching={useGraphQLFetching}
-              totalRows={totalRows}
+              totalRows={displayRows.length} // Set totalRows to the length of displayRows
               setPage={setPage}
               setSortModel={setSortModel}
               setFilterModel={setFilterModel}
