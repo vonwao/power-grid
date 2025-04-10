@@ -107,9 +107,12 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
   ...props
 }: EnhancedDataGridGraphQLProps<T>) {
   const apiRef = useGridApiRef();
+
+  console.log('[EnhancedDataGridGraphQLCustom] useGraphQL:', useGraphQL, 'forceClientSide:', forceClientSide);
   
   // Use GraphQL data if enabled and not forcing client-side
   const useGraphQLFetching = useGraphQL && !forceClientSide;
+  console.log('[EnhancedDataGridGraphQLCustom] useGraphQLFetching:', useGraphQLFetching);
   
   // Always call the hook, but only use its results if useGraphQLFetching is true
   const {
@@ -119,19 +122,36 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
     setPage,
     setSortModel,
     setFilterModel,
+    error: graphQLError, // Add error if hook supports it
   } = useGraphQLData<T>({
     pageSize,
     initialPage: 0,
     initialSortModel: [],
     initialFilterModel: {},
   });
+
+  console.log('[EnhancedDataGridGraphQLCustom] graphQLRows:', graphQLRows);
+  if (graphQLRows && graphQLRows.length > 0) {
+    console.log('[EnhancedDataGridGraphQLCustom] First 3 GraphQL rows:', graphQLRows.slice(0,3));
+  }
+  console.log('[EnhancedDataGridGraphQLCustom] graphQLTotalRows:', graphQLTotalRows);
+  console.log('[EnhancedDataGridGraphQLCustom] graphQLLoading:', graphQLLoading);
+  console.log('[EnhancedDataGridGraphQLCustom] graphQLError:', graphQLError);
   
   // Use GraphQL data or client data based on the useGraphQLFetching flag
   const displayRows = useGraphQLFetching ? graphQLRows : rows;
   const totalRows = useGraphQLFetching ? graphQLTotalRows : rows.length;
+
+  console.log('[EnhancedDataGridGraphQLCustom] displayRows:', displayRows);
+  console.log('[EnhancedDataGridGraphQLCustom] totalRows:', totalRows);
+  console.log('[EnhancedDataGridGraphQLCustom] fallback rows length:', rows.length);
   
   // Combine external loading state with GraphQL loading state
   const loading = externalLoading || graphQLLoading;
+
+  if (graphQLError) {
+    console.error('[EnhancedDataGridGraphQLCustom] GraphQL error:', graphQLError);
+  }
   
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
