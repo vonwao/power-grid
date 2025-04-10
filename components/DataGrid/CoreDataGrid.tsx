@@ -226,6 +226,11 @@ export const CoreDataGrid = <T extends { id: GridRowId }>({ // Renamed component
           <div className="flex items-center justify-center h-full">
             <Typography>No rows</Typography>
           </div>
+        ),
+        loadingOverlay: () => (
+          <div className="flex items-center justify-center h-full">
+            <Typography>Loading...</Typography>
+          </div>
         )
       }}
       sx={{

@@ -348,6 +348,7 @@ const IssueTrackerContent = ({
             canSelectRows={canSelectRows}
             rowHeight={40}
             pageSize={25}
+            autoHeight={true} // Add autoHeight prop
             // totalRows is calculated internally by EnhancedDataGridGraphQLCustom
           />
         </Box>
