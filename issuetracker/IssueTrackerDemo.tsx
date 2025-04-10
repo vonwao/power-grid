@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
+import { GridFormProvider, useGridForm, GridModeProvider } from '../components/DataGrid/context'; // Added imports
 import { EnhancedDataGridGraphQLCustom } from './components/EnhancedDataGridGraphQLCustom';
 import { IssueTrackerToolbar } from './components/IssueTrackerToolbar';
 import { issues, users, tags } from './mockData';
@@ -8,6 +9,13 @@ import { IssueStatus, IssuePriority, IssueType } from './types';
 export default function IssueTrackerDemo() {
   const [useGraphQL, setUseGraphQL] = useState(true);
   const [selectionModel, setSelectionModel] = useState<any[]>([]);
+  
+  // Determine total rows (assuming client-side for now)
+  const totalRows = issues.length;
+  // Define capabilities (can be dynamic later)
+  const canEditRows = true;
+  const canAddRows = true;
+  const canSelectRows = true;
   
   /**
    * Column Definitions:
@@ -251,28 +259,99 @@ export default function IssueTrackerDemo() {
   };
   
   return (
-    <Box sx={{ width: '100%', height: '100%', p: 2 }}>
-      {/* Custom toolbar */}
-      <IssueTrackerToolbar 
-        onFilter={handleFilter}
-        onExport={handleExport}
-        onHelp={handleHelp}
-      />
-      
-      {/* Data grid */}
-      <EnhancedDataGridGraphQLCustom
-        columns={columns}
-        rows={issues}
-        onSave={handleSave}
-        validateRow={validateIssueRow}
-        useGraphQL={useGraphQL}
-        checkboxSelection={true}
+    <GridFormProvider
+      columns={columns}
+      initialRows={issues} // Pass initial data
+      onSave={handleSave}
+      validateRow={validateIssueRow}
+      // isCompact can be determined here if needed, or passed down
+    >
+      <IssueTrackerContent
         selectionModel={selectionModel}
-        onSelectionModelChange={setSelectionModel}
-        canAddRows={true}
-        rowHeight={40}
-        pageSize={25}
+        handleSelectionModelChange={setSelectionModel}
+        totalRows={totalRows}
+        canEditRows={canEditRows}
+        canAddRows={canAddRows}
+        canSelectRows={canSelectRows}
+        // Pass other necessary props if any
+        useGraphQL={useGraphQL} // Pass useGraphQL down
+        columns={columns} // Pass columns down for GridModeProvider logic if needed
+        handleFilter={handleFilter} // Pass handlers down
+        handleExport={handleExport}
+        handleHelp={handleHelp}
       />
-    </Box>
+    </GridFormProvider>
+  );
+}
+
+// Inner component to correctly scope useGridForm hook
+const IssueTrackerContent = ({
+  selectionModel,
+  handleSelectionModelChange,
+  totalRows,
+  canEditRows,
+  canAddRows,
+  canSelectRows,
+  useGraphQL,
+  columns, // Receive columns
+  handleFilter, // Receive handlers
+  handleExport,
+  handleHelp,
+}: any) => { // Use 'any' for simplicity, refine props interface later
+  const {
+    saveChanges,
+    cancelChanges,
+    addRow,
+    hasValidationErrors,
+    isRowEditing,
+    isRowDirty,
+    // Get initialRows from context if needed, or assume it's handled internally
+  } = useGridForm();
+
+  return (
+    <GridModeProvider
+      totalRows={totalRows}
+      initialMode="none" // Start in 'none' (view) mode
+      saveChanges={saveChanges}
+      cancelChanges={cancelChanges}
+      addRow={addRow}
+      hasValidationErrors={hasValidationErrors}
+      isRowEditing={isRowEditing}
+      isRowDirty={isRowDirty}
+      canEditRows={canEditRows}
+      canAddRows={canAddRows}
+      canSelectRows={canSelectRows}
+      selectionModel={selectionModel}
+      onSelectionModelChange={handleSelectionModelChange}
+    >
+      <Box sx={{ width: '100%', height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
+        {/* Custom toolbar */}
+        <IssueTrackerToolbar
+          onFilter={handleFilter}
+          onExport={handleExport}
+          onHelp={handleHelp}
+          // Pass context-derived state/functions if toolbar needs them (e.g., mode, saveChanges)
+        />
+        
+        {/* Data grid - remove props handled by GridFormProvider */}
+        <Box sx={{ flexGrow: 1, mt: 2 }}> {/* Added Box for grid growth */}
+          <EnhancedDataGridGraphQLCustom
+            columns={columns} // Pass columns
+            rows={issues} // Pass rows (or let grid fetch if useGraphQL is true)
+            // onSave and validateRow are handled by GridFormProvider
+            useGraphQL={useGraphQL}
+            checkboxSelection={true}
+            selectionModel={selectionModel}
+            onSelectionModelChange={handleSelectionModelChange}
+            canAddRows={canAddRows} // Pass capability props
+            canEditRows={canEditRows}
+            canSelectRows={canSelectRows}
+            rowHeight={40}
+            pageSize={25}
+            // totalRows is calculated internally by EnhancedDataGridGraphQLCustom
+          />
+        </Box>
+      </Box>
+    </GridModeProvider>
   );
 }

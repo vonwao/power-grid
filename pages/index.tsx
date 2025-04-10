@@ -81,6 +81,22 @@ export default function Home() {
               </CardContent>
             </Card>
           </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Issue Tracker
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  A custom grid implementation for tracking issues using GraphQL.
+                </Typography>
+                <Link href="/issue-tracker" passHref>
+                  <Button variant="contained" color="success">View Issue Tracker</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
       </Box>
     </>

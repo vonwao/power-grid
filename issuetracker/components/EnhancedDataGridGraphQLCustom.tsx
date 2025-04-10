@@ -8,10 +8,10 @@ import {
   GridRenderCellParams,
 } from '@mui/x-data-grid';
 import { Box, Paper } from '@mui/material';
-import { GridFormProvider, useGridForm, ValidationHelpers } from '../../components/DataGrid/context/GridFormContext';
-import { CellEditHandler, GridFormModeConnector } from '../../components/DataGrid/components'; // Added GridFormModeConnector
+import { useGridForm, ValidationHelpers } from '../../components/DataGrid/context/GridFormContext'; // Removed GridFormProvider
+import { CellEditHandler } from '../../components/DataGrid/components'; // Removed GridFormModeConnector
 import { useGridNavigation, useGraphQLData, useSelectionModel } from '../../components/DataGrid/hooks';
-import { GridModeProvider } from '../../components/DataGrid/context/GridModeContext';
+// Removed GridModeProvider import
 import { EnhancedColumnConfig } from '../../components/DataGrid/types/columnConfig';
 import { FormAwareCellRenderer } from '../../components/DataGrid/renderers/FormAwareCellRenderer';
 import { CoreDataGrid } from '../../components/DataGrid/CoreDataGrid';
@@ -24,6 +24,7 @@ import { ValidationOptions } from '../../types/form';
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
+  // totalRows removed - it's calculated internally
   onSave?: (changes: { edits: any[], additions: any[] }) => void;
   validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
   
@@ -197,21 +198,9 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
   
   return (
-    <GridFormProvider
-      columns={columns as EnhancedColumnConfig[]}
-      initialRows={displayRows}
-      onSave={onSave}
-      validateRow={validateRow}
-      isCompact={isCompact}
-    >
-      <GridFormModeConnector
-        totalRows={totalRows}
-        selectionModel={selectionModel}
-        handleSelectionModelChange={handleSelectionModelChange}
-        canEditRows={canEditRows}
-        canAddRows={canAddRows}
-        canSelectRows={canSelectRows}
-      >
+    // GridFormProvider removed - will be added in the parent component (IssueTrackerDemo)
+      // GridFormModeConnector removed - GridModeProvider will be added in the parent component (IssueTrackerDemo)
+      // Props like totalRows, selectionModel etc. will be passed directly to CoreDataGrid
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           <Paper elevation={0} className="flex-grow w-full overflow-auto">
             <CellEditHandler apiRef={apiRef} />
@@ -252,8 +241,7 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
             />
           </Paper>
         </div>
-      </GridFormModeConnector>
-    </GridFormProvider>
+      // Closing tags for removed providers
   );
 }
 
