@@ -324,7 +324,7 @@ const IssueTrackerContent = ({
       selectionModel={selectionModel}
       onSelectionModelChange={handleSelectionModelChange}
     >
-      <Box sx={{ width: '100%', height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ width: '100%', height: '100%', p: 2 }}> {/* Removed flex layout for now */}
         {/* Custom toolbar */}
         <IssueTrackerToolbar
           onFilter={handleFilter}
@@ -334,7 +334,7 @@ const IssueTrackerContent = ({
         />
         
         {/* Data grid - remove props handled by GridFormProvider */}
-        <Box sx={{ flexGrow: 1, mt: 2 }}> {/* Added Box for grid growth */}
+        <Box sx={{ height: '80vh', mt: 2 }}> {/* Temporary fixed height for grid container */}
           <EnhancedDataGridGraphQLCustom
             columns={columns} // Pass columns
             rows={issues} // Pass rows (or let grid fetch if useGraphQL is true)
@@ -351,7 +351,8 @@ const IssueTrackerContent = ({
             // totalRows is calculated internally by EnhancedDataGridGraphQLCustom
           />
         </Box>
-      </Box>
+        {/* Removed extra closing Box tag */}
+      </Box> {/* Closing outer Box */}
     </GridModeProvider>
   );
 }
