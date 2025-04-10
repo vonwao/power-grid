@@ -4,7 +4,7 @@ import { EnhancedDataGridGraphQL, EnhancedColumnConfig } from '../../demos/graph
 import { useDataGridToolbar } from '../../components/DataGrid/hooks/toolbar/useDataGridToolbar';
 import { useGraphQLData } from '../../components/DataGrid/hooks/useGraphQLData';
 import { useSelectionModel } from '../../components/DataGrid/hooks/useSelectionModel';
-import { Employee, EmployeeInput, GraphQLQueryOptions, GraphQLMutationOptions } from '../../demos/graphql/types';
+import type { Employee, EmployeeInput, GraphQLQueryOptions, GraphQLMutationOptions } from '../../demos/graphql/types';
 import { ValidationHelpers } from '../../components/DataGrid/context/GridFormContext';
 
 // Sample data with more fields for the kitchen sink demo
@@ -234,8 +234,8 @@ export function KitchenSinkDemo() {
                 status: edit.status,
                 department: edit.department,
                 salary: edit.salary
-              }
-            } as { id: number; input: Record<keyof EmployeeInput, any> },
+              } as unknown as EmployeeInput
+            },
             optimisticResponse: {
               updateEmployee: edit
             }
@@ -268,8 +268,8 @@ export function KitchenSinkDemo() {
                 status: addition.status,
                 department: addition.department,
                 salary: addition.salary
-              }
-            } as { input: Record<keyof EmployeeInput, any> }
+              } as unknown as EmployeeInput
+            }
           });
         }
       } else {
