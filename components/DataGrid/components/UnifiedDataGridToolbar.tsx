@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Removed useMemo
+import React, { useState } from 'react';
 import {
   Box,
   IconButton,
@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
 // Import the filter dialog and its types
-import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog'; 
+import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog';
 // import { Dayjs } from 'dayjs'; // Removed unused Dayjs type import here
 
 // Action icons
@@ -42,19 +42,12 @@ import UploadIcon from '@mui/icons-material/Upload';
 // Context and hooks
 import { useGridMode, GridMode } from '../context/GridModeContext';
 import { useGridForm } from '../context/GridFormContext';
-// import { useSelectionModel } from '../hooks/useSelectionModel'; // Removed unused
-// import { GridRowId } from '@mui/x-data-grid'; // Removed unused
 
-// Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
-// interface FilterValues { // Or import from GlobalFilterDialog as done above
-//   birthdayMonthYear: Dayjs | null; 
-//   department: string;
-//   name: string;
 // }
 
 interface UnifiedDataGridToolbarProps {
   onSave?: () => void; // Re-added prop
-  onFilter?: (filters: FilterValues) => void; // Use the imported/defined FilterValues type
+  onFilter?: (filters: FilterValues) => void;
   onExport?: () => void;
   onUpload?: () => void;
   onHelp?: () => void; // Re-added prop
@@ -122,7 +115,6 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
 
-  // Handle mode switching with confirmation when needed - Removed unused function
   // const handleModeSwitch = (newMode: GridMode) => {
   //   // If in selection mode with multiple rows selected, show confirmation
   //   if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
