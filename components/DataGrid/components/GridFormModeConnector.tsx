@@ -1,9 +1,9 @@
 import React from 'react';
 import { GridRowSelectionModel, GridCallbackDetails } from '@mui/x-data-grid';
-import { useGridForm } from '../../context/GridFormContext';
-import { GridModeProvider } from '../../context/GridModeContext';
+import { useGridForm } from '../context/GridFormContext'; // Updated path
+import { GridModeProvider } from '../context/GridModeContext'; // Updated path
 
-interface GridFormWrapperProps {
+interface GridFormModeConnectorProps { // Renamed interface
   children: React.ReactNode;
   totalRows: number;
   canEditRows?: boolean;
@@ -13,7 +13,7 @@ interface GridFormWrapperProps {
   handleSelectionModelChange: (selectionModel: GridRowSelectionModel, details: GridCallbackDetails) => void;
 }
 
-export const GridFormWrapper: React.FC<GridFormWrapperProps> = ({ 
+export const GridFormModeConnector: React.FC<GridFormModeConnectorProps> = ({ // Renamed component and used renamed interface
   children,
   totalRows,
   canEditRows,

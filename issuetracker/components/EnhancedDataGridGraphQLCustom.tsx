@@ -9,52 +9,17 @@ import {
 } from '@mui/x-data-grid';
 import { Box, Paper } from '@mui/material';
 import { GridFormProvider, useGridForm, ValidationHelpers } from '../../components/DataGrid/context/GridFormContext';
-import { CellEditHandler } from '../../components/DataGrid/components';
+import { CellEditHandler, GridFormModeConnector } from '../../components/DataGrid/components'; // Added GridFormModeConnector
 import { useGridNavigation, useGraphQLData, useSelectionModel } from '../../components/DataGrid/hooks';
 import { GridModeProvider } from '../../components/DataGrid/context/GridModeContext';
-import { CellRendererWrapper } from '../../demos/graphql/components/CellRendererWrapper'; 
-import { DataGridWithModeControl } from '../../demos/graphql/components/DataGridWithModeControl'; 
-import { GridFormWrapper } from '../../demos/graphql/components/GridFormWrapper';
+import { EnhancedColumnConfig } from '../../components/DataGrid/types/columnConfig';
+import { FormAwareCellRenderer } from '../../components/DataGrid/renderers/FormAwareCellRenderer';
+import { CoreDataGrid } from '../../components/DataGrid/CoreDataGrid';
+// Removed import for GridFormWrapper
 import { SelectFieldType } from '../../components/DataGrid/fieldTypes/SelectField';
 import { ValidationOptions } from '../../types/form';
 
-// Field configuration for React Hook Form integration
-export interface FieldConfig<T = any> {
-  // Basic properties
-  type: 'string' | 'number' | 'date' | 'boolean' | 'select';
-  
-  // For select fields
-  options?: Array<{value: any, label: string}>;
-  
-  // Rendering (optional - can use defaults)
-  renderViewMode?: (value: T | null, row: any) => React.ReactNode;
-  renderEditMode?: (props: any) => React.ReactNode;
-  
-  // Validation
-  validation?: ValidationOptions;
-  
-  // Transform functions (optional)
-  parse?: (value: any) => T | null;
-  format?: (value: T | null) => string;
-}
-
-// Enhanced column configuration
-export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
-  // Field configuration for React Hook Form
-  fieldConfig: FieldConfig<T>;
-  
-  // Legacy field type (for backward compatibility)
-  fieldType?: any;
-  
-  // Legacy validation (for backward compatibility)
-  required?: boolean;
-  validationRules?: any[];
-  validator?: any;
-  
-  // Value accessors
-  valueGetter?: GridValueGetter;
-  valueSetter?: GridValueSetter;
-}
+// Type definitions moved to components/DataGrid/types/columnConfig.ts
 
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
@@ -211,7 +176,7 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
       ...column,
       renderCell: (params: GridRenderCellParams) => {
         return (
-          <CellRendererWrapper 
+          <FormAwareCellRenderer
             params={params} 
             column={column as EnhancedColumnConfig}
           />
@@ -239,7 +204,7 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
       validateRow={validateRow}
       isCompact={isCompact}
     >
-      <GridFormWrapper
+      <GridFormModeConnector
         totalRows={totalRows}
         selectionModel={selectionModel}
         handleSelectionModelChange={handleSelectionModelChange}
@@ -250,8 +215,8 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           <Paper elevation={0} className="flex-grow w-full overflow-auto">
             <CellEditHandler apiRef={apiRef} />
-            {/* Use the imported DataGridWithModeControl component */}
-            <DataGridWithModeControl
+            {/* Use the new CoreDataGrid component */}
+            <CoreDataGrid
               apiRef={apiRef}
               displayRows={displayRows}
               gridColumns={gridColumns}
@@ -287,7 +252,7 @@ export function EnhancedDataGridGraphQLCustom<T extends { id: GridRowId }>({
             />
           </Paper>
         </div>
-      </GridFormWrapper>
+      </GridFormModeConnector>
     </GridFormProvider>
   );
 }

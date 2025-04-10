@@ -11,10 +11,10 @@ import {
   GridFilterModel,
 } from '@mui/x-data-grid';
 import { Typography } from '@mui/material';
-import { useGridMode } from '../../context/GridModeContext';
-import { EnhancedColumnConfig } from '../../EnhancedDataGridGraphQL'; // Adjust path if needed
+import { useGridMode } from './context/GridModeContext'; // Corrected path
+import { EnhancedColumnConfig } from './types/columnConfig'; // Corrected path
 
-interface DataGridWithModeControlProps<T = any> {
+interface CoreDataGridProps<T = any> { // Renamed interface
   apiRef: React.MutableRefObject<GridApi>;
   displayRows: T[];
   gridColumns: GridColDef[];
@@ -33,7 +33,7 @@ interface DataGridWithModeControlProps<T = any> {
   hideFooterSelectedRowCount?: boolean;
   pageSize?: number;
   rowsPerPageOptions?: number[];
-  useGraphQLFetching: boolean;
+  useGraphQLFetching: boolean; // Assuming this prop remains relevant for server-side logic
   totalRows: number;
   setPage: (page: number) => void;
   setSortModel: (model: { field: string; sort: 'asc' | 'desc' }[]) => void;
@@ -49,7 +49,7 @@ interface DataGridWithModeControlProps<T = any> {
   props?: any; // Pass through any remaining props
 }
 
-export const DataGridWithModeControl = <T extends { id: GridRowId }>({
+export const CoreDataGrid = <T extends { id: GridRowId }>({ // Renamed component
   apiRef,
   displayRows,
   gridColumns,
@@ -82,7 +82,7 @@ export const DataGridWithModeControl = <T extends { id: GridRowId }>({
   rowHeight,
   handleKeyDown,
   props,
-}: DataGridWithModeControlProps<T>) => {
+}: CoreDataGridProps<T>) => { // Used renamed interface
   // Get the current mode from context
   const { mode, setMode } = useGridMode();
 
