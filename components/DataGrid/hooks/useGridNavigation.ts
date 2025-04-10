@@ -20,7 +20,7 @@ export const useGridNavigation = ({
   }, [api]);
 
   // Handle keyboard navigation
-  const handleKeyDown: GridEventListener<'cellKeyDown'> = useCallback((params, event) => {
+  const handleKeyDown: GridEventListener<'cellKeyDown'> = useCallback((params: GridCellParams, event: React.KeyboardEvent<HTMLElement>) => {
     console.log('handleKeyDown called with key:', event.key, 'params:', params);
     const { id, field, cellMode } = params;
     // Get the current column index

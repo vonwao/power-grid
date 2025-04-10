@@ -219,7 +219,7 @@ export const CoreDataGrid = <T extends { id: GridRowId }>({ // Renamed component
       // Wrap handleKeyDown to match the expected signature for onCellKeyDown
       onCellKeyDown={(params, event, details) => {
         // Pass only the event to the original handleKeyDown from the hook
-        handleKeyDown(event as React.KeyboardEvent<HTMLDivElement>); 
+        handleKeyDown(params, event as React.KeyboardEvent<HTMLDivElement>);
       }}
       slots={{
         noRowsOverlay: () => (
