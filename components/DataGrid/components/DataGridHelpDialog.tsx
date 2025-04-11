@@ -34,7 +34,7 @@ export const DataGridHelpDialog: React.FC<DataGridHelpDialogProps> = ({ open, on
 
         <Typography variant="h6" gutterBottom>Adding New Rows</Typography>
         <Typography paragraph>
-          Click the **Add** button to create a new row for entering data. Remember to click **Save** when you're done.
+          Click the **Add** button to create a new row for entering data. Remember to click **Save** when you&apos;re done.
         </Typography>
 
         <Divider sx={{ my: 2 }} />

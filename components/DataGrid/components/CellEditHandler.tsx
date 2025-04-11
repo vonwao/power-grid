@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { GridApi } from '@mui/x-data-grid';
+import { GridApi, GridRowId } from '@mui/x-data-grid';
 import { useGridForm } from '../context/GridFormContext';
 
 interface CellEditHandlerProps {
@@ -13,7 +13,7 @@ export const CellEditHandler: React.FC<CellEditHandlerProps> = ({ apiRef }) => {
     // Subscribe to cell edit start event
     const startSubscription = apiRef.current.subscribeEvent(
       'cellEditStart',
-      (params: { id: any; field: string }) => {
+      (params: { id: GridRowId; field: string }) => {
         const { id, field } = params;
         startEditingCell(id, field);
       }

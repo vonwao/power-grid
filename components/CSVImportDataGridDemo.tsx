@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Paper, Alert } from '@mui/material';
-import { EnhancedDataGrid, EnhancedColumnConfig } from './DataGrid';
+import { EnhancedColumnConfig } from './DataGrid/EnhancedDataGridGraphQL';
+import { EnhancedDataGridGraphQL as EnhancedDataGrid } from './DataGrid/EnhancedDataGridGraphQL';
 import CSVInput from './CSVInput';
 import { parseCSV } from '../utils/csvParser';
 

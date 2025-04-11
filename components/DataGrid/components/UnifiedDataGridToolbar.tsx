@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   IconButton,
@@ -11,17 +11,12 @@ import {
   DialogActions,
   Button,
   Chip,
-  Select,
-  MenuItem,
   Paper,
   SelectChangeEvent,
-  Divider,
-  TextField, // Added for potential future use in filter dialog if needed directly here
 } from '@mui/material';
 import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
 // Import the filter dialog and its types
-import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog'; 
-import { Dayjs } from 'dayjs'; // Import Dayjs type
+import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog';
 
 // Action icons
 import AddIcon from '@mui/icons-material/Add';
@@ -31,8 +26,6 @@ import HelpIcon from '@mui/icons-material/Help';
 import BugReportIcon from '@mui/icons-material/BugReport';
 
 // Pagination icons
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // Action buttons
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -42,8 +35,6 @@ import UploadIcon from '@mui/icons-material/Upload';
 // Context and hooks
 import { useGridMode, GridMode } from '../context/GridModeContext';
 import { useGridForm } from '../context/GridFormContext';
-import { useSelectionModel } from '../hooks/useSelectionModel';
-import { GridRowId } from '@mui/x-data-grid';
 
 // Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
 // interface FilterValues { // Or import from GlobalFilterDialog as done above
@@ -84,11 +75,6 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     saveChanges,
     cancelChanges,
     addRow,
-    page,
-    pageSize,
-    totalRows,
-    setPage,
-    setPageSize,
     // Get selection model from context
     selectionModel,
     onSelectionModelChange,
@@ -104,13 +90,10 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   }
 
   // Get grid form context
-  const { 
-    getRowErrors, 
-    isRowEditing, 
-    getPendingChanges, 
-    getEditedRowCount, 
-    getAllValidationErrors, 
-    getFormMethods,
+  const {
+    getPendingChanges,
+    getEditedRowCount,
+    getAllValidationErrors,
     getOriginalRowData
   } = useGridForm();
 

@@ -1,6 +1,5 @@
 import Papa from 'papaparse';
-import { GridColDef } from '@mui/x-data-grid';
-import { EnhancedColumnConfig, FieldConfig } from '../components/DataGrid/EnhancedDataGrid';
+import { EnhancedColumnConfig, FieldConfig } from '../components/DataGrid/EnhancedDataGridGraphQL';
 
 interface ParsedCSVResult {
   columns: EnhancedColumnConfig[];

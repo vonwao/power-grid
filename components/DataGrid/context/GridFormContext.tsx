@@ -2,8 +2,6 @@ import React, { createContext, useCallback, useContext, useState, useRef, useEff
 import {
   FieldValues,
   FieldError,
-  ValidationOptions,
-  FieldPath,
   FormState,
   FormMethods
 } from '../../../types/form';

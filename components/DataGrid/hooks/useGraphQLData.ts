@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { gql, useQuery, ApolloError } from '@apollo/client';
+import { useState, useEffect } from 'react';
+import { gql, useQuery } from '@apollo/client';
 import { ServerSideResult } from '../types/serverSide';
 
 // GraphQL query for fetching employees with pagination, sorting, and filtering

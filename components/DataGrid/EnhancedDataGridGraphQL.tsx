@@ -7,19 +7,18 @@ import {
   GridValueSetter,
   useGridApiRef,
   GridRenderCellParams,
-  GridRowSelectionModel,
-  GridCallbackDetails,
+  GridRowSelectionModel as _GridRowSelectionModel,
+  GridCallbackDetails as _GridCallbackDetails,
 } from '@mui/x-data-grid';
-import { Box, Paper, Typography, Chip } from '@mui/material';
+import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useGraphQLData, useSelectionModel, usePagination } from './hooks';
-import { ServerSideResult } from './types';
-import { GridModeProvider, useGridMode, GridMode } from './context/GridModeContext';
+import { useGridNavigation, useGraphQLData, useSelectionModel } from './hooks';
+import { GridModeProvider, useGridMode } from './context/GridModeContext';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -30,15 +29,15 @@ export interface FieldConfig<T = any> {
   options?: Array<{value: any, label: string}>;
   
   // Rendering (optional - can use defaults)
-  renderViewMode?: (value: T | null, row: any) => React.ReactNode;
-  renderEditMode?: (props: any) => React.ReactNode;
+  renderViewMode?: (_value: T | null, _row: any) => React.ReactNode;
+  renderEditMode?: (_props: any) => React.ReactNode;
   
   // Validation
   validation?: ValidationOptions;
   
   // Transform functions (optional)
-  parse?: (value: any) => T | null;
-  format?: (value: T | null) => string;
+  parse?: (_value: any) => T | null;
+  format?: (_value: T | null) => string;
 }
 
 // Enhanced column configuration
@@ -62,8 +61,8 @@ export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderC
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
-  onSave?: (changes: { edits: any[], additions: any[] }) => void;
-  validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
+  onSave?: (_changes: { edits: any[], additions: any[] }) => void;
+  validateRow?: (_values: any, _helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
   
   // GraphQL options
   useGraphQL?: boolean;
@@ -72,7 +71,7 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   // Selection options
   checkboxSelection?: boolean;
   selectionModel?: any[];
-  onSelectionModelChange?: (selectionModel: any[]) => void;
+  onSelectionModelChange?: (_selectionModel: any[]) => void;
   disableMultipleSelection?: boolean;
   
   // Grid capabilities
@@ -131,8 +130,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   loading: externalLoading,
   pageSize = 25,
   rowsPerPageOptions = [10, 25, 50, 100],
-  showCellRightBorder = true,
-  showColumnRightBorder = true,
+  // Removed unused border options
   hideFooter,
   hideFooterPagination,
   hideFooterSelectedRowCount,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { GridApi, GridCellParams, GridEventListener, GridRowId, GridColDef } from '@mui/x-data-grid';
+import { GridApi, GridEventListener, GridRowId, GridColDef } from '@mui/x-data-grid';
 
 export interface UseGridNavigationProps {
   api: GridApi;

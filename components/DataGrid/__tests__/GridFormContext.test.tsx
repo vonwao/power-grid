@@ -17,9 +17,8 @@ const TestComponent = () => {
   React.useEffect(() => {
     startEditingRow('1', 'name');
   }, [startEditingRow]);
-  
-  // Get the form for row 1
-  const form = getFormMethods('1');
+  // We don't need to store the form reference
+  const _form = getFormMethods('1');
   
   // Update a cell value
   const handleUpdateCell = () => {

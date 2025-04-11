@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
-import { EnhancedDataGrid } from './DataGrid';
+import { EnhancedDataGridGraphQL as EnhancedDataGrid } from './DataGrid/EnhancedDataGridGraphQL';
 import { employees, departments } from './data/mockData';
 
 export default function EnhancedDataGridDemo() {
