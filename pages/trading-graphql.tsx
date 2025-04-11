@@ -78,17 +78,20 @@ export default function TradingGraphQLPage() {
   };
 
 
+  // Create custom action buttons component to pass to the grid
+  const customActionButtons = (
+    <TradingActionButtons
+      isInEditMode={isInEditMode}
+      selectionModel={selectionModel}
+      onFilter={handleFilter}
+      onExport={handleExport}
+      onUpload={handleUpload}
+      onHelp={handleHelp}
+    />
+  );
+
   return (
     <div className="h-full w-full flex flex-col">
-      {/* Action Buttons */}
-      <TradingActionButtons
-        isInEditMode={isInEditMode}
-        selectionModel={selectionModel}
-        onFilter={handleFilter}
-        onExport={handleExport}
-        onUpload={handleUpload}
-        onHelp={handleHelp}
-      />
       
       {/* Data Grid */}
       <Paper elevation={0} className="flex-grow w-full overflow-auto">
@@ -116,6 +119,9 @@ export default function TradingGraphQLPage() {
           disableSelectionOnClick={true}
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
+          
+          // Custom components
+          customActionButtons={customActionButtons}
         />
       </Paper>
     </div>

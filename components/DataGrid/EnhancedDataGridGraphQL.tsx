@@ -79,6 +79,9 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   canAddRows?: boolean;
   canSelectRows?: boolean;
   
+  // Custom components
+  customActionButtons?: React.ReactNode;
+  
   // UI options
   className?: string;
   autoHeight?: boolean;
@@ -436,6 +439,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
             canEditRows={canEditRows}
             canAddRows={canAddRows}
             canSelectRows={canSelectRows}
+            customActionButtons={props.customActionButtons}
           />
 
           <Paper elevation={0} className="flex-grow w-full overflow-auto">

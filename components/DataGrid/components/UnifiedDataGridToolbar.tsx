@@ -53,6 +53,8 @@ interface UnifiedDataGridToolbarProps {
   canEditRows?: boolean;
   canAddRows?: boolean; // Removed default value = true
   canSelectRows?: boolean;
+  // Custom action buttons
+  customActionButtons?: React.ReactNode;
 }
 
 export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
@@ -63,7 +65,8 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   onHelp,
   canEditRows = true,
   canAddRows, // Removed default value = true
-  canSelectRows = true
+  canSelectRows = true,
+  customActionButtons
 }) => {
   // Get grid mode context
   const {
@@ -341,53 +344,59 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
         alignItems: 'center',
         gap: 1
       }}>
-        {/* Selection Status */}
-        {selectionModel && selectionModel.length > 0 && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-            <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-              Selected:
-            </Typography>
-            <Chip
-              label={`${selectionModel.length} rows`}
-              onDelete={clearSelection}
-              size="small"
-            />
-          </Box>
+        {/* Custom Action Buttons - if provided, render them instead of default buttons */}
+        {customActionButtons ? (
+          customActionButtons
+        ) : (
+          <>
+            {/* Selection Status */}
+            {selectionModel && selectionModel.length > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                  Selected:
+                </Typography>
+                <Chip
+                  label={`${selectionModel.length} rows`}
+                  onDelete={clearSelection}
+                  size="small"
+                />
+              </Box>
+            )}
+            {/* Filter Options - Updated onClick */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
+              <span>
+                <IconButton onClick={handleFilterClick} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <FilterAltIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Upload Options */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot upload while editing" : "Upload"}>
+              <span>
+                <IconButton onClick={onUpload} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <UploadIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Export Options */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot export while editing" : "Export"}>
+              <span>
+                <IconButton onClick={onExport} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <FileDownloadIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Help button */}
+            <Tooltip title="Help">
+              <IconButton size="small" onClick={handleHelpClick}>
+                <HelpIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
         )}
-        {/* Filter Options - Updated onClick */}
-        <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
-          <span>
-            <IconButton onClick={handleFilterClick} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
-              <FilterAltIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
-
-        {/* Upload Options */}
-        <Tooltip title={areActionButtonsDisabled ? "Cannot upload while editing" : "Upload"}>
-          <span>
-            <IconButton onClick={onUpload} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
-              <UploadIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
-
-        {/* Export Options */}
-        <Tooltip title={areActionButtonsDisabled ? "Cannot export while editing" : "Export"}>
-          <span>
-            <IconButton onClick={onExport} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
-              <FileDownloadIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
-
-                {/* Help button */}
-                <Tooltip title="Help">
-          <IconButton size="small" onClick={handleHelpClick}>
-            <HelpIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-
       </Box>
 
       {/* Confirmation Dialog */}
