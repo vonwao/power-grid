@@ -54,8 +54,17 @@ export default function TradingGraphQLPage() {
   
   const handleExport = async () => {
     console.log('Export clicked');
-    // Implement export functionality
-    return new Promise(resolve => setTimeout(resolve, 1000)); // Simulate async operation
+    
+    // Get the selected rows based on selectionModel
+    const selectedRows = selectionModel.length > 0
+      ? tradingData.filter(row => selectionModel.includes(row.id as GridRowId))
+      : tradingData; // If no rows selected, export all rows
+    
+    // Log the selected rows to the console
+    console.log('Rows to export:', selectedRows);
+    
+    // Simulate async operation
+    return new Promise(resolve => setTimeout(resolve, 1000));
   };
   
   const handleUpload = () => {
