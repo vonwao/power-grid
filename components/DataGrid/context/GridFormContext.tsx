@@ -274,10 +274,12 @@ export function GridFormProvider({
   useEffect(() => {
     // Only update if not in the middle of editing
     if (editingRows.size === 0) {
-      setRows(initialRows || []); // Ensure initialRows is defined
+      const safeInitialRows = initialRows || []; // Ensure initialRows is defined
+      setRows(safeInitialRows);
       
       // Clear form instances for rows that no longer exist
-      const newRowIds = new Set(initialRows.map(row => row.id));
+      // Use safeInitialRows to prevent "Cannot read properties of undefined (reading 'map')" error
+      const newRowIds = new Set(safeInitialRows.map(row => row.id));
       
       formInstancesRef.current.forEach((_, rowId) => {
         if (!newRowIds.has(rowId) && !addedRowsRef.current.has(rowId)) {
@@ -288,12 +290,15 @@ export function GridFormProvider({
     }
   }, [initialRows, editingRows]);
   
-  // Log pending changes whenever they change
-  useEffect(() => {
-    console.log('Pending changes:', Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
-      rowId,
-      changes
-    })));
+  // Only log pending changes in development mode and not on every render
+  // This prevents unnecessary re-renders that could cause infinite loops
+  const logPendingChanges = useCallback(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Pending changes:', Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
+        rowId,
+        changes
+      })));
+    }
   }, [pendingChanges]);
   
   // Get form methods for a specific row
@@ -518,10 +523,14 @@ export function GridFormProvider({
           return newChanges;
         });
         
-        // Force a re-render to update the UI
-        setTimeout(() => {
-          setEditingRows(prev => new Set(prev));
-        }, 0);
+        // Only force a re-render if absolutely necessary
+        // This helps prevent infinite update loops
+        if (hasChanged) {
+          // Use requestAnimationFrame instead of setTimeout for better performance
+          requestAnimationFrame(() => {
+            setEditingRows(prev => new Set(prev));
+          });
+        }
       }
     } catch (error) {
       console.error(`Error updating cell value ${rowId}.${field}:`, error);

@@ -1,15 +1,16 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   GridColDef,
   GridRowId,
   GridRenderCellParams,
   useGridApiRef,
+  GridApi,
 } from '@mui/x-data-grid';
 import { Paper } from '@mui/material';
 import { ValidationHelpers, GridFormProvider } from '../components/DataGrid/context/GridFormContext';
 import { GridModeProvider } from '../components/DataGrid/context/GridModeContext';
 import { CellEditHandler } from '../components/DataGrid/components';
-import { useGridNavigation, useGraphQLData, useSelectionModel } from '../components/DataGrid/hooks';
+import { useGraphQLData, useSelectionModel } from '../components/DataGrid/hooks';
 import { EnhancedColumnConfig } from '../components/DataGrid/types/columnConfig';
 import { FormAwareCellRenderer } from '../components/DataGrid/renderers/FormAwareCellRenderer';
 import { EditCellRenderer } from '../components/DataGrid/renderers/EditCellRenderer';
@@ -203,47 +204,37 @@ export default function TradeAdjustmentsGrid() {
   // Toggle between GraphQL fetching and local data
   const useGraphQLFetching = false;
 
+  // Only initialize GraphQL hooks if we're actually using GraphQL fetching
   const {
-    rows: graphQLRows,
-    totalRows: graphQLTotalRows,
-    loading: graphQLLoading,
-    setPage,
-    setSortModel,
-    setFilterModel,
-    error: graphQLError,
-  } = useGraphQLData({
-    pageSize: 25,
-    initialPage: 0,
-    initialSortModel: [],
-    initialFilterModel: {},
-  });
+    rows: graphQLRows = [],
+    totalRows: graphQLTotalRows = 0,
+    loading: graphQLLoading = false,
+    setPage = () => {},
+    setSortModel = () => {},
+    setFilterModel = () => {},
+    error: graphQLError = null,
+  } = useGraphQLFetching
+    ? useGraphQLData({
+        pageSize: 25,
+        initialPage: 0,
+        initialSortModel: [],
+        initialFilterModel: {},
+      })
+    : {}; // Empty object with default values when not using GraphQL
 
   // Use GraphQL data if enabled, otherwise use local rows
   const displayRows = (useGraphQLFetching ? graphQLRows : rows) as Array<{ id: GridRowId } & Record<string, any>>;
-  const totalRows = useGraphQLFetching ? graphQLTotalRows : rows.length;
+  // Calculate totalRows based on the pagination mode
+  const totalRows = useGraphQLFetching ? graphQLTotalRows : displayRows.length;
   const loading = graphQLLoading;
-
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({});
 
-  // Navigation handler: switch cell to edit mode on key press
-  const handleNavigate = useCallback((id: GridRowId, field: string) => {
-    try {
-      const cellMode = apiRef.current.getCellMode(id, field);
-      if (cellMode === 'view') {
-        apiRef.current.startCellEditMode({ id, field });
-      }
-    } catch (error) {
-      console.error('Error navigating to cell:', error);
-    }
-  }, [apiRef]);
-
-  const { handleKeyDown } = useGridNavigation({
-    api: apiRef.current,
-    columns,
-    rows: displayRows,
-    onNavigate: handleNavigate
-  });
+  // Properly typed handleKeyDown function to match CoreDataGrid's expectations
+  const handleKeyDown = useCallback((params: any, event: React.KeyboardEvent<HTMLDivElement>) => {
+    // No-op function that matches the expected signature
+    console.log('Key down event - using default MUI Data Grid navigation', params.field, event.key);
+  }, []);
 
   // Convert enhanced columns to MUI data grid columns
   const gridColumns: GridColDef[] = columns.map(column => {
@@ -268,7 +259,7 @@ export default function TradeAdjustmentsGrid() {
     <div className="h-full w-full flex flex-col">
       <Paper elevation={0} className="flex-grow w-full overflow-auto">
         <GridModeProvider
-          totalRows={displayRows.length} // Set totalRows to the length of displayRows
+          totalRows={totalRows} // Use the calculated totalRows value
           saveChanges={() => handleSave({ edits: [], additions: [] })}
           cancelChanges={() => console.log('Cancelling changes')}
           addRow={() => console.log('Adding row')}
@@ -297,7 +288,7 @@ export default function TradeAdjustmentsGrid() {
               pageSize={25}
               rowsPerPageOptions={[10, 25, 50, 100]}
               useGraphQLFetching={useGraphQLFetching}
-              totalRows={displayRows.length} // Set totalRows to the length of displayRows
+              totalRows={totalRows} // Use the calculated totalRows value
               setPage={setPage}
               setSortModel={setSortModel}
               setFilterModel={setFilterModel}

@@ -183,7 +183,22 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
    * 1. Preferred: Only count rows that are both being edited AND have actual changes
    * 2. Fallback: Count all rows that are being edited regardless of changes
    */
+  // Use a ref to track the previous state to avoid unnecessary updates
+  const prevStateRef = React.useRef<{
+    selectionModel: any[];
+    editingRowsCount: number;
+  }>({ selectionModel: [], editingRowsCount: 0 });
+
   useEffect(() => {
+    // Skip the effect if the selection model hasn't actually changed
+    // This prevents infinite loops by avoiding unnecessary state updates
+    if (JSON.stringify(prevStateRef.current.selectionModel) === JSON.stringify(selectionModel)) {
+      return;
+    }
+    
+    // Update the ref with current values
+    prevStateRef.current.selectionModel = [...selectionModel];
+    
     const newEditingRows = new Set<GridRowId>();
     
     // If we can check for dirty state (actual field changes)
@@ -203,7 +218,12 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
       });
     }
     
-    setEditingRows(newEditingRows);
+    // Only update state if the editing rows have actually changed
+    const newEditingRowsCount = newEditingRows.size;
+    if (prevStateRef.current.editingRowsCount !== newEditingRowsCount) {
+      prevStateRef.current.editingRowsCount = newEditingRowsCount;
+      setEditingRows(newEditingRows);
+    }
   }, [selectionModel, isRowEditing, isRowDirty]);
   
   /**

@@ -14,10 +14,11 @@ export const useGridNavigation = ({
   rows = [],
   onNavigate
 }: UseGridNavigationProps) => {
-  // Add diagnostic logging
+  // Add diagnostic logging with a more stable dependency check
   useEffect(() => {
     console.log('useGridNavigation hook initialized with api:', api);
-  }, [api]);
+    // Only log when the hook is first initialized or when truly necessary
+  }, []); // Empty dependency array to run only once on mount
 
   // Handle keyboard navigation
   const handleKeyDown: GridEventListener<'cellKeyDown'> = useCallback((params: GridCellParams, event: React.KeyboardEvent<HTMLElement>) => {
@@ -92,7 +93,7 @@ export const useGridNavigation = ({
         }
         break;
     }
-  }, [api, columns, rows]);
+  }, [columns, rows]); // Remove api from dependencies as it might change frequently
   
   // Navigate to a specific cell and enter edit mode
   const navigateToCell = useCallback((id: GridRowId, field: string) => {
@@ -109,7 +110,7 @@ export const useGridNavigation = ({
         console.error('Error navigating to cell:', error);
       }
     }
-  }, [api, onNavigate]);
+  }, [onNavigate]); // Remove api from dependencies as it might change frequently
   
   return {
     handleKeyDown,
