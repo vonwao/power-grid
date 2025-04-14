@@ -2,38 +2,6 @@ import { useState, useEffect } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { ServerSideResult } from '../types/serverSide';
 
-// GraphQL query for fetching employees with pagination, sorting, and filtering
-const GET_EMPLOYEES = gql`
-  query GetEmployees(
-    $page: Int
-    $pageSize: Int
-    $sort: SortInput
-    $filter: EmployeeFilterInput
-  ) {
-    employees(
-      page: $page
-      pageSize: $pageSize
-      sort: $sort
-      filter: $filter
-    ) {
-      rows {
-        id
-        name
-        email
-        age
-        birthday
-        active
-        departmentId
-        department {
-          id
-          label
-        }
-      }
-      totalRows
-    }
-  }
-`;
-
 /**
  * Hook for handling GraphQL data operations
  * Manages fetching data with pagination, sorting, and filtering using Apollo Client
@@ -71,7 +39,7 @@ export function useGraphQLData<T>({
   };
 
   // Execute the query - use custom query if provided, otherwise use default
-  const { data, loading, error, refetch } = useQuery(query || GET_EMPLOYEES, {
+  const { data, loading, error, refetch } = useQuery(query, {
     variables,
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'cache-and-network',

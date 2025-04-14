@@ -18,7 +18,7 @@ import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useGraphQLData, useSelectionModel } from './hooks';
+import { useGridNavigation, useGraphQLData, useRelayGraphQLData, useSelectionModel } from './hooks';
 import { GridModeProvider, useGridMode } from './context/GridModeContext';
 
 // Field configuration for React Hook Form integration
@@ -70,6 +70,7 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   forceClientSide?: boolean; // Escape hatch - not recommended for large datasets
   query?: DocumentNode; // New prop for GraphQL query
   variables?: Record<string, any>;
+  paginationStyle?: 'offset' | 'cursor'; // Pagination style: offset (default) or cursor (Relay)
   
   // Selection options
   checkboxSelection?: boolean;
@@ -116,6 +117,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   forceClientSide = false,
   query,
   variables,
+  paginationStyle = 'offset',
   // Selection options
   checkboxSelection = false,
   selectionModel: initialSelectionModel,
@@ -150,7 +152,10 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // Use GraphQL data if enabled and not forcing client-side
   const useGraphQLFetching = useGraphQL && !forceClientSide;
   
-  // Always call the hook, but only use its results if useGraphQLFetching is true
+  // Determine which hook to use based on pagination style
+  const isRelayCursorPagination = paginationStyle === 'cursor';
+  
+  // Use the appropriate hook based on pagination style
   const {
     rows: graphQLRows,
     totalRows: graphQLTotalRows,
@@ -158,14 +163,34 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     setPage,
     setSortModel,
     setFilterModel,
-  } = useGraphQLData<T>({
-    pageSize,
-    initialPage: 0,
-    initialSortModel: [],
-    initialFilterModel: {},
-    query, // Use the passed query
-    variables, // Use the passed variables
-  });
+  } = useGraphQLFetching
+    ? (isRelayCursorPagination
+      ? useRelayGraphQLData<T>({
+          pageSize,
+          initialPage: 0,
+          initialSortModel: [],
+          initialFilterModel: {},
+          query,
+          variables,
+          nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
+        })
+      : useGraphQLData<T>({
+          pageSize,
+          initialPage: 0,
+          initialSortModel: [],
+          initialFilterModel: {},
+          query,
+          variables,
+        }))
+    : {
+        rows: [] as T[],
+        totalRows: 0,
+        loading: false,
+        error: null as Error | null,
+        setPage: () => {},
+        setSortModel: () => {},
+        setFilterModel: () => {}
+      };
   
   // Use GraphQL data or client data based on the useGraphQLFetching flag
   const displayRows = useGraphQLFetching ? graphQLRows : rows;

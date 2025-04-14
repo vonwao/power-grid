@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-micro';
+import { mtmHistoryTypeDefs } from './mtm-history';
 
 // Define the GraphQL schema
 export const typeDefs = gql`
@@ -63,3 +64,6 @@ export const typeDefs = gql`
     ): EmployeesResult!
   }
 `;
+
+// Merge the base schema with the MTM History schema
+export const mergedTypeDefs = [typeDefs, mtmHistoryTypeDefs];

@@ -1,5 +1,6 @@
 import { departments, Employee } from '../../components/data/mockData';
 import { generateEmployees } from '../../utils/dataGenerator';
+import { mtmHistoryResolvers } from './mtm-history';
 
 // Cache generated data
 let cachedEmployees: Employee[] | null = null;
@@ -21,6 +22,8 @@ function getEmployees(count = 10000): Employee[] {
 // GraphQL resolvers
 export const resolvers = {
   Query: {
+    // Include MTM History query resolver
+    ...mtmHistoryResolvers.Query,
     // Get all departments
     departments: () => departments,
     

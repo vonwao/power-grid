@@ -54,6 +54,22 @@ export default function Home() {
             <Card>
               <CardContent>
                 <Typography variant="h5" component="h2" gutterBottom>
+                  MTM History with Relay Pagination
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  GraphQL implementation using Relay-style cursor-based pagination for efficient data fetching.
+                </Typography>
+                <Link href="/mtm-history" passHref>
+                  <Button variant="contained" component="a" color="secondary">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
                   Unified Toolbar
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
