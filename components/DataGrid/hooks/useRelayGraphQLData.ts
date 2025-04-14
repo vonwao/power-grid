@@ -175,14 +175,18 @@ export function useRelayGraphQLData<T>({
       // Transform the node into a row
       const row = nodeToRow(edge.node);
       
-      // Ensure the row has an id property (required by MUI DataGrid)
+      // Instead of modifying the original object, create a new one with the id property
       if (typeof row === 'object' && row !== null && !('id' in row)) {
         // Look for common ID patterns or fallback to the cursor
-        (row as any).id = 
-          edge.node.id || 
-          edge.node.uuid || 
-          edge.node[`${Object.keys(edge.node)[0]}_id`] || 
+        const id =
+          edge.node.id ||
+          edge.node.uuid ||
+          edge.node.accounting_mtm_history_id ||
+          edge.node[`${Object.keys(edge.node)[0]}_id`] ||
           edge.cursor;
+        
+        // Create a new object with the id property
+        return { ...row, id };
       }
       
       return row;

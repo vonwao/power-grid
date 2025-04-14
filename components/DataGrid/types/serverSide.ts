@@ -3,6 +3,16 @@
  */
 
 /**
+ * PageInfo interface for Relay-style pagination
+ */
+export interface PageInfo {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  startCursor?: string | null;
+  endCursor?: string | null;
+}
+
+/**
  * Server-side data parameters
  */
 export interface ServerSideParams {
@@ -24,4 +34,8 @@ export interface ServerSideResult<T> {
   setPage: (page: number) => void;
   setSortModel: (sortModel: { field: string; sort: 'asc' | 'desc' }[]) => void;
   setFilterModel: (filterModel: Record<string, any>) => void;
+  
+  // Optional properties for Relay-style pagination
+  pageInfo?: PageInfo;
+  setPaginationDirection?: (direction: 'forward' | 'backward') => void;
 }

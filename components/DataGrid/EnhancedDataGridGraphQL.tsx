@@ -20,6 +20,7 @@ import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
 import { useGridNavigation, useGraphQLData, useRelayGraphQLData, useSelectionModel } from './hooks';
 import { GridModeProvider, useGridMode } from './context/GridModeContext';
+import { ServerSideResult } from './types/serverSide';
 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
@@ -163,6 +164,8 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     setPage,
     setSortModel,
     setFilterModel,
+    pageInfo,
+    setPaginationDirection,
   } = useGraphQLFetching
     ? (isRelayCursorPagination
       ? useRelayGraphQLData<T>({
@@ -189,8 +192,15 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         error: null as Error | null,
         setPage: () => {},
         setSortModel: () => {},
-        setFilterModel: () => {}
-      };
+        setFilterModel: () => {},
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null
+        },
+        setPaginationDirection: () => {}
+      } as ServerSideResult<T>;
   
   // Use GraphQL data or client data based on the useGraphQLFetching flag
   const displayRows = useGraphQLFetching ? graphQLRows : rows;
