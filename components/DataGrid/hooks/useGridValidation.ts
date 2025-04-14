@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { GridRowModel } from '@mui/x-data-grid';
 import { ValidationResult } from '../validation/types';
-import { EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
 import { createValidatorFromColumnConfig } from '../validation/validators';
 
 export interface UseGridValidationProps {
@@ -19,9 +19,17 @@ export const useGridValidation = ({ columns }: UseGridValidationProps) => {
       createValidatorFromColumnConfig(column);
     
     // Get value
-    const value = column.valueGetter ? 
-      column.valueGetter({ row, field }) : 
-      row[field];
+    let value = row[field];
+    
+    // Use valueGetter if available
+    if (column.valueGetter) {
+      try {
+        // Try to use valueGetter with the expected signature
+        value = (column.valueGetter as any)({ row, field });
+      } catch (error) {
+        console.error('Error using valueGetter:', error);
+      }
+    }
     
     // Validate
     return validator.validate(value);

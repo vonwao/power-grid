@@ -43,11 +43,15 @@ export function useGraphQLData<T>({
   initialPage = 0,
   initialSortModel = [],
   initialFilterModel = {},
+  query,
+  variables: customVariables = {},
 }: {
   pageSize: number;
   initialPage?: number;
   initialSortModel?: { field: string; sort: 'asc' | 'desc' }[];
   initialFilterModel?: Record<string, any>;
+  query?: any; // DocumentNode from Apollo
+  variables?: Record<string, any>;
 }): ServerSideResult<T> {
   const [page, setPage] = useState(initialPage);
   const [sortModel, setSortModel] = useState(initialSortModel);
@@ -63,10 +67,11 @@ export function useGraphQLData<T>({
     filter: Object.keys(filterModel).length > 0
       ? filterModel
       : undefined,
+    ...customVariables, // Merge custom variables
   };
 
-  // Execute the query
-  const { data, loading, error, refetch } = useQuery(GET_EMPLOYEES, {
+  // Execute the query - use custom query if provided, otherwise use default
+  const { data, loading, error, refetch } = useQuery(query || GET_EMPLOYEES, {
     variables,
     notifyOnNetworkStatusChange: true,
     fetchPolicy: 'cache-and-network',
@@ -78,8 +83,16 @@ export function useGraphQLData<T>({
   }, [page, pageSize, sortModel, filterModel, refetch]);
 
   // Extract data from query result
-  const rows = data?.employees?.rows || [];
-  const totalRows = data?.employees?.totalRows || 0;
+  // Try to find the first property that has rows and totalRows
+  const queryResult = data ? Object.values(data)[0] : null;
+  
+  // Safely access rows and totalRows with type assertions
+  const rows = queryResult && typeof queryResult === 'object' && queryResult !== null && 'rows' in queryResult
+    ? (queryResult as any).rows
+    : [];
+  const totalRows = queryResult && typeof queryResult === 'object' && queryResult !== null && 'totalRows' in queryResult
+    ? (queryResult as any).totalRows
+    : 0;
 
   return {
     rows: rows as T[],

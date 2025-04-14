@@ -4,8 +4,45 @@ import {
   useGridApiRef,
 } from '@mui/x-data-grid';
 import { Paper } from '@mui/material';
+import { gql } from '@apollo/client';
 import { EnhancedDataGridGraphQL } from '../components/DataGrid';
 import { TradingActionButtons } from '../components/TradingActionButtons';
+
+// GraphQL query for fetching MTMAdjustments with pagination, sorting, and filtering
+const GET_MTM_ADJUSTMENTS = gql`
+  query GetMTMAdjustments(
+    $page: Int
+    $pageSize: Int
+    $sort: SortInput
+    $filter: MTMAdjustmentFilterInput
+  ) {
+    mtmAdjustments(
+      page: $page
+      pageSize: $pageSize
+      sort: $sort
+      filter: $filter
+    ) {
+      rows {
+        id
+        deal_key
+        reporting_month
+        contract_month
+        contract_number
+        bucket_strategy
+        bs_netting_label
+        group_id
+        rolloff_classification
+        fas_161_label
+        strategy
+        fas_157_curve_rank
+        portfolio
+        modified_by
+        modified_on
+      }
+      totalRows
+    }
+  }
+`;
 import { GridMode } from '../components/DataGrid/context/GridModeContext';
 import { ValidationHelpers } from '../components/DataGrid/context/GridFormContext';
 import { tradingColumns } from '../components/data/tradingColumns';
@@ -103,6 +140,10 @@ export default function TradingGraphQLPage() {
           
           // GraphQL options
           useGraphQL={useGraphQLFetching}
+          query={GET_MTM_ADJUSTMENTS}
+          variables={{
+            // Add any additional variables needed for the query
+          }}
           
           // Selection options
           checkboxSelection={true}

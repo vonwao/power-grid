@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import { GridRenderEditCellParams } from '@mui/x-data-grid';
 import { TextField, Checkbox, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
-import { EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
 import { useGridForm } from '../context/GridFormContext';
 import { ValidationIndicator } from '../components/ValidationIndicator';
 

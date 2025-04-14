@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
   GridColDef,
@@ -67,6 +68,8 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   // GraphQL options
   useGraphQL?: boolean;
   forceClientSide?: boolean; // Escape hatch - not recommended for large datasets
+  query?: DocumentNode; // New prop for GraphQL query
+  variables?: Record<string, any>;
   
   // Selection options
   checkboxSelection?: boolean;
@@ -111,6 +114,8 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // GraphQL options
   useGraphQL = true,
   forceClientSide = false,
+  query,
+  variables,
   // Selection options
   checkboxSelection = false,
   selectionModel: initialSelectionModel,
@@ -158,6 +163,8 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     initialPage: 0,
     initialSortModel: [],
     initialFilterModel: {},
+    query, // Use the passed query
+    variables, // Use the passed variables
   });
   
   // Use GraphQL data or client data based on the useGraphQLFetching flag
@@ -167,6 +174,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // Combine external loading state with GraphQL loading state
   const loading = externalLoading || graphQLLoading;
   
+  // Initialize selection model hook
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
     selectionModel: initialSelectionModel,
@@ -413,8 +421,9 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         canAddRows={canAddRows}
         canSelectRows={canSelectRows}
         selectionModel={selectionModel}
-        onRowSelectionModelChange={(newSelectionModel, details) => {
-          handleSelectionModelChange(newSelectionModel, details);
+        onSelectionModelChange={(selectionModel) => {
+          // Adapter function to match the expected signature
+          handleSelectionModelChange(selectionModel, {} as any);
         }}
       >
         {children}

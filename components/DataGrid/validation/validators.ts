@@ -1,7 +1,7 @@
 import { FieldValidator, ValidationResult, ValidationRule } from './types';
 import { RequiredRule } from './rules';
 import { FieldTypeConfig } from '../fieldTypes/types';
-import { EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
 
 export function createValidator<T>(rules: ValidationRule<T>[]): FieldValidator<T> {
   return {

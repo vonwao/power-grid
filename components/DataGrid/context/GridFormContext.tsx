@@ -6,7 +6,7 @@ import {
   FormMethods
 } from '../../../types/form';
 import { GridRowId } from '@mui/x-data-grid';
-import { EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
 
 export interface ValidationHelpers {
   getFieldValue: (field: string) => any;

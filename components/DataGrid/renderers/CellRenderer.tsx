@@ -2,7 +2,7 @@ import React from 'react';
 import { Tooltip } from '@mui/material';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { FieldError } from '../../../types/form';
-import { EnhancedColumnConfig } from '../EnhancedDataGrid';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
 import { ValidationIndicator } from '../components/ValidationIndicator';
 import { useGridForm } from '../context/GridFormContext';
 
