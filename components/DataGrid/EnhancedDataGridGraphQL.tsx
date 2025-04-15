@@ -354,7 +354,7 @@ console.log("useRelayGraphQLData running with variables:", variables);
         columns={gridColumns}
         autoHeight={autoHeight}
         density={density}
-        disableColumnFilter={disableColumnFilter}
+        disableColumnFilter={false} // Always enable column filters
         disableColumnMenu={disableColumnMenu}
         disableColumnSelector={disableColumnSelector}
         disableDensitySelector={disableDensitySelector}
@@ -364,10 +364,13 @@ console.log("useRelayGraphQLData running with variables:", variables);
         hideFooter={hideFooter}
         hideFooterPagination={hideFooterPagination}
         hideFooterSelectedRowCount={hideFooterSelectedRowCount}
-        // Pagination
+        // Pagination and sorting
         initialState={{
           pagination: {
             paginationModel: { pageSize, page: 0 },
+          },
+          sorting: {
+            sortModel: [], // Initialize with empty sort model
           },
         }}
         pageSizeOptions={rowsPerPageOptions}
@@ -384,21 +387,40 @@ console.log("useRelayGraphQLData running with variables:", variables);
         sortingMode={useGraphQLFetching ? 'server' : 'client'}
         filterMode={useGraphQLFetching ? 'server' : 'client'}
         onSortModelChange={(model) => {
+          console.log('Sort model changed:', model);
           if (useGraphQLFetching) {
-            setSortModel(model.map(item => ({
-              field: item.field,
-              sort: item.sort as 'asc' | 'desc'
-            })));
+            // Only process if there's a valid sort model
+            if (model && model.length > 0) {
+              const newSortModel = model.map(item => ({
+                field: item.field,
+                sort: item.sort as 'asc' | 'desc'
+              }));
+              console.log('Processed sort model:', newSortModel);
+              setSortModel(newSortModel);
+            } else {
+              // Reset sort model if empty
+              console.log('Resetting sort model');
+              setSortModel([]);
+            }
           }
         }}
         onFilterModelChange={(model) => {
           if (useGraphQLFetching) {
+            console.log('Filter model changed:', model);
             const filterModel: Record<string, any> = {};
+            
+            // Process each filter item and capture all relevant information
             model.items.forEach(item => {
               if (item.field && item.value !== undefined) {
-                filterModel[item.field] = item.value;
+                // Include the operator and value in the filter model
+                filterModel[item.field] = {
+                  value: item.value,
+                  operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
+                };
               }
             });
+            
+            console.log('Processed filter model:', filterModel);
             setFilterModel(filterModel);
           }
         }}

@@ -93,18 +93,28 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
   // Memoize the sort configuration to prevent recreating on every render
   const sort = useMemo(() => {
     if (sortModel.length === 0) return undefined;
-    return [
-      {
-        field: sortModel[0].field,
-        direction: sortModel[0].sort === "desc" ? "DESC" : "ASC",
-      },
-    ];
+    
+    // Log the sort model for debugging
+    console.log('Creating sort configuration from model:', sortModel);
+    
+    // Create a properly formatted sort object that includes the direction
+    // This ensures both ASC and DESC sorting work correctly
+    const sortConfig = JSON.stringify({
+      field: sortModel[0].field,
+      direction: sortModel[0].sort === "desc" ? "DESC" : "ASC",
+    });
+    
+    console.log('Generated sort configuration:', sortConfig);
+    return sortConfig;
   }, [sortModel]);
 
   // Memoize the filter configuration
   const filter = useMemo(() => {
     if (Object.keys(filterModel).length === 0) return undefined;
-    return filterModel;
+    
+    // Create a properly formatted filter object that includes all filter information
+    // This ensures filtering works correctly with the GraphQL API
+    return JSON.stringify(filterModel);
   }, [filterModel]);
 
   // Memoize pagination variables
@@ -132,8 +142,8 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
     return {
       ...paginationVars,
       ...customVariables,
-      ...(sort ? { sort: JSON.stringify(sort) } : {}),
-      ...(filter ? { filter: JSON.stringify(filter) } : {}),
+      ...(sort ? { sort } : {}),
+      ...(filter ? { filter } : {}),
     } as GraphQLVariables;
   }, [paginationVars, customVariables, sort, filter]);
 
@@ -167,6 +177,11 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
     fetchPolicy: "cache-and-network",
     skip: !query || Object.keys(variables).length === 0, // Skip if variables is empty
   });
+
+  // Effect to log sort model changes
+  useEffect(() => {
+    console.log('Sort model changed in hook:', sortModel);
+  }, [sortModel]);
 
   // Effect for pagination changes with throttling
   useEffect(() => {
