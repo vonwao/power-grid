@@ -174,7 +174,7 @@ export default function MTMHistoryPage() {
 FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/EnhancedDataGridGraphQL.tsx
 ==========================================================================
 
-import React, { useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -194,7 +194,7 @@ import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useGraphQLData, useRelayGraphQLData, useSelectionModel } from './hooks';
+import { useGridNavigation, useRelayGraphQLData, useSelectionModel } from './hooks';
 import { GridModeProvider, useGridMode } from './context/GridModeContext';
 import { ServerSideResult } from './types/serverSide';
 
@@ -235,7 +235,6 @@ export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderC
   valueGetter?: GridValueGetter;
   valueSetter?: GridValueSetter;
 }
-
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
@@ -282,6 +281,10 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   hideFooterPagination?: boolean;
   hideFooterSelectedRowCount?: boolean;
   rowHeight?: number; // Custom row height in pixels
+  
+  // Testing and debugging props
+  onPageChange?: (page: number) => void; // Callback for page changes
+  onRowsChange?: (rows: T[]) => void; // Callback for rows changes
 }
 
 export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
@@ -324,11 +327,25 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   rowHeight,
   ...props
 }: EnhancedDataGridGraphQLProps<T>) {
+
+  // In EnhancedDataGridGraphQL component, add near the top:
+console.log("EnhancedDataGridGraphQL rendering", { 
+  useGraphQL, 
+  forceClientSide, 
+  selectionModel: initialSelectionModel?.length 
+});
+
+// In useRelayGraphQLData hook, add:
+console.log("useRelayGraphQLData running with variables:", variables);
+
   const apiRef = useGridApiRef();
   
   // Use GraphQL data if enabled and not forcing client-side
-  const useGraphQLFetching = useGraphQL && !forceClientSide;
-  
+  const useGraphQLFetching = useMemo(() => 
+    useGraphQL && !forceClientSide, 
+    [useGraphQL, forceClientSide]
+  );
+
   // Determine which hook to use based on pagination style
   const isRelayCursorPagination = paginationStyle === 'cursor';
   
@@ -343,7 +360,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     pageInfo,
     setPaginationDirection,
   } = useGraphQLFetching
-    ? (isRelayCursorPagination
       ? useRelayGraphQLData<T>({
           pageSize,
           initialPage: 0,
@@ -353,14 +369,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
           variables,
           nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
         })
-      : useGraphQLData<T>({
-          pageSize,
-          initialPage: 0,
-          initialSortModel: [],
-          initialFilterModel: {},
-          query,
-          variables,
-        }))
     : {
         rows: [] as T[],
         totalRows: 0,
@@ -384,6 +392,13 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   
   // Combine external loading state with GraphQL loading state
   const loading = externalLoading || graphQLLoading;
+  
+  // Call the onRowsChange callback when rows change
+  useEffect(() => {
+    if (props.onRowsChange) {
+      props.onRowsChange(displayRows);
+    }
+  }, [displayRows, props.onRowsChange]);
   
   // Initialize selection model hook
   // Initialize selection model hook
@@ -525,7 +540,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         columns={gridColumns}
         autoHeight={autoHeight}
         density={density}
-        disableColumnFilter={disableColumnFilter}
+        disableColumnFilter={false} // Always enable column filters
         disableColumnMenu={disableColumnMenu}
         disableColumnSelector={disableColumnSelector}
         disableDensitySelector={disableDensitySelector}
@@ -535,10 +550,13 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         hideFooter={hideFooter}
         hideFooterPagination={hideFooterPagination}
         hideFooterSelectedRowCount={hideFooterSelectedRowCount}
-        // Pagination
+        // Pagination and sorting
         initialState={{
           pagination: {
             paginationModel: { pageSize, page: 0 },
+          },
+          sorting: {
+            sortModel: [], // Initialize with empty sort model
           },
         }}
         pageSizeOptions={rowsPerPageOptions}
@@ -547,7 +565,35 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         onPaginationModelChange={(model) => {
           // For GraphQL pagination, fetch the data
           if (useGraphQLFetching) {
+            console.log("Pagination model changed:", model);
+            
+            // For Relay cursor pagination, we need to handle "Next" and "Previous" differently
+            if (paginationStyle === 'cursor') {
+              // If we're going to the next page, set pagination direction to forward
+              if (model.page > 0) {
+                setPaginationDirection("forward");
+              }
+            }
+            
+            // Set the page
             setPage(model.page);
+            
+            // Force a refetch with a slight delay to ensure state updates have propagated
+            setTimeout(() => {
+              console.log("Forcing refetch after page change to page", model.page);
+              // This will trigger the useEffect in the hook that watches variables
+              const currentVars = { ...variables };
+              if (paginationStyle === 'cursor') {
+                // For cursor pagination, we need to ensure we're using the right cursor
+                // We don't have direct access to cursors here, so we'll just trigger a refetch
+                // The hook will handle the cursor management
+              }
+            }, 50);
+            
+            // Call the onPageChange callback if provided
+            if (props.onPageChange) {
+              props.onPageChange(model.page);
+            }
           }
         }}
         
@@ -555,21 +601,40 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         sortingMode={useGraphQLFetching ? 'server' : 'client'}
         filterMode={useGraphQLFetching ? 'server' : 'client'}
         onSortModelChange={(model) => {
+          console.log('Sort model changed:', model);
           if (useGraphQLFetching) {
-            setSortModel(model.map(item => ({
-              field: item.field,
-              sort: item.sort as 'asc' | 'desc'
-            })));
+            // Only process if there's a valid sort model
+            if (model && model.length > 0) {
+              const newSortModel = model.map(item => ({
+                field: item.field,
+                sort: item.sort as 'asc' | 'desc'
+              }));
+              console.log('Processed sort model:', newSortModel);
+              setSortModel(newSortModel);
+            } else {
+              // Reset sort model if empty
+              console.log('Resetting sort model');
+              setSortModel([]);
+            }
           }
         }}
         onFilterModelChange={(model) => {
           if (useGraphQLFetching) {
+            console.log('Filter model changed:', model);
             const filterModel: Record<string, any> = {};
+            
+            // Process each filter item and capture all relevant information
             model.items.forEach(item => {
               if (item.field && item.value !== undefined) {
-                filterModel[item.field] = item.value;
+                // Include the operator and value in the filter model
+                filterModel[item.field] = {
+                  value: item.value,
+                  operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
+                };
               }
             });
+            
+            console.log('Processed filter model:', filterModel);
             setFilterModel(filterModel);
           }
         }}
@@ -822,48 +887,35 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   // State for the current mode
   const [mode, setMode] = useState<GridMode>(initialMode);
   
-  /**
-   * Selection Model Management
-   *
-   * This component handles two possible sources of selection state:
-   * 1. External selection model passed via props (controlled mode)
-   * 2. Internal selection model managed by the useSelectionModel hook (uncontrolled mode)
-   *
-   * The logic prioritizes the external selection model if provided, otherwise
-   * falls back to the internal hook-based selection model.
-   */
+  // Determine if we're in controlled selection mode
+  const isSelectionControlled = externalSelectionModel !== undefined;
   
-  // Get selection model from hook, but configure it with external values if provided
+  // Only use the internal selection hook when in uncontrolled mode
   const {
-    selectionModel: hookSelectionModel,
-    onSelectionModelChange: hookOnSelectionModelChange
+    selectionModel: internalSelectionModel,
+    onSelectionModelChange: internalOnSelectionModelChange
   } = useSelectionModel({
-    selectionModel: externalSelectionModel,
-    onSelectionModelChange: externalOnSelectionModelChange ?
-      (newModel) => externalOnSelectionModelChange(newModel) :
+    // Don't pass the external selection model to avoid double-management
+    onSelectionModelChange: !isSelectionControlled && externalOnSelectionModelChange ? 
+      (newModel) => externalOnSelectionModelChange(newModel) : 
       undefined
   });
   
-  /**
-   * Selection Change Adapter
-   *
-   * This function adapts between different selection change handler signatures:
-   * - The external handler might expect just the new selection model
-   * - The hook handler expects both the model and additional details
-   *
-   * This adapter ensures that the correct parameters are passed to each handler.
-   */
+  // Use the appropriate selection model based on controlled/uncontrolled state
+  const selectionModel = isSelectionControlled ? externalSelectionModel : internalSelectionModel;
+  
   // Create a wrapper function that adapts between the different types
   const adaptedOnSelectionModelChange = useCallback((newModel: any[], details?: any) => {
-    if (externalOnSelectionModelChange) {
-      externalOnSelectionModelChange(newModel);
+    if (isSelectionControlled) {
+      // In controlled mode, only call the external handler
+      if (externalOnSelectionModelChange) {
+        externalOnSelectionModelChange(newModel);
+      }
     } else {
-      hookOnSelectionModelChange(newModel, details || {} as any);
+      // In uncontrolled mode, update internal state
+      internalOnSelectionModelChange(newModel, details || {} as any);
     }
-  }, [externalOnSelectionModelChange, hookOnSelectionModelChange]);
-  
-  // Use external selection model if provided, otherwise use hook-managed model
-  const selectionModel = externalSelectionModel !== undefined ? externalSelectionModel : hookSelectionModel;
+  }, [isSelectionControlled, externalOnSelectionModelChange, internalOnSelectionModelChange]);
   
   // Get pagination
   const {
@@ -873,47 +925,20 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     setPageSize
   } = usePagination();
   
-  /**
-   * Editing Rows Tracking
-   *
-   * This state and effect track which rows are currently being edited.
-   * A row is considered "being edited" if:
-   * 1. It's in edit mode (isRowEditing returns true)
-   * 2. It has actual changes (isRowDirty returns true) - if available
-   *
-   * This tracking is used to:
-   * - Display UI indicators for edited rows
-   * - Determine if save/cancel actions should be enabled
-   * - Count how many rows are being edited for the toolbar display
-   */
+  // Tracking edited rows logic...
   const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
   
-  /**
-   * Effect: Update Editing Rows Set
-   *
-   * This effect runs whenever:
-   * - The selection model changes
-   * - The row editing state changes
-   * - The row dirty state changes
-   *
-   * It rebuilds the set of rows that are currently being edited with actual changes.
-   * Two approaches are used based on available functions:
-   * 1. Preferred: Only count rows that are both being edited AND have actual changes
-   * 2. Fallback: Count all rows that are being edited regardless of changes
-   */
+  // Effect for updating editing rows set
   useEffect(() => {
     const newEditingRows = new Set<GridRowId>();
     
-    // If we can check for dirty state (actual field changes)
     if (isRowDirty) {
-      // Only count rows that are both being edited AND have actual changes
       selectionModel.forEach((rowId: GridRowId) => {
         if (isRowEditing(rowId) && isRowDirty(rowId)) {
           newEditingRows.add(rowId);
         }
       });
     } else {
-      // Fallback: count all rows being edited regardless of changes
       selectionModel.forEach((rowId: GridRowId) => {
         if (isRowEditing(rowId)) {
           newEditingRows.add(rowId);
@@ -924,97 +949,36 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     setEditingRows(newEditingRows);
   }, [selectionModel, isRowEditing, isRowDirty]);
   
-  /**
-   * Derived State
-   *
-   * These values are computed from other state and don't need their own useState.
-   * They're recalculated whenever their dependencies change.
-   */
-  
-  // Count of selected rows - derived from selectionModel
+  // Derived state
   const selectedRowCount = selectionModel.length;
   
-  /**
-   * Count of rows being edited with actual changes
-   *
-   * Two approaches:
-   * 1. If isRowDirty is available: Filter editingRows to only count those with changes
-   * 2. Otherwise: Use the total count of rows being edited
-   *
-   * This ensures the UI accurately reflects how many rows will be affected by a save.
-   */
   const editingRowCount = isRowDirty ?
     Array.from(editingRows).filter(rowId => isRowDirty(rowId)).length :
     editingRows.size;
   
-  /**
-   * Flag indicating if we're in "add row" mode
-   *
-   * This is a simplified approach based on the current mode.
-   * A more robust implementation would track newly added rows specifically.
-   */
   const isAddingRow = mode === 'add';
   
-  /**
-   * Action Handlers
-   *
-   * These callbacks handle user actions and update state accordingly.
-   * They're memoized with useCallback to prevent unnecessary re-renders.
-   */
-  
-  /**
-   * Clear Selection
-   * Removes all selected rows by passing an empty array to the selection handler
-   */
-  // Clear selection
+  // Action Handlers
   const clearSelection = useCallback(() => {
-    // Just pass an empty array to clear the selection
     adaptedOnSelectionModelChange([]);
   }, [adaptedOnSelectionModelChange]);
   
-  /**
-   * Save Changes
-   * 1. Calls the form's save function to persist changes
-   * 2. Resets the grid mode to 'none' (view mode)
-   */
   const saveChanges = useCallback(() => {
     formSaveChanges();
     setMode('none');
   }, [formSaveChanges]);
   
-  /**
-   * Cancel Changes
-   * 1. Calls the form's cancel function to revert changes
-   * 2. Resets the grid mode to 'none' (view mode)
-   */
   const cancelChanges = useCallback(() => {
     formCancelChanges();
     setMode('none');
   }, [formCancelChanges]);
   
-  /**
-   * Add Row
-   * 1. Calls the form's add row function to create a new row
-   * 2. Sets the grid mode to 'add' to indicate we're adding a row
-   */
   const addRow = useCallback(() => {
     formAddRow();
     setMode('add');
   }, [formAddRow]);
   
-  /**
-   * Context Value
-   *
-   * This object contains all the state and functions that will be
-   * provided to components that consume this context.
-   *
-   * It includes:
-   * - Mode state and setter
-   * - Selection state and handlers
-   * - Editing state
-   * - Action handlers
-   * - Pagination state and handlers
-   */
+  // Context value
   const contextValue: GridModeContextType = {
     mode,
     setMode,
@@ -1906,14 +1870,17 @@ import { SelectionModelState, SelectionOptions } from '../types/selection';
  * Hook for managing row selection state
  */
 export function useSelectionModel({
-  selectionModel: initialSelectionModel = [],
+  selectionModel: externalSelectionModel,
   onSelectionModelChange: externalOnSelectionModelChange,
 }: SelectionOptions = {}): SelectionModelState {
-  // Initialize selection model state
-  const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>(initialSelectionModel);
+  // Only create internal state for uncontrolled mode
+  const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>([]);
   
-  // Use external selection model if provided, otherwise use internal
-  const selectionModel = initialSelectionModel || internalSelectionModel;
+  // Determine if we're in controlled mode
+  const isControlled = externalSelectionModel !== undefined;
+  
+  // Use external model if in controlled mode, otherwise use internal
+  const selectionModel = isControlled ? externalSelectionModel : internalSelectionModel;
   
   // Handle selection model change
   const onSelectionModelChange = useCallback(
@@ -1921,15 +1888,17 @@ export function useSelectionModel({
       // Convert readonly array to mutable array
       const mutableSelectionModel = [...newSelectionModel];
       
-      // Update internal state
-      setInternalSelectionModel(mutableSelectionModel);
+      if (!isControlled) {
+        // Only update internal state if we're not in controlled mode
+        setInternalSelectionModel(mutableSelectionModel);
+      }
       
-      // Call external handler if provided
+      // Always call external handler if provided
       if (externalOnSelectionModelChange) {
         externalOnSelectionModelChange(mutableSelectionModel);
       }
     },
-    [externalOnSelectionModelChange]
+    [isControlled, externalOnSelectionModelChange]
   );
   
   return {
@@ -1943,9 +1912,9 @@ export function useSelectionModel({
 FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/hooks/useRelayGraphQLData.ts
 ==========================================================================
 
-import { useState, useEffect } from 'react';
-import { useQuery } from '@apollo/client';
-import { ServerSideResult } from '../types/serverSide';
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useQuery } from "@apollo/client";
+import { ServerSideResult } from "../types/serverSide";
 
 /**
  * PageInfo interface from the Relay Cursor Connections specification
@@ -1953,10 +1922,10 @@ import { ServerSideResult } from '../types/serverSide';
  * and cursors for the start and end of the current page
  */
 interface PageInfo {
-  hasNextPage: boolean;    // Whether there are more items after the end cursor
+  hasNextPage: boolean; // Whether there are more items after the end cursor
   hasPreviousPage: boolean; // Whether there are more items before the start cursor
   startCursor?: string | null; // Cursor pointing to the first item in the current page
-  endCursor?: string | null;   // Cursor pointing to the last item in the current page
+  endCursor?: string | null; // Cursor pointing to the last item in the current page
 }
 
 /**
@@ -1965,7 +1934,7 @@ interface PageInfo {
  */
 interface Edge<T> {
   cursor: string; // Base64-encoded cursor for pagination
-  node: T;        // The actual data item
+  node: T; // The actual data item
 }
 
 /**
@@ -1973,15 +1942,36 @@ interface Edge<T> {
  * Represents a paginated list of items with metadata
  */
 interface Connection<T> {
-  edges: Edge<T>[];    // Array of edges (items with cursors)
-  pageInfo: PageInfo;  // Pagination metadata
-  totalCount: number;  // Total number of items matching the query
+  edges: Edge<T>[]; // Array of edges (items with cursors)
+  pageInfo: PageInfo; // Pagination metadata
+  totalCount: number; // Total number of items matching the query
+}
+
+/**
+ * Define GraphQLVariables type to fix type issues
+ */
+interface GraphQLVariables {
+  first?: number;
+  last?: number;
+  after?: string | null;
+  before?: string | null;
+  sort?: string;
+  filter?: string;
+  [key: string]: any;
+}
+
+/**
+ * Combined pagination state to prevent race conditions
+ */
+interface PaginationState {
+  page: number;
+  direction: "forward" | "backward";
 }
 
 /**
  * Hook for handling GraphQL data operations with Relay-style cursor-based pagination
  * Manages fetching data with pagination, sorting, and filtering using Apollo Client
- * 
+ *
  * This hook is specifically designed to work with a DynamoDB backend that uses
  * cursor-based pagination following the Relay Connection specification
  */
@@ -1993,192 +1983,442 @@ export function useRelayGraphQLData<T>({
   query,
   variables: customVariables = {},
   nodeToRow = (node: any) => node as T,
-  enableBackwardPagination = false, // Set to true to enable backward pagination
+  enableBackwardPagination = false,
 }: {
-  pageSize: number;  // Number of items to fetch per page
-  initialPage?: number; // Starting page (0-indexed)
-  initialSortModel?: { field: string; sort: 'asc' | 'desc' }[]; // Initial sort configuration
-  initialFilterModel?: Record<string, any>; // Initial filter configuration
-  query?: any; // GraphQL DocumentNode from Apollo
-  variables?: Record<string, any>; // Additional GraphQL variables
-  nodeToRow?: (node: any) => T; // Function to convert GraphQL nodes to row objects
-  enableBackwardPagination?: boolean; // Whether to enable backward pagination
+  pageSize: number;
+  initialPage?: number;
+  initialSortModel?: { field: string; sort: "asc" | "desc" }[];
+  initialFilterModel?: Record<string, any>;
+  query?: any;
+  variables?: Record<string, any>;
+  nodeToRow?: (node: any) => T;
+  enableBackwardPagination?: boolean;
 }): ServerSideResult<T> {
-  // State for pagination
-  const [page, setPage] = useState(initialPage);
-  const [cursors, setCursors] = useState<Record<number, string>>({});
-  const [paginationDirection, setPaginationDirection] = 
-    useState<'forward' | 'backward'>('forward');
+  // For debugging and logging purposes
+  const debugEnabled = true;
+  const logPrefix = "📊 [useRelayGraphQLData]";
   
-  // State for sorting and filtering
+  const debugLog = useCallback((...args: any[]) => {
+    if (debugEnabled) {
+      console.log(logPrefix, ...args);
+    }
+  }, []);
+
+  // Store last fetch request to prevent duplicate requests
+  const lastRequestRef = useRef<string>("");
+  
+  // Keep track of previous variables for change detection
+  const prevVariablesRef = useRef<GraphQLVariables | null>(null);
+  
+  // Store fetch timestamps for tracking request sequence
+  const fetchTimestampsRef = useRef<Map<string, number>>(new Map());
+  
+  // Combined pagination state to prevent race conditions
+  const [paginationState, setPaginationState] = useState<PaginationState>({
+    page: initialPage,
+    direction: "forward",
+  });
+  
+  // Destructure the pagination state for easier access
+  const { page, direction: paginationDirection } = paginationState;
+  
+  // Cursor storage with both page-indexed and explicit start/end markers
+  const [cursors, setCursors] = useState<Record<string, string>>({});
+  
+  // State for sort and filter models
   const [sortModel, setSortModel] = useState(initialSortModel);
   const [filterModel, setFilterModel] = useState(initialFilterModel);
   
-  /**
-   * Convert MUI DataGrid sort model to the format expected by the backend
-   * The backend expects an array of objects with 'field' and 'direction' properties
-   */
-  const sort = sortModel.length > 0
-    ? [{ 
-        field: sortModel[0].field, 
-        direction: sortModel[0].sort === 'desc' ? 'DESC' : 'ASC' 
-      }]
-    : undefined;
+  // Store whether initial data has been loaded
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   
-  /**
-   * Pass filter model directly to the backend
-   * The backend expects a direct object with filter criteria
-   * (not a JSON string as in the previous version)
-   */
-  const filter = Object.keys(filterModel).length > 0
-    ? filterModel
-    : undefined;
-  
-  /**
-   * Prepare variables for GraphQL query based on pagination direction
-   * For forward pagination: use 'first' and 'after'
-   * For backward pagination: use 'last' and 'before'
-   */
-  // Create basic pagination variables
-  const paginationVars = paginationDirection === 'forward'
-    ? { first: pageSize, after: page > 0 ? cursors[page - 1] : null }
-    : { last: pageSize, before: cursors[page + 1] || null };
-  
-  // Create variables object with pagination, sort, and filter
-  const variables = {
-    ...paginationVars,
-    ...(sort && { sort: JSON.stringify(sort) }),
-    ...(filter && { filter: JSON.stringify(filter) }),
-  };
-  
-  /**
-   * Execute the GraphQL query using Apollo Client's useQuery hook
-   * This fetches data from the backend and handles loading/error states
-   */
-  const { data, loading, error, refetch } = useQuery(query, {
-    variables,
-    notifyOnNetworkStatusChange: true, // Update loading state on refetch
-    fetchPolicy: 'cache-and-network',  // Check cache but also fetch from network
-    skip: !query, // Skip if no query is provided
-  });
-  
-  /**
-   * Refetch data when pagination, sorting, or filtering changes
-   * This ensures we get updated data when any parameter changes
-   */
+  // Store pending navigation to resolve after data loads
+  const pendingNavigationRef = useRef<number | null>(null);
+
+  // Debug logging on mount
   useEffect(() => {
-    if (query) {
-      // Use a stable reference to variables
-      const stableVariables = { ...variables };
-      refetch(stableVariables);
+    debugLog("Hook initialized with:", {
+      pageSize,
+      initialPage,
+      enableBackwardPagination,
+    });
+  }, [debugLog, pageSize, initialPage, enableBackwardPagination]);
+
+  // Memoize the sort configuration to prevent recreating on every render
+  const sort = useMemo(() => {
+    if (sortModel.length === 0) return undefined;
+    
+    debugLog("Creating sort configuration from model:", sortModel);
+    
+    // Create a properly formatted sort configuration
+    return JSON.stringify({
+      field: sortModel[0].field,
+      direction: sortModel[0].sort === "desc" ? "DESC" : "ASC",
+    });
+  }, [sortModel, debugLog]);
+
+  // Memoize the filter configuration
+  const filter = useMemo(() => {
+    if (Object.keys(filterModel).length === 0) return undefined;
+    
+    debugLog("Creating filter configuration:", filterModel);
+    
+    // Create a properly formatted filter configuration
+    return JSON.stringify(filterModel);
+  }, [filterModel, debugLog]);
+
+  // Memoize pagination variables with improved cursor management
+  const paginationVars = useMemo(() => {
+    // Ensure pageSize has a fallback value
+    const effectivePageSize = pageSize || 25;
+    
+    debugLog("Building pagination variables for:", {
+      page,
+      direction: paginationDirection,
+      cursors,
+    });
+    
+    // Construct variables based on direction and page
+    if (paginationDirection === "forward") {
+      if (page === 0) {
+        return { first: effectivePageSize, after: null };
+      }
+      
+      // For forward pagination beyond page 0, we need the cursor from previous page
+      // Try both traditional and explicit cursor formats
+      const cursor = cursors[page - 1] || cursors[`${page-1}-end`];
+      
+      if (!cursor && page > 0) {
+        debugLog(`⚠️ Warning: Missing cursor for page ${page-1}. Navigation might fail.`);
+      }
+      
+      return { first: effectivePageSize, after: cursor || null };
+    } else {
+      // For backward pagination, use the cursor from next page
+      const cursor = cursors[page + 1] || cursors[`${page+1}-start`];
+      
+      if (!cursor) {
+        debugLog(`⚠️ Warning: Missing cursor for page ${page+1}. Navigation might fail.`);
+      }
+      
+      return { last: effectivePageSize, before: cursor || null };
     }
-  }, [page, pageSize, paginationDirection, query, refetch]);
-  
-  // Separate effect for sort and filter changes to avoid unnecessary refetches
-  useEffect(() => {
-    if (query && (sortModel.length > 0 || Object.keys(filterModel).length > 0)) {
-      const stableVariables = { ...variables };
-      refetch(stableVariables);
+  }, [paginationDirection, page, pageSize, cursors, debugLog]);
+
+  // Combine all variables into a single object
+  const variables = useMemo(() => {
+    // Check if paginationVars is valid
+    if (!paginationVars) {
+      debugLog("⚠️ Warning: Invalid pagination variables");
+      return {} as GraphQLVariables;
     }
-  }, [sortModel, filterModel, query, refetch]);
-  
-  /**
-   * Handle page changes with proper cursor management
-   * This function updates both the page number and pagination direction
-   */
-  const handlePageChange = (newPage: number) => {
-    // Determine if we're going forward or backward
-    if (newPage > page) {
-      setPaginationDirection('forward');
-    } else if (newPage < page && enableBackwardPagination) {
-      setPaginationDirection('backward');
+
+    const result = {
+      ...paginationVars,
+      ...customVariables,
+      ...(sort ? { sort } : {}),
+      ...(filter ? { filter } : {}),
+    } as GraphQLVariables;
+    
+    const varsJSON = JSON.stringify(result);
+    
+    // Log only when variables actually change
+    if (JSON.stringify(prevVariablesRef.current) !== varsJSON) {
+      debugLog("Variables changed:", {
+        current: result,
+        previous: prevVariablesRef.current,
+      });
+      
+      prevVariablesRef.current = { ...result };
     }
     
-    setPage(newPage);
-  };
-  
-  // Extract data from query result - get the first property which should be our connection
-  const queryResult = data ? Object.values(data)[0] : null;
-  
-  // Initialize empty results
-  let rows: T[] = [];
-  let totalCount = 0;
-  
-  /**
-   * Type guard to check if the result matches the Connection interface
-   * This ensures we only process data that has the expected structure
-   */
-  const isConnection = (obj: any): obj is Connection<any> => {
-    return obj && 
-           typeof obj === 'object' && 
-           'edges' in obj && 
-           Array.isArray(obj.edges) &&
-           'pageInfo' in obj &&
-           'totalCount' in obj;
-  };
-  
-  // Only process data if it matches the Connection interface
-  const connection = isConnection(queryResult) ? queryResult : null;
-  
-  if (connection) {
-    // Convert edges to rows using the provided nodeToRow function
-    rows = connection.edges.map((edge) => {
-      // Transform the node into a row
-      const row = nodeToRow(edge.node);
+    return result;
+  }, [paginationVars, customVariables, sort, filter, debugLog]);
+
+  // Atomic page change handler with direction management
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      debugLog(`Page change requested: ${page} → ${newPage}`);
       
-      // Instead of modifying the original object, create a new one with the id property
-      if (typeof row === 'object' && row !== null && !('id' in row)) {
-        // Look for common ID patterns or fallback to the cursor
+      if (newPage === page) {
+        debugLog("Ignoring page change to same page");
+        return;
+      }
+      
+      // Determine direction based on the page change
+      const newDirection = newPage > page
+        ? "forward"
+        : (newPage < page && enableBackwardPagination ? "backward" : "forward");
+      
+      debugLog(`Setting direction to ${newDirection} for page change ${page} → ${newPage}`);
+      
+      // Store pending navigation to resolve after data loads
+      pendingNavigationRef.current = newPage;
+      
+      // Update both page and direction atomically
+      setPaginationState({
+        page: newPage,
+        direction: newDirection,
+      });
+    },
+    [page, enableBackwardPagination, debugLog]
+  );
+
+  // Execute query with improved cache handling
+  const { data, loading, error, refetch } = useQuery(query, {
+    variables, // Now properly typed
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network", // Check cache but still make network request
+    nextFetchPolicy: "cache-first", // For subsequent fetches within the component lifecycle
+    skip: !query || Object.keys(variables).length === 0, // Skip if variables is empty
+  });
+
+  // Record request timing for tracking
+  useEffect(() => {
+    if (!loading && Object.keys(variables).length > 0) {
+      const requestKey = JSON.stringify(variables);
+      
+      // Record the request timestamp if it's a new request
+      if (requestKey !== lastRequestRef.current) {
+        lastRequestRef.current = requestKey;
+        fetchTimestampsRef.current.set(requestKey, Date.now());
+        debugLog(`Request started: ${requestKey}`);
+      }
+    }
+  }, [loading, variables, debugLog]);
+
+  // Force refetch when variables change to ensure fresh data
+  useEffect(() => {
+    if (!query || Object.keys(variables).length === 0) return;
+    
+    const requestKey = JSON.stringify(variables);
+    
+    // Only refetch if this is a new request (avoid duplicate requests)
+    if (lastRequestRef.current !== requestKey) {
+      debugLog(`Refetching data with variables:`, variables);
+      
+      refetch(variables).then(() => {
+        debugLog(`✅ Refetch complete for page ${page}`);
+      }).catch(err => {
+        debugLog(`❌ Refetch error for page ${page}:`, err);
+      });
+    }
+  }, [query, refetch, variables, page, debugLog]);
+
+  // Process and transform data
+  const queryResult = data ? Object.values(data)[0] : null;
+
+  // Type guard to validate connection structure
+  const isConnection = (obj: any): obj is Connection<any> => {
+    return (
+      obj &&
+      typeof obj === "object" &&
+      "edges" in obj &&
+      Array.isArray(obj.edges) &&
+      "pageInfo" in obj &&
+      "totalCount" in obj
+    );
+  };
+
+  // Validate connection format
+  const connection = isConnection(queryResult) ? queryResult : null;
+
+  // Process rows only when connection changes
+  const { rows, totalCount } = useMemo(() => {
+    if (!connection) {
+      return { rows: [], totalCount: 0 };
+    }
+
+    debugLog(`Processing ${connection.edges.length} rows for page ${page}`);
+    
+    // Mark initial data as loaded
+    if (!initialDataLoaded && connection.edges.length > 0) {
+      setInitialDataLoaded(true);
+    }
+
+    const processedRows = connection.edges.map((edge) => {
+      const row = nodeToRow(edge.node);
+
+      // Ensure each row has an ID
+      if (typeof row === "object" && row !== null && !("id" in row)) {
         const id =
           edge.node.id ||
           edge.node.uuid ||
           edge.node.accounting_mtm_history_id ||
           edge.node[`${Object.keys(edge.node)[0]}_id`] ||
           edge.cursor;
-        
-        // Create a new object with the id property
+
         return { ...row, id };
       }
-      
+
       return row;
     });
+
+    return {
+      rows: processedRows,
+      totalCount: connection.totalCount,
+    };
+  }, [connection, page, nodeToRow, initialDataLoaded, debugLog]);
+
+  // Update cursors when connection changes with improved cursor management
+  useEffect(() => {
+    if (!connection?.pageInfo) return;
     
-    // Store the total count for pagination UI
-    totalCount = connection.totalCount;
+    debugLog("Updating cursors from pageInfo:", {
+      page,
+      startCursor: connection.pageInfo.startCursor,
+      endCursor: connection.pageInfo.endCursor,
+    });
     
-    // Store the end cursor for the current page to use for future pagination
-    if (connection.pageInfo.endCursor) {
-      setCursors(prev => ({
-        ...prev,
-        [page]: connection.pageInfo.endCursor as string,
-      }));
-    }
-  }
+    setCursors(prev => {
+      const newCursors = { ...prev };
+      
+      // Store both explicit start/end cursors and traditional format
+      if (connection.pageInfo.startCursor) {
+        newCursors[`${page}-start`] = connection.pageInfo.startCursor;
+      }
+      
+      if (connection.pageInfo.endCursor) {
+        // Store as explicit end cursor
+        newCursors[`${page}-end`] = connection.pageInfo.endCursor;
+        
+        // Also store in traditional format for backward compatibility
+        newCursors[page.toString()] = connection.pageInfo.endCursor;
+      }
+      
+      return newCursors;
+    });
+  }, [connection, page, debugLog]);
   
-  /**
-   * Return an object with all the data and functions needed by the grid component
-   * This follows the ServerSideResult interface expected by the consuming component
-   */
-  return {
-    rows,                       // Transformed data rows
-    totalRows: totalCount,      // Total count for pagination
-    loading,                    // Loading state
-    error: error as Error | null, // Error state
-    setPage: handlePageChange,  // Function to change pages
-    setSortModel,               // Function to update sorting
-    setFilterModel,             // Function to update filtering
+  // Debug logging for cursor state changes
+  useEffect(() => {
+    debugLog("Cursor state updated:", cursors);
+  }, [cursors, debugLog]);
+  
+  // Clear pending navigation when data loads
+  useEffect(() => {
+    if (!loading && pendingNavigationRef.current !== null) {
+      debugLog(`Resolving pending navigation to page ${pendingNavigationRef.current}`);
+      pendingNavigationRef.current = null;
+    }
+  }, [loading, debugLog]);
+
+  // Memoize the pageInfo object
+  const pageInfo = useMemo(
+    () =>
+      connection?.pageInfo || {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+    [connection]
+  );
+
+  // Methods for pagination control
+  const pagination = useMemo(() => ({
+    setPage: handlePageChange,
     
-    // Additional properties for pagination info
-    pageInfo: connection?.pageInfo || {
-      hasNextPage: false,
-      hasPreviousPage: false,
-      startCursor: null,
-      endCursor: null
+    setSortModel: (newSortModel: typeof sortModel) => {
+      debugLog("Setting sort model:", newSortModel);
+      setSortModel(newSortModel);
+      
+      // Reset to first page when sorting changes
+      if (page !== 0) {
+        handlePageChange(0);
+      }
     },
     
-    // Function to explicitly set pagination direction if needed
-    setPaginationDirection,
-  };
+    setFilterModel: (newFilterModel: typeof filterModel) => {
+      debugLog("Setting filter model:", newFilterModel);
+      setFilterModel(newFilterModel);
+      
+      // Reset to first page when filtering changes
+      if (page !== 0) {
+        handlePageChange(0);
+      }
+    },
+    
+    setPaginationDirection: (newDirection: "forward" | "backward") => {
+      debugLog(`Setting pagination direction: ${paginationDirection} → ${newDirection}`);
+      
+      setPaginationState(prev => ({
+        ...prev,
+        direction: newDirection,
+      }));
+    },
+    
+    // Helper for debugging
+    resetCursors: () => {
+      debugLog("Resetting all cursors");
+      setCursors({});
+      handlePageChange(0);
+    },
+  }), [page, handlePageChange, paginationDirection, debugLog]);
+
+  // Create debug info
+  const debugInfo = useMemo(() => ({
+    page,
+    direction: paginationDirection,
+    cursors,
+    variables,
+    loading,
+    error: error ? error.message : null,
+    rowCount: rows.length,
+    totalCount,
+    hasNextPage: pageInfo.hasNextPage,
+    hasPreviousPage: pageInfo.hasPreviousPage,
+  }), [
+    page, 
+    paginationDirection, 
+    cursors, 
+    variables, 
+    loading, 
+    error, 
+    rows.length, 
+    totalCount, 
+    pageInfo.hasNextPage, 
+    pageInfo.hasPreviousPage
+  ]);
+
+  // Memoize the final result object to prevent unnecessary renders
+  return useMemo(() => ({
+    // Data
+    rows,
+    totalRows: totalCount,
+    loading,
+    error: error as Error | null,
+    pageInfo,
+    
+    // Methods
+    setPage: pagination.setPage,
+    setSortModel: pagination.setSortModel,
+    setFilterModel: pagination.setFilterModel,
+    setPaginationDirection: pagination.setPaginationDirection,
+    
+    // Debugging helper
+    debug: debugInfo,
+    
+    // Force refetch method
+    refetch: () => {
+      debugLog("Manually forcing refetch");
+      return refetch(variables);
+    },
+    
+    // Reset cursors method
+    resetCursors: pagination.resetCursors,
+  }), [
+    rows,
+    totalCount,
+    loading,
+    error,
+    pageInfo,
+    pagination,
+    variables,
+    refetch,
+    debugInfo,
+    debugLog
+  ]);
 }
 
 
@@ -3232,4 +3472,4 @@ ANALYSIS OF POTENTIAL CAUSES
 TOKEN COUNT ESTIMATE
 ==========================================================================
 
-Approximate number of tokens: 10643
+Approximate number of tokens: 11004

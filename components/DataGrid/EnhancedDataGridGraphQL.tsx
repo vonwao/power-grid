@@ -402,6 +402,15 @@ console.log("useRelayGraphQLData running with variables:", variables);
             // Set the page
             setPage(model.page);
             
+            // Force a refetch with a slight delay to ensure state updates have propagated
+            setTimeout(() => {
+              console.log("Forcing refetch after page change to page", model.page);
+              if (useGraphQLFetching) {
+                // Actually call refetch with the hook's refetch function
+                refetch();
+              }
+            }, 50);
+            
             // Call the onPageChange callback if provided
             if (props.onPageChange) {
               props.onPageChange(model.page);
