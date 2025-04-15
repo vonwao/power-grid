@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -109,7 +109,6 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   // Testing and debugging props
   onPageChange?: (page: number) => void; // Callback for page changes
   onRowsChange?: (rows: T[]) => void; // Callback for rows changes
-  rowHeight?: number; // Custom row height in pixels
 }
 
 export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
