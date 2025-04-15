@@ -83,7 +83,7 @@ const sampleMTMHistory = [
 export default function MTMHistoryPage() {
   // State for grid
   const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
-  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true); // Use GraphQL fetching by default
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false); // Start with client-side data
   
   // Handler for selection changes
   const handleSelectionChange = (newSelection: GridRowId[]) => {

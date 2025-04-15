@@ -367,7 +367,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         }}
         pageSizeOptions={rowsPerPageOptions}
         paginationMode={useGraphQLFetching ? 'server' : 'client'}
-        rowCount={totalRows}
+        rowCount={useGraphQLFetching ? totalRows : undefined}
         onPaginationModelChange={(model) => {
           // For GraphQL pagination, fetch the data
           if (useGraphQLFetching) {
