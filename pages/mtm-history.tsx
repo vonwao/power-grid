@@ -115,6 +115,7 @@ export default function MTMHistoryPage() {
           // GraphQL options
           useGraphQL={useGraphQLFetching}
           query={GET_MTM_HISTORY}
+          // Don't pass variables directly, let the hook handle it
           paginationStyle="cursor" // Use cursor-based pagination
           
           // Selection options

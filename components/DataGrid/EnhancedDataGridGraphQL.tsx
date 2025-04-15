@@ -153,6 +153,15 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // Use GraphQL data if enabled and not forcing client-side
   const useGraphQLFetching = useGraphQL && !forceClientSide;
   
+  // Debug logging
+  console.log('EnhancedDataGridGraphQL props:', {
+    useGraphQL,
+    forceClientSide,
+    paginationStyle,
+    query: !!query,
+    variables,
+  });
+  
   // Determine which hook to use based on pagination style
   const isRelayCursorPagination = paginationStyle === 'cursor';
   
