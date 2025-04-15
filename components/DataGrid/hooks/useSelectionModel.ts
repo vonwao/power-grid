@@ -6,14 +6,17 @@ import { SelectionModelState, SelectionOptions } from '../types/selection';
  * Hook for managing row selection state
  */
 export function useSelectionModel({
-  selectionModel: initialSelectionModel = [],
+  selectionModel: externalSelectionModel,
   onSelectionModelChange: externalOnSelectionModelChange,
 }: SelectionOptions = {}): SelectionModelState {
-  // Initialize selection model state
-  const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>(initialSelectionModel);
+  // Only create internal state for uncontrolled mode
+  const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>([]);
   
-  // Use external selection model if provided, otherwise use internal
-  const selectionModel = initialSelectionModel || internalSelectionModel;
+  // Determine if we're in controlled mode
+  const isControlled = externalSelectionModel !== undefined;
+  
+  // Use external model if in controlled mode, otherwise use internal
+  const selectionModel = isControlled ? externalSelectionModel : internalSelectionModel;
   
   // Handle selection model change
   const onSelectionModelChange = useCallback(
@@ -21,15 +24,17 @@ export function useSelectionModel({
       // Convert readonly array to mutable array
       const mutableSelectionModel = [...newSelectionModel];
       
-      // Update internal state
-      setInternalSelectionModel(mutableSelectionModel);
+      if (!isControlled) {
+        // Only update internal state if we're not in controlled mode
+        setInternalSelectionModel(mutableSelectionModel);
+      }
       
-      // Call external handler if provided
+      // Always call external handler if provided
       if (externalOnSelectionModelChange) {
         externalOnSelectionModelChange(mutableSelectionModel);
       }
     },
-    [externalOnSelectionModelChange]
+    [isControlled, externalOnSelectionModelChange]
   );
   
   return {

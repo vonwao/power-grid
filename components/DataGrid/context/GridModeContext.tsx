@@ -104,48 +104,35 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   // State for the current mode
   const [mode, setMode] = useState<GridMode>(initialMode);
   
-  /**
-   * Selection Model Management
-   *
-   * This component handles two possible sources of selection state:
-   * 1. External selection model passed via props (controlled mode)
-   * 2. Internal selection model managed by the useSelectionModel hook (uncontrolled mode)
-   *
-   * The logic prioritizes the external selection model if provided, otherwise
-   * falls back to the internal hook-based selection model.
-   */
+  // Determine if we're in controlled selection mode
+  const isSelectionControlled = externalSelectionModel !== undefined;
   
-  // Get selection model from hook, but configure it with external values if provided
+  // Only use the internal selection hook when in uncontrolled mode
   const {
-    selectionModel: hookSelectionModel,
-    onSelectionModelChange: hookOnSelectionModelChange
+    selectionModel: internalSelectionModel,
+    onSelectionModelChange: internalOnSelectionModelChange
   } = useSelectionModel({
-    selectionModel: externalSelectionModel,
-    onSelectionModelChange: externalOnSelectionModelChange ?
-      (newModel) => externalOnSelectionModelChange(newModel) :
+    // Don't pass the external selection model to avoid double-management
+    onSelectionModelChange: !isSelectionControlled && externalOnSelectionModelChange ? 
+      (newModel) => externalOnSelectionModelChange(newModel) : 
       undefined
   });
   
-  /**
-   * Selection Change Adapter
-   *
-   * This function adapts between different selection change handler signatures:
-   * - The external handler might expect just the new selection model
-   * - The hook handler expects both the model and additional details
-   *
-   * This adapter ensures that the correct parameters are passed to each handler.
-   */
+  // Use the appropriate selection model based on controlled/uncontrolled state
+  const selectionModel = isSelectionControlled ? externalSelectionModel : internalSelectionModel;
+  
   // Create a wrapper function that adapts between the different types
   const adaptedOnSelectionModelChange = useCallback((newModel: any[], details?: any) => {
-    if (externalOnSelectionModelChange) {
-      externalOnSelectionModelChange(newModel);
+    if (isSelectionControlled) {
+      // In controlled mode, only call the external handler
+      if (externalOnSelectionModelChange) {
+        externalOnSelectionModelChange(newModel);
+      }
     } else {
-      hookOnSelectionModelChange(newModel, details || {} as any);
+      // In uncontrolled mode, update internal state
+      internalOnSelectionModelChange(newModel, details || {} as any);
     }
-  }, [externalOnSelectionModelChange, hookOnSelectionModelChange]);
-  
-  // Use external selection model if provided, otherwise use hook-managed model
-  const selectionModel = externalSelectionModel !== undefined ? externalSelectionModel : hookSelectionModel;
+  }, [isSelectionControlled, externalOnSelectionModelChange, internalOnSelectionModelChange]);
   
   // Get pagination
   const {
@@ -155,47 +142,20 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     setPageSize
   } = usePagination();
   
-  /**
-   * Editing Rows Tracking
-   *
-   * This state and effect track which rows are currently being edited.
-   * A row is considered "being edited" if:
-   * 1. It's in edit mode (isRowEditing returns true)
-   * 2. It has actual changes (isRowDirty returns true) - if available
-   *
-   * This tracking is used to:
-   * - Display UI indicators for edited rows
-   * - Determine if save/cancel actions should be enabled
-   * - Count how many rows are being edited for the toolbar display
-   */
+  // Tracking edited rows logic...
   const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
   
-  /**
-   * Effect: Update Editing Rows Set
-   *
-   * This effect runs whenever:
-   * - The selection model changes
-   * - The row editing state changes
-   * - The row dirty state changes
-   *
-   * It rebuilds the set of rows that are currently being edited with actual changes.
-   * Two approaches are used based on available functions:
-   * 1. Preferred: Only count rows that are both being edited AND have actual changes
-   * 2. Fallback: Count all rows that are being edited regardless of changes
-   */
+  // Effect for updating editing rows set
   useEffect(() => {
     const newEditingRows = new Set<GridRowId>();
     
-    // If we can check for dirty state (actual field changes)
     if (isRowDirty) {
-      // Only count rows that are both being edited AND have actual changes
       selectionModel.forEach((rowId: GridRowId) => {
         if (isRowEditing(rowId) && isRowDirty(rowId)) {
           newEditingRows.add(rowId);
         }
       });
     } else {
-      // Fallback: count all rows being edited regardless of changes
       selectionModel.forEach((rowId: GridRowId) => {
         if (isRowEditing(rowId)) {
           newEditingRows.add(rowId);
@@ -206,97 +166,36 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     setEditingRows(newEditingRows);
   }, [selectionModel, isRowEditing, isRowDirty]);
   
-  /**
-   * Derived State
-   *
-   * These values are computed from other state and don't need their own useState.
-   * They're recalculated whenever their dependencies change.
-   */
-  
-  // Count of selected rows - derived from selectionModel
+  // Derived state
   const selectedRowCount = selectionModel.length;
   
-  /**
-   * Count of rows being edited with actual changes
-   *
-   * Two approaches:
-   * 1. If isRowDirty is available: Filter editingRows to only count those with changes
-   * 2. Otherwise: Use the total count of rows being edited
-   *
-   * This ensures the UI accurately reflects how many rows will be affected by a save.
-   */
   const editingRowCount = isRowDirty ?
     Array.from(editingRows).filter(rowId => isRowDirty(rowId)).length :
     editingRows.size;
   
-  /**
-   * Flag indicating if we're in "add row" mode
-   *
-   * This is a simplified approach based on the current mode.
-   * A more robust implementation would track newly added rows specifically.
-   */
   const isAddingRow = mode === 'add';
   
-  /**
-   * Action Handlers
-   *
-   * These callbacks handle user actions and update state accordingly.
-   * They're memoized with useCallback to prevent unnecessary re-renders.
-   */
-  
-  /**
-   * Clear Selection
-   * Removes all selected rows by passing an empty array to the selection handler
-   */
-  // Clear selection
+  // Action Handlers
   const clearSelection = useCallback(() => {
-    // Just pass an empty array to clear the selection
     adaptedOnSelectionModelChange([]);
   }, [adaptedOnSelectionModelChange]);
   
-  /**
-   * Save Changes
-   * 1. Calls the form's save function to persist changes
-   * 2. Resets the grid mode to 'none' (view mode)
-   */
   const saveChanges = useCallback(() => {
     formSaveChanges();
     setMode('none');
   }, [formSaveChanges]);
   
-  /**
-   * Cancel Changes
-   * 1. Calls the form's cancel function to revert changes
-   * 2. Resets the grid mode to 'none' (view mode)
-   */
   const cancelChanges = useCallback(() => {
     formCancelChanges();
     setMode('none');
   }, [formCancelChanges]);
   
-  /**
-   * Add Row
-   * 1. Calls the form's add row function to create a new row
-   * 2. Sets the grid mode to 'add' to indicate we're adding a row
-   */
   const addRow = useCallback(() => {
     formAddRow();
     setMode('add');
   }, [formAddRow]);
   
-  /**
-   * Context Value
-   *
-   * This object contains all the state and functions that will be
-   * provided to components that consume this context.
-   *
-   * It includes:
-   * - Mode state and setter
-   * - Selection state and handlers
-   * - Editing state
-   * - Action handlers
-   * - Pagination state and handlers
-   */
+  // Context value
   const contextValue: GridModeContextType = {
     mode,
     setMode,

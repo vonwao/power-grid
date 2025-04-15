@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -18,7 +18,7 @@ import { EditCellRenderer } from './renderers/EditCellRenderer';
 import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
 import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useGraphQLData, useRelayGraphQLData, useSelectionModel } from './hooks';
+import { useGridNavigation, useRelayGraphQLData, useSelectionModel } from './hooks';
 import { GridModeProvider, useGridMode } from './context/GridModeContext';
 import { ServerSideResult } from './types/serverSide';
 
@@ -148,11 +148,25 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   rowHeight,
   ...props
 }: EnhancedDataGridGraphQLProps<T>) {
+
+  // In EnhancedDataGridGraphQL component, add near the top:
+console.log("EnhancedDataGridGraphQL rendering", { 
+  useGraphQL, 
+  forceClientSide, 
+  selectionModel: initialSelectionModel?.length 
+});
+
+// In useRelayGraphQLData hook, add:
+console.log("useRelayGraphQLData running with variables:", variables);
+
   const apiRef = useGridApiRef();
   
   // Use GraphQL data if enabled and not forcing client-side
-  const useGraphQLFetching = useGraphQL && !forceClientSide;
-  
+  const useGraphQLFetching = useMemo(() => 
+    useGraphQL && !forceClientSide, 
+    [useGraphQL, forceClientSide]
+  );
+
   // Determine which hook to use based on pagination style
   const isRelayCursorPagination = paginationStyle === 'cursor';
   
@@ -167,7 +181,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     pageInfo,
     setPaginationDirection,
   } = useGraphQLFetching
-    ? (isRelayCursorPagination
       ? useRelayGraphQLData<T>({
           pageSize,
           initialPage: 0,
@@ -177,14 +190,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
           variables,
           nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
         })
-      : useGraphQLData<T>({
-          pageSize,
-          initialPage: 0,
-          initialSortModel: [],
-          initialFilterModel: {},
-          query,
-          variables,
-        }))
     : {
         rows: [] as T[],
         totalRows: 0,
