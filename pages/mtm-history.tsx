@@ -83,7 +83,7 @@ const sampleMTMHistory = [
 export default function MTMHistoryPage() {
   // State for grid
   const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
-  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true); // Use GraphQL fetching by default
   
   // Handler for selection changes
   const handleSelectionChange = (newSelection: GridRowId[]) => {
@@ -115,7 +115,12 @@ export default function MTMHistoryPage() {
           // GraphQL options
           useGraphQL={useGraphQLFetching}
           query={GET_MTM_HISTORY}
-          // Don't pass variables directly, let the hook handle it
+          variables={{
+            // Add a default filter to ensure the backend has the necessary key conditions
+            filter: JSON.stringify({
+              commodity: "Oil" // This is just an example, adjust as needed for your DynamoDB key
+            })
+          }}
           paginationStyle="cursor" // Use cursor-based pagination
           
           // Selection options

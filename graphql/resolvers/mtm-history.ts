@@ -98,17 +98,18 @@ export const mtmHistoryResolvers = {
       filter?: string;
       sort?: string;
     }) => {
-      const {
-        first = 25,
-        after,
-        filter: rawFilter,
-        sort: rawSort,
-      } = args;
-      console.log('MTM History Query:', { first, after, filter: rawFilter, sort: rawSort });
-      
-      // Debug: Log the arguments received
-      console.log('MTM History Query Args:', JSON.stringify(args, null, 2));
-      
+      try {
+        const {
+          first = 25,
+          after,
+          filter: rawFilter,
+          sort: rawSort,
+        } = args;
+        
+        console.log('MTM History Query:', { first, after, filter: rawFilter, sort: rawSort });
+        
+        // Debug: Log the arguments received
+        console.log('MTM History Query Args:', JSON.stringify(args, null, 2));
       
       // Parse filter (handle both string and object formats)
       let filterObj = {};
@@ -240,6 +241,20 @@ export const mtmHistoryResolvers = {
       });
       
       return result;
+      } catch (error) {
+        console.error('Error in mtmHistory resolver:', error);
+        // Return empty result instead of throwing error
+        return {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false,
+            startCursor: null,
+            endCursor: null,
+          },
+          totalCount: 0,
+        };
+      }
     }
   }
 };

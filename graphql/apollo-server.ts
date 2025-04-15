@@ -10,8 +10,14 @@ export const apolloServer = new ApolloServer({
   introspection: process.env.NODE_ENV !== 'production',
 });
 
-// Start the server
+// Track server state
+let serverStarted = false;
+
+// Start the server (only if not already started)
 export const startServer = async () => {
-  await apolloServer.start();
+  if (!serverStarted) {
+    await apolloServer.start();
+    serverStarted = true;
+  }
   return apolloServer;
 };
