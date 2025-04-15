@@ -122,14 +122,10 @@ export const mtmHistoryResolvers = {
       }
       
       // Simulate DynamoDB key condition validation
-      try {
-        if (!validateKeyConditions(filterObj)) {
-          console.warn('Warning: No filter conditions provided. In a real DynamoDB implementation, this would cause an error.');
-          // In a real implementation, you might throw an error here:
-          // throw new Error('KeyConditionExpression must be specified in the request');
-        }
-      } catch (e) {
-        console.error('Key condition validation error:', e);
+      // In a real implementation, this would be required, but for our demo we'll make it optional
+      if (!validateKeyConditions(filterObj)) {
+        console.warn('Warning: No filter conditions provided. Using all data without filtering.');
+        // Instead of throwing an error, we'll just use all the data
       }
       
       // Get data

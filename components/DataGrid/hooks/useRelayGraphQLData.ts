@@ -94,21 +94,17 @@ export function useRelayGraphQLData<T>({
    * For forward pagination: use 'first' and 'after'
    * For backward pagination: use 'last' and 'before'
    */
-  const variables = paginationDirection === 'forward'
-    ? {
-        first: pageSize,
-        after: page > 0 ? cursors[page - 1] : null,
-        sort: sort,
-        filter: filter,
-        ...customVariables,
-      }
-    : {
-        last: pageSize,
-        before: cursors[page + 1] || null,
-        sort: sort,
-        filter: filter,
-        ...customVariables,
-      };
+  // Create basic pagination variables
+  const paginationVars = paginationDirection === 'forward'
+    ? { first: pageSize, after: page > 0 ? cursors[page - 1] : null }
+    : { last: pageSize, before: cursors[page + 1] || null };
+  
+  // Create variables object with pagination, sort, and filter
+  const variables = {
+    ...paginationVars,
+    ...(sort && { sort: JSON.stringify(sort) }),
+    ...(filter && { filter: JSON.stringify(filter) }),
+  };
   
   /**
    * Execute the GraphQL query using Apollo Client's useQuery hook
@@ -127,9 +123,19 @@ export function useRelayGraphQLData<T>({
    */
   useEffect(() => {
     if (query) {
-      refetch(variables);
+      // Use a stable reference to variables
+      const stableVariables = { ...variables };
+      refetch(stableVariables);
     }
-  }, [page, pageSize, sortModel, filterModel, paginationDirection, refetch, query]);
+  }, [page, pageSize, paginationDirection, query, refetch]);
+  
+  // Separate effect for sort and filter changes to avoid unnecessary refetches
+  useEffect(() => {
+    if (query && (sortModel.length > 0 || Object.keys(filterModel).length > 0)) {
+      const stableVariables = { ...variables };
+      refetch(stableVariables);
+    }
+  }, [sortModel, filterModel, query, refetch]);
   
   /**
    * Handle page changes with proper cursor management

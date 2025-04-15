@@ -1,0 +1,3235 @@
+
+COMBINED CONTEXT FOR DEBUGGING "Too many re-renders" ISSUE
+==========================================================================
+
+This file contains the combined content of all relevant files related to the
+"Too many re-renders" issue in the mtm-history.tsx page and EnhancedDataGridGraphQL component.
+
+The issue occurs when using the EnhancedDataGridGraphQL component with the following error:
+"Error: Too many re-renders. React limits the number of renders to prevent an infinite loop."
+
+Files included:
+- pages/mtm-history.tsx
+- components/DataGrid/EnhancedDataGridGraphQL.tsx
+- components/DataGrid/context/GridModeContext.tsx
+- components/DataGrid/context/GridFormContext.tsx
+- components/DataGrid/hooks/useSelectionModel.ts
+- components/DataGrid/hooks/useRelayGraphQLData.ts
+- components/DataGrid/renderers/CellRenderer.tsx
+- components/DataGrid/renderers/EditCellRenderer.tsx
+- components/DataGrid/components/ValidationIndicator.tsx
+- components/DataGrid/components/CellEditHandler.tsx
+- components/DataGrid/components/UnifiedDataGridToolbar.tsx
+
+==========================================================================
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/pages/mtm-history.tsx
+==========================================================================
+
+import React, { useState } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { Paper } from '@mui/material';
+import { gql } from '@apollo/client';
+import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { EnhancedColumnConfig } from '../components/DataGrid/EnhancedDataGridGraphQL';
+
+// GraphQL query using Relay-style pagination
+const GET_MTM_HISTORY = gql`
+  query MtmHistory(
+    $first: Int
+    $after: String
+    $filter: String
+    $sort: String
+  ) {
+    mtmHistory(first: $first, after: $after, filter: $filter, sort: $sort) {
+      edges {
+        cursor
+        node {
+          accounting_mtm_history_id
+          adj_description 
+          commodity
+          deal_volume
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+`;
+
+// Define columns
+const mtmHistoryColumns: EnhancedColumnConfig[] = [
+  {
+    field: 'accounting_mtm_history_id',
+    headerName: 'ID',
+    width: 120,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'adj_description',
+    headerName: 'Description',
+    width: 200,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'commodity',
+    headerName: 'Commodity',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'deal_volume',
+    headerName: 'Deal Volume',
+    width: 150,
+    fieldConfig: { type: 'number' as const },
+  },
+];
+
+// Sample data for client-side fallback
+const sampleMTMHistory = [
+  {
+    id: 'MTM-1',
+    accounting_mtm_history_id: 'MTM-1',
+    adj_description: 'Sample Adjustment 1',
+    commodity: 'Oil',
+    deal_volume: 100.5,
+  },
+  {
+    id: 'MTM-2',
+    accounting_mtm_history_id: 'MTM-2',
+    adj_description: 'Sample Adjustment 2',
+    commodity: 'Gas',
+    deal_volume: 200.75,
+  },
+];
+
+export default function MTMHistoryPage() {
+  // State for grid
+  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true); 
+  
+  // Handler for selection changes
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectionModel(newSelection);
+  };
+  
+  return (
+    <div className="h-full w-full flex flex-col p-4">
+      <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
+      
+      <div className="mb-4">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={useGraphQLFetching}
+            onChange={(e) => setUseGraphQLFetching(e.target.checked)}
+            className="mr-2"
+          />
+          Use GraphQL Fetching
+        </label>
+      </div>
+      
+      {/* Data Grid */}
+      <Paper elevation={0} className="flex-grow w-full overflow-auto">
+        <EnhancedDataGridGraphQL
+          columns={mtmHistoryColumns}
+          rows={sampleMTMHistory} // Used as fallback when not using GraphQL
+          
+          // GraphQL options
+          useGraphQL={useGraphQLFetching}
+          query={GET_MTM_HISTORY}
+          // No need to pass variables, let the hook handle it
+          paginationStyle="cursor" // Use cursor-based pagination
+          
+          // Selection options
+          checkboxSelection={true}
+          selectionModel={selectionModel}
+          onSelectionModelChange={handleSelectionChange}
+          
+          // Grid capabilities
+          canEditRows={false}
+          canAddRows={false}
+          canSelectRows={true}
+          
+          // UI options
+          density="standard"
+          disableSelectionOnClick={true}
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
+      </Paper>
+    </div>
+  );
+}
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/EnhancedDataGridGraphQL.tsx
+==========================================================================
+
+import React, { useCallback } from 'react';
+import { DocumentNode } from '@apollo/client';
+import {
+  DataGrid,
+  GridColDef,
+  GridRowId,
+  GridValueGetter,
+  GridValueSetter,
+  useGridApiRef,
+  GridRenderCellParams,
+  GridRowSelectionModel as _GridRowSelectionModel,
+  GridCallbackDetails as _GridCallbackDetails,
+} from '@mui/x-data-grid';
+import { Paper, Typography } from '@mui/material';
+import { ValidationOptions } from '../../types/form';
+import { CellRenderer } from './renderers/CellRenderer';
+import { EditCellRenderer } from './renderers/EditCellRenderer';
+import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
+import { CellEditHandler, UnifiedDataGridToolbar } from './components';
+import { SelectFieldType } from './fieldTypes/SelectField';
+import { useGridNavigation, useGraphQLData, useRelayGraphQLData, useSelectionModel } from './hooks';
+import { GridModeProvider, useGridMode } from './context/GridModeContext';
+import { ServerSideResult } from './types/serverSide';
+
+// Field configuration for React Hook Form integration
+export interface FieldConfig<T = any> {
+  // Basic properties
+  type: 'string' | 'number' | 'date' | 'boolean' | 'select';
+  
+  // For select fields
+  options?: Array<{value: any, label: string}>;
+  
+  // Rendering (optional - can use defaults)
+  renderViewMode?: (_value: T | null, _row: any) => React.ReactNode;
+  renderEditMode?: (_props: any) => React.ReactNode;
+  
+  // Validation
+  validation?: ValidationOptions;
+  
+  // Transform functions (optional)
+  parse?: (_value: any) => T | null;
+  format?: (_value: T | null) => string;
+}
+
+// Enhanced column configuration
+export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
+  // Field configuration for React Hook Form
+  fieldConfig: FieldConfig<T>;
+  
+  // Legacy field type (for backward compatibility)
+  fieldType?: any;
+  
+  // Legacy validation (for backward compatibility)
+  required?: boolean;
+  validationRules?: any[];
+  validator?: any;
+  
+  // Value accessors
+  valueGetter?: GridValueGetter;
+  valueSetter?: GridValueSetter;
+}
+
+export interface EnhancedDataGridGraphQLProps<T = any> {
+  columns: EnhancedColumnConfig[];
+  rows: T[];
+  onSave?: (_changes: { edits: any[], additions: any[] }) => void;
+  validateRow?: (_values: any, _helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
+  
+  // GraphQL options
+  useGraphQL?: boolean;
+  forceClientSide?: boolean; // Escape hatch - not recommended for large datasets
+  query?: DocumentNode; // New prop for GraphQL query
+  variables?: Record<string, any>;
+  paginationStyle?: 'offset' | 'cursor'; // Pagination style: offset (default) or cursor (Relay)
+  
+  // Selection options
+  checkboxSelection?: boolean;
+  selectionModel?: any[];
+  onSelectionModelChange?: (_selectionModel: any[]) => void;
+  disableMultipleSelection?: boolean;
+  
+  // Grid capabilities
+  canEditRows?: boolean;
+  canAddRows?: boolean;
+  canSelectRows?: boolean;
+  
+  // Custom components
+  customActionButtons?: React.ReactNode;
+  
+  // UI options
+  className?: string;
+  autoHeight?: boolean;
+  density?: 'compact' | 'standard' | 'comfortable';
+  disableColumnFilter?: boolean;
+  disableColumnMenu?: boolean;
+  disableColumnSelector?: boolean;
+  disableDensitySelector?: boolean;
+  disableSelectionOnClick?: boolean;
+  disableVirtualization?: boolean;
+  loading?: boolean;
+  pageSize?: number;
+  rowsPerPageOptions?: number[];
+  showCellRightBorder?: boolean;
+  showColumnRightBorder?: boolean;
+  hideFooter?: boolean;
+  hideFooterPagination?: boolean;
+  hideFooterSelectedRowCount?: boolean;
+  rowHeight?: number; // Custom row height in pixels
+}
+
+export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
+  columns,
+  rows,
+  onSave,
+  validateRow,
+  // GraphQL options
+  useGraphQL = true,
+  forceClientSide = false,
+  query,
+  variables,
+  paginationStyle = 'offset',
+  // Selection options
+  checkboxSelection = false,
+  selectionModel: initialSelectionModel,
+  onSelectionModelChange,
+  disableMultipleSelection = false,
+  // Grid capabilities
+  canEditRows = true,
+  canAddRows = true,
+  canSelectRows = true,
+  // UI options
+  className,
+  autoHeight,
+  density = 'standard',
+  disableColumnFilter,
+  disableColumnMenu,
+  disableColumnSelector,
+  disableDensitySelector,
+  disableSelectionOnClick = true,
+  disableVirtualization,
+  loading: externalLoading,
+  pageSize = 25,
+  rowsPerPageOptions = [10, 25, 50, 100],
+  // Removed unused border options
+  hideFooter,
+  hideFooterPagination,
+  hideFooterSelectedRowCount,
+  rowHeight,
+  ...props
+}: EnhancedDataGridGraphQLProps<T>) {
+  const apiRef = useGridApiRef();
+  
+  // Use GraphQL data if enabled and not forcing client-side
+  const useGraphQLFetching = useGraphQL && !forceClientSide;
+  
+  // Determine which hook to use based on pagination style
+  const isRelayCursorPagination = paginationStyle === 'cursor';
+  
+  // Use the appropriate hook based on pagination style
+  const {
+    rows: graphQLRows,
+    totalRows: graphQLTotalRows,
+    loading: graphQLLoading,
+    setPage,
+    setSortModel,
+    setFilterModel,
+    pageInfo,
+    setPaginationDirection,
+  } = useGraphQLFetching
+    ? (isRelayCursorPagination
+      ? useRelayGraphQLData<T>({
+          pageSize,
+          initialPage: 0,
+          initialSortModel: [],
+          initialFilterModel: {},
+          query,
+          variables,
+          nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
+        })
+      : useGraphQLData<T>({
+          pageSize,
+          initialPage: 0,
+          initialSortModel: [],
+          initialFilterModel: {},
+          query,
+          variables,
+        }))
+    : {
+        rows: [] as T[],
+        totalRows: 0,
+        loading: false,
+        error: null as Error | null,
+        setPage: () => {},
+        setSortModel: () => {},
+        setFilterModel: () => {},
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null
+        },
+        setPaginationDirection: () => {}
+      } as ServerSideResult<T>;
+  
+  // Use GraphQL data or client data based on the useGraphQLFetching flag
+  const displayRows = useGraphQLFetching ? graphQLRows : rows;
+  const totalRows = useGraphQLFetching ? graphQLTotalRows : rows.length;
+  
+  // Combine external loading state with GraphQL loading state
+  const loading = externalLoading || graphQLLoading;
+  
+  // Initialize selection model hook
+  // Initialize selection model hook
+  const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
+    selectionModel: initialSelectionModel,
+    onSelectionModelChange,
+  });
+  
+  // Define a navigation handler that uses the correct API methods
+  const handleNavigate = useCallback((id: GridRowId, field: string) => {
+    try {
+      // Check if the cell is already in edit mode
+      const cellMode = apiRef.current.getCellMode(id, field);
+      if (cellMode === 'view') {
+        apiRef.current.startCellEditMode({ id, field });
+      }
+    } catch (error) {
+      console.error('Error navigating to cell:', error);
+    }
+  }, [apiRef]);
+
+  // Initialize grid navigation hook
+  const { handleKeyDown } = useGridNavigation({
+    api: apiRef.current,
+    columns,
+    rows: displayRows,
+    onNavigate: handleNavigate
+  });
+  
+  // Create SelectFieldType instances for select fields
+  columns.forEach(column => {
+    if (column.fieldConfig?.type === 'select' && !column.fieldType) {
+      column.fieldType = new SelectFieldType({
+        options: column.fieldConfig.options || [],
+        valueKey: 'value',
+        labelKey: 'label'
+      });
+    }
+  });
+  
+  // Convert enhanced columns to MUI X Data Grid columns
+  const gridColumns: GridColDef[] = columns.map(column => {
+    return {
+      ...column,
+      renderCell: (params) => {
+        return (
+          <CellRendererWrapper 
+            params={params} 
+            column={column}
+          />
+        );
+      },
+      renderEditCell: (params) => {
+        return (
+          <EditCellRenderer
+            params={params}
+            column={column}
+          />
+        );
+      },
+    };
+  });
+  
+  // Determine if we're in compact mode based on row height
+  const isCompact = rowHeight !== undefined && rowHeight <= 30;
+
+  // Create a wrapper component for DataGrid that uses the grid mode
+  const DataGridWithModeControl = () => {
+    // Get the current mode from context
+    const { mode, setMode } = useGridMode();
+    
+    // Determine if row selection should be disabled
+    const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+    
+    // Handle cell click
+    const handleCellClick = (params: any) => {
+      // If we're already in edit mode, allow single click to edit cells
+      if (mode === 'edit') {
+        // Don't handle clicks on checkboxes or action columns
+        if (params.field === '__check__' || params.field === '__actions__') {
+          return;
+        }
+        
+        const { id, field } = params;
+        const column = columns.find(col => col.field === field);
+        
+        // Only allow editing if the column is editable and editing is enabled
+        if (column?.editable !== false && canEditRows) {
+          try {
+            // Start cell edit mode
+            const cellMode = apiRef.current.getCellMode(id, field);
+            if (cellMode === 'view') {
+              apiRef.current.startCellEditMode({ id, field });
+            }
+          } catch (error) {
+            console.error('Error starting cell edit mode:', error);
+          }
+        }
+      }
+      // In other modes, single click does nothing - we'll use double click for initial editing
+    };
+    
+    // Handle cell double click to enter edit mode
+    const handleCellDoubleClick = (params: any) => {
+      // Disable cell editing when in add mode for existing rows
+      if (mode === 'add' && !params.id.toString().startsWith('new-')) {
+        return;
+      }
+      
+      // Don't handle double clicks on checkboxes or action columns
+      if (params.field === '__check__' || params.field === '__actions__') {
+        return;
+      }
+      
+      const { id, field } = params;
+      const column = columns.find(col => col.field === field);
+      
+      // Only allow editing if the column is editable and editing is enabled
+      if (column?.editable !== false && canEditRows) {
+        try {
+          // Set the grid mode to edit
+          setMode('edit');
+          
+          // Start cell edit mode
+          const cellMode = apiRef.current.getCellMode(id, field);
+          if (cellMode === 'view') {
+            apiRef.current.startCellEditMode({ id, field });
+          }
+        } catch (error) {
+          console.error('Error starting cell edit mode:', error);
+        }
+      }
+    };
+    
+    return (
+      <DataGrid
+        apiRef={apiRef}
+        rows={displayRows}
+        columns={gridColumns}
+        autoHeight={autoHeight}
+        density={density}
+        disableColumnFilter={disableColumnFilter}
+        disableColumnMenu={disableColumnMenu}
+        disableColumnSelector={disableColumnSelector}
+        disableDensitySelector={disableDensitySelector}
+        disableRowSelectionOnClick={isInEditOrAddMode || disableSelectionOnClick}
+        disableVirtualization={disableVirtualization}
+        loading={loading}
+        hideFooter={hideFooter}
+        hideFooterPagination={hideFooterPagination}
+        hideFooterSelectedRowCount={hideFooterSelectedRowCount}
+        // Pagination
+        initialState={{
+          pagination: {
+            paginationModel: { pageSize, page: 0 },
+          },
+        }}
+        pageSizeOptions={rowsPerPageOptions}
+        paginationMode={useGraphQLFetching ? 'server' : 'client'}
+        rowCount={useGraphQLFetching ? totalRows : undefined}
+        onPaginationModelChange={(model) => {
+          // For GraphQL pagination, fetch the data
+          if (useGraphQLFetching) {
+            setPage(model.page);
+          }
+        }}
+        
+        // Sorting and filtering
+        sortingMode={useGraphQLFetching ? 'server' : 'client'}
+        filterMode={useGraphQLFetching ? 'server' : 'client'}
+        onSortModelChange={(model) => {
+          if (useGraphQLFetching) {
+            setSortModel(model.map(item => ({
+              field: item.field,
+              sort: item.sort as 'asc' | 'desc'
+            })));
+          }
+        }}
+        onFilterModelChange={(model) => {
+          if (useGraphQLFetching) {
+            const filterModel: Record<string, any> = {};
+            model.items.forEach(item => {
+              if (item.field && item.value !== undefined) {
+                filterModel[item.field] = item.value;
+              }
+            });
+            setFilterModel(filterModel);
+          }
+        }}
+        // Row selection
+        checkboxSelection={checkboxSelection && canSelectRows}
+        rowSelectionModel={selectionModel}
+        onRowSelectionModelChange={handleSelectionModelChange}
+        disableMultipleRowSelection={disableMultipleSelection}
+        isRowSelectable={() => !isInEditOrAddMode}
+        
+        // Editing
+        editMode="cell"
+        rowHeight={rowHeight}
+        onCellClick={handleCellClick}
+        onCellDoubleClick={handleCellDoubleClick}
+        onCellKeyDown={handleKeyDown}
+        slots={{
+          noRowsOverlay: () => (
+            <div className="flex items-center justify-center h-full">
+              <Typography>No rows</Typography>
+            </div>
+          )
+        }}
+        sx={{
+          border: 'none',
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+          height: '100%',
+          '& .MuiDataGrid-main': {
+            overflow: 'auto',
+          }
+        }}
+        {...props}
+      />
+    );
+  };
+  // Get the GridFormContext functions and state
+  const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
+    const {
+      saveChanges,
+      cancelChanges,
+      addRow,
+      hasValidationErrors,
+      isRowEditing,
+      isRowDirty
+    } = useGridForm();
+
+    return (
+      <GridModeProvider
+        totalRows={totalRows}
+        initialMode="none"
+        saveChanges={saveChanges}
+        cancelChanges={cancelChanges}
+        addRow={addRow}
+        hasValidationErrors={hasValidationErrors}
+        isRowEditing={isRowEditing}
+        isRowDirty={isRowDirty}
+        canEditRows={canEditRows}
+        canAddRows={canAddRows}
+        canSelectRows={canSelectRows}
+        selectionModel={selectionModel}
+        onSelectionModelChange={(selectionModel) => {
+          // Adapter function to match the expected signature
+          handleSelectionModelChange(selectionModel, {} as any);
+        }}
+      >
+        {children}
+      </GridModeProvider>
+    );
+  };
+  
+  // Get the saveChanges function from GridFormContext
+  const GridFormWithToolbar = () => {
+    const { saveChanges } = useGridForm();
+    
+    return (
+      <GridFormWrapper>
+        <div className={`h-full w-full flex flex-col ${className || ''}`}>
+          {/* Unified Toolbar */}
+          <UnifiedDataGridToolbar
+            onSave={saveChanges}
+            onFilter={() => console.log('Filter clicked')}
+            onExport={() => console.log('Export clicked')}
+            onUpload={() => console.log('Upload clicked')}
+            onHelp={() => console.log('Help clicked')}
+            canEditRows={canEditRows}
+            canAddRows={canAddRows}
+            canSelectRows={canSelectRows}
+            customActionButtons={props.customActionButtons}
+          />
+
+          <Paper elevation={0} className="flex-grow w-full overflow-auto">
+            <CellEditHandler apiRef={apiRef} />
+            <DataGridWithModeControl />
+          </Paper>
+        </div>
+      </GridFormWrapper>
+    );
+  };
+  
+  return (
+    <GridFormProvider
+      columns={columns}
+      initialRows={displayRows}
+      onSave={onSave}
+      validateRow={validateRow}
+      isCompact={isCompact}
+    >
+      <GridFormWithToolbar />
+    </GridFormProvider>
+  );
+}
+
+// Wrapper for CellRenderer that gets validation state from context
+const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {
+  const { isFieldDirty, getRowErrors, getFormMethods } = useGridForm();
+  const isDirty = isFieldDirty(params.id, params.field);
+  const errors = getRowErrors(params.id);
+  const error = errors?.[params.field];
+  
+  // Get the latest value from the form state if available
+  const formMethods = getFormMethods(params.id);
+  const formValue = formMethods ? formMethods.getValues()[params.field] : undefined;
+  
+  // Create a new params object with the updated value from form state
+  const updatedParams = {
+    ...params,
+    value: formValue !== undefined ? formValue : params.value
+  };
+  
+  return (
+    <CellRenderer
+      params={updatedParams}
+      column={column}
+      isDirty={isDirty}
+      error={error}
+    />
+  );
+};
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/context/GridModeContext.tsx
+==========================================================================
+
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { useSelectionModel } from '../hooks/useSelectionModel';
+import { usePagination } from '../hooks/usePagination';
+
+/**
+ * Grid Mode System
+ *
+ * This context manages the modal state of the grid, ensuring that only one mode
+ * can be active at a time. The available modes are:
+ *
+ * - none: Default state, grid is in view-only mode
+ * - edit: Grid is in editing mode, allowing cell modifications
+ * - add: Grid is in add mode, allowing new row creation
+ * - select: Grid is in selection mode, allowing row selection
+ *
+ * The context also manages the interactions between these modes and handles
+ * conflicts (e.g., can't select rows while editing).
+ */
+
+// Define the grid mode type
+export type GridMode = 'none' | 'edit' | 'add' | 'select';
+
+// Define the context type
+interface GridModeContextType {
+  // Mode state
+  mode: GridMode;
+  setMode: (newMode: GridMode) => void;
+  
+  // Selection state
+  selectedRowCount: number;
+  clearSelection: () => void;
+  selectionModel: any[];
+  /**
+   * Selection model change handler
+   * This signature is intentionally flexible to accommodate both:
+   * - The MUI X DataGrid's onSelectionModelChange prop (which passes two arguments)
+   * - Our internal handlers (which may use one or two arguments)
+   */
+  onSelectionModelChange: (selectionModel: any[], details?: any) => void;
+  
+  // Edit state
+  editingRowCount: number;
+  isAddingRow: boolean;
+  hasValidationErrors: boolean;
+  
+  // Actions
+  saveChanges: () => void;
+  cancelChanges: () => void;
+  addRow: () => void;
+  
+  // Pagination
+  page: number;
+  pageSize: number;
+  totalRows: number;
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
+}
+
+// Create the context
+const GridModeContext = createContext<GridModeContextType | undefined>(undefined);
+
+// Provider props
+interface GridModeProviderProps {
+  children: React.ReactNode;
+  totalRows: number;
+  initialMode?: GridMode;
+  // Form state and actions
+  saveChanges: () => void;
+  cancelChanges: () => void;
+  addRow: () => void;
+  hasValidationErrors: boolean;
+  isRowEditing?: (rowId: GridRowId) => boolean;
+  isRowDirty?: (rowId: GridRowId) => boolean;
+  // Grid capabilities
+  canEditRows?: boolean;
+  canAddRows?: boolean;
+  canSelectRows?: boolean;
+  // Selection model
+  selectionModel?: any[];
+  onSelectionModelChange?: (selectionModel: any[]) => void;
+}
+
+// Provider component
+export const GridModeProvider: React.FC<GridModeProviderProps> = ({
+  children,
+  totalRows,
+  initialMode = 'none',
+  // Form state and actions
+  saveChanges: formSaveChanges,
+  cancelChanges: formCancelChanges,
+  addRow: formAddRow,
+  hasValidationErrors,
+  isRowEditing = () => false,
+  isRowDirty = () => false,
+  // Grid capabilities
+  canEditRows = true,
+  canAddRows = true,
+  canSelectRows = true,
+  // Selection model
+  selectionModel: externalSelectionModel,
+  onSelectionModelChange: externalOnSelectionModelChange
+}) => {
+  // State for the current mode
+  const [mode, setMode] = useState<GridMode>(initialMode);
+  
+  /**
+   * Selection Model Management
+   *
+   * This component handles two possible sources of selection state:
+   * 1. External selection model passed via props (controlled mode)
+   * 2. Internal selection model managed by the useSelectionModel hook (uncontrolled mode)
+   *
+   * The logic prioritizes the external selection model if provided, otherwise
+   * falls back to the internal hook-based selection model.
+   */
+  
+  // Get selection model from hook, but configure it with external values if provided
+  const {
+    selectionModel: hookSelectionModel,
+    onSelectionModelChange: hookOnSelectionModelChange
+  } = useSelectionModel({
+    selectionModel: externalSelectionModel,
+    onSelectionModelChange: externalOnSelectionModelChange ?
+      (newModel) => externalOnSelectionModelChange(newModel) :
+      undefined
+  });
+  
+  /**
+   * Selection Change Adapter
+   *
+   * This function adapts between different selection change handler signatures:
+   * - The external handler might expect just the new selection model
+   * - The hook handler expects both the model and additional details
+   *
+   * This adapter ensures that the correct parameters are passed to each handler.
+   */
+  // Create a wrapper function that adapts between the different types
+  const adaptedOnSelectionModelChange = useCallback((newModel: any[], details?: any) => {
+    if (externalOnSelectionModelChange) {
+      externalOnSelectionModelChange(newModel);
+    } else {
+      hookOnSelectionModelChange(newModel, details || {} as any);
+    }
+  }, [externalOnSelectionModelChange, hookOnSelectionModelChange]);
+  
+  // Use external selection model if provided, otherwise use hook-managed model
+  const selectionModel = externalSelectionModel !== undefined ? externalSelectionModel : hookSelectionModel;
+  
+  // Get pagination
+  const {
+    page,
+    pageSize,
+    setPage,
+    setPageSize
+  } = usePagination();
+  
+  /**
+   * Editing Rows Tracking
+   *
+   * This state and effect track which rows are currently being edited.
+   * A row is considered "being edited" if:
+   * 1. It's in edit mode (isRowEditing returns true)
+   * 2. It has actual changes (isRowDirty returns true) - if available
+   *
+   * This tracking is used to:
+   * - Display UI indicators for edited rows
+   * - Determine if save/cancel actions should be enabled
+   * - Count how many rows are being edited for the toolbar display
+   */
+  const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
+  
+  /**
+   * Effect: Update Editing Rows Set
+   *
+   * This effect runs whenever:
+   * - The selection model changes
+   * - The row editing state changes
+   * - The row dirty state changes
+   *
+   * It rebuilds the set of rows that are currently being edited with actual changes.
+   * Two approaches are used based on available functions:
+   * 1. Preferred: Only count rows that are both being edited AND have actual changes
+   * 2. Fallback: Count all rows that are being edited regardless of changes
+   */
+  useEffect(() => {
+    const newEditingRows = new Set<GridRowId>();
+    
+    // If we can check for dirty state (actual field changes)
+    if (isRowDirty) {
+      // Only count rows that are both being edited AND have actual changes
+      selectionModel.forEach((rowId: GridRowId) => {
+        if (isRowEditing(rowId) && isRowDirty(rowId)) {
+          newEditingRows.add(rowId);
+        }
+      });
+    } else {
+      // Fallback: count all rows being edited regardless of changes
+      selectionModel.forEach((rowId: GridRowId) => {
+        if (isRowEditing(rowId)) {
+          newEditingRows.add(rowId);
+        }
+      });
+    }
+    
+    setEditingRows(newEditingRows);
+  }, [selectionModel, isRowEditing, isRowDirty]);
+  
+  /**
+   * Derived State
+   *
+   * These values are computed from other state and don't need their own useState.
+   * They're recalculated whenever their dependencies change.
+   */
+  
+  // Count of selected rows - derived from selectionModel
+  const selectedRowCount = selectionModel.length;
+  
+  /**
+   * Count of rows being edited with actual changes
+   *
+   * Two approaches:
+   * 1. If isRowDirty is available: Filter editingRows to only count those with changes
+   * 2. Otherwise: Use the total count of rows being edited
+   *
+   * This ensures the UI accurately reflects how many rows will be affected by a save.
+   */
+  const editingRowCount = isRowDirty ?
+    Array.from(editingRows).filter(rowId => isRowDirty(rowId)).length :
+    editingRows.size;
+  
+  /**
+   * Flag indicating if we're in "add row" mode
+   *
+   * This is a simplified approach based on the current mode.
+   * A more robust implementation would track newly added rows specifically.
+   */
+  const isAddingRow = mode === 'add';
+  
+  /**
+   * Action Handlers
+   *
+   * These callbacks handle user actions and update state accordingly.
+   * They're memoized with useCallback to prevent unnecessary re-renders.
+   */
+  
+  /**
+   * Clear Selection
+   * Removes all selected rows by passing an empty array to the selection handler
+   */
+  // Clear selection
+  const clearSelection = useCallback(() => {
+    // Just pass an empty array to clear the selection
+    adaptedOnSelectionModelChange([]);
+  }, [adaptedOnSelectionModelChange]);
+  
+  /**
+   * Save Changes
+   * 1. Calls the form's save function to persist changes
+   * 2. Resets the grid mode to 'none' (view mode)
+   */
+  const saveChanges = useCallback(() => {
+    formSaveChanges();
+    setMode('none');
+  }, [formSaveChanges]);
+  
+  /**
+   * Cancel Changes
+   * 1. Calls the form's cancel function to revert changes
+   * 2. Resets the grid mode to 'none' (view mode)
+   */
+  const cancelChanges = useCallback(() => {
+    formCancelChanges();
+    setMode('none');
+  }, [formCancelChanges]);
+  
+  /**
+   * Add Row
+   * 1. Calls the form's add row function to create a new row
+   * 2. Sets the grid mode to 'add' to indicate we're adding a row
+   */
+  const addRow = useCallback(() => {
+    formAddRow();
+    setMode('add');
+  }, [formAddRow]);
+  
+  /**
+   * Context Value
+   *
+   * This object contains all the state and functions that will be
+   * provided to components that consume this context.
+   *
+   * It includes:
+   * - Mode state and setter
+   * - Selection state and handlers
+   * - Editing state
+   * - Action handlers
+   * - Pagination state and handlers
+   */
+  const contextValue: GridModeContextType = {
+    mode,
+    setMode,
+    selectedRowCount,
+    clearSelection,
+    selectionModel,
+    onSelectionModelChange: adaptedOnSelectionModelChange,
+    editingRowCount,
+    isAddingRow,
+    hasValidationErrors,
+    saveChanges,
+    cancelChanges,
+    addRow,
+    page,
+    pageSize,
+    totalRows,
+    setPage,
+    setPageSize
+  };
+  
+  return (
+    <GridModeContext.Provider value={contextValue}>
+      {children}
+    </GridModeContext.Provider>
+  );
+};
+
+/**
+ * Custom Hook: useGridMode
+ *
+ * This hook provides access to the GridModeContext.
+ * Components can use this hook to:
+ * - Read the current grid mode
+ * - Change the grid mode
+ * - Access selection state
+ * - Perform actions like save, cancel, add
+ *
+ * It throws an error if used outside of a GridModeProvider.
+ */
+export const useGridMode = () => {
+  const context = useContext(GridModeContext);
+  if (!context) {
+    throw new Error('useGridMode must be used within a GridModeProvider');
+  }
+  return context;
+};
+
+/**
+ * Alias for backward compatibility
+ *
+ * This allows components that were using the old useToolbarMode hook
+ * to continue working without changes.
+ */
+export const useToolbarMode = useGridMode;
+
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/context/GridFormContext.tsx
+==========================================================================
+
+import React, { createContext, useCallback, useContext, useState, useRef, useEffect } from 'react';
+import {
+  FieldValues,
+  FieldError,
+  FormState,
+  FormMethods
+} from '../../../types/form';
+import { GridRowId } from '@mui/x-data-grid';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
+
+export interface ValidationHelpers {
+  getFieldValue: (field: string) => any;
+  setError: (field: string, message: string) => void;
+}
+
+// We're now using FormState and FormMethods from our custom types
+
+interface GridFormContextType {
+  // Form instances for each row
+  getFormMethods: (rowId: GridRowId) => FormMethods | undefined;
+  
+  // Row management
+  startEditingRow: (rowId: GridRowId, field: string) => void;
+  stopEditingRow: (rowId: GridRowId) => void;
+  
+  // Cell management
+  startEditingCell: (rowId: GridRowId, field: string) => void;
+  stopEditingCell: () => void;
+  getCurrentCell: () => { rowId: GridRowId; field: string } | undefined;
+  
+  // Row state
+  isRowEditing: (rowId: GridRowId) => boolean;
+  isRowDirty: (rowId: GridRowId) => boolean;
+  isFieldDirty: (rowId: GridRowId, field: string) => boolean;
+  getRowErrors: (rowId: GridRowId) => Record<string, FieldError> | undefined;
+  
+  // Row-level validation
+  validateRow: (rowId: GridRowId) => Promise<boolean>;
+  
+  // Value updates
+  updateCellValue: (rowId: GridRowId, field: string, value: any) => void;
+  
+  // Save/cancel
+  saveChanges: () => void;
+  cancelChanges: () => void;
+  
+  // Add row
+  addRow: () => void;
+  
+  // Validation state
+  hasValidationErrors: boolean;
+  
+  // Columns config
+  columns: EnhancedColumnConfig[];
+  
+  // UI configuration
+  isCompact: boolean;
+  
+  // Pending changes tracking
+  getPendingChanges: () => Array<{ rowId: GridRowId, changes: Record<string, any> }>;
+  getEditedRowCount: () => number;
+  getAllValidationErrors: () => Array<{ rowId: GridRowId, field: string, message: string }>;
+  
+  // Original data access
+  getOriginalRowData: (rowId: GridRowId) => Record<string, any> | undefined;
+}
+
+interface GridFormProviderProps {
+  children: React.ReactNode;
+  columns: EnhancedColumnConfig[];
+  initialRows: any[];
+  onSave?: (changes: { edits: any[], additions: any[] }) => void;
+  validateRow?: (values: any, helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
+  isCompact?: boolean;
+}
+
+export const GridFormContext = createContext<GridFormContextType | undefined>(undefined);
+
+// Create a form instance factory
+const createFormInstance = (defaultValues: Record<string, any>, columns: EnhancedColumnConfig[]): FormMethods => {
+  try {
+    // Create a form state
+    const formState: FormState = {
+      values: { ...defaultValues },
+      errors: {},
+      dirtyFields: {},
+      isDirty: false,
+      isValid: true,
+    };
+    
+    // Create the form methods
+    const formMethods: FormMethods = {
+      formState,
+      getValues: () => {
+        return { ...formState.values };
+      },
+      setValue: (name, value, options) => {
+        // Check if the value has actually changed
+        const currentValue = formState.values[name];
+        const valueHasChanged = JSON.stringify(currentValue) !== JSON.stringify(value);
+        
+        // Set the value
+        formState.values[name] = value;
+        
+        // Update form state - only mark as dirty if the value has actually changed
+        if (options?.shouldDirty && valueHasChanged) {
+          formState.isDirty = true;
+          formState.dirtyFields[name] = true;
+        } else if (!valueHasChanged && formState.dirtyFields[name]) {
+          // If the value is back to its original state, remove the dirty flag
+          delete formState.dirtyFields[name];
+          // Check if there are any remaining dirty fields
+          formState.isDirty = Object.keys(formState.dirtyFields).length > 0;
+        }
+        
+        // Validate if needed
+        if (options?.shouldValidate) {
+          // Find the column configuration for this field
+          const column = columns.find(col => col.field === name);
+          const validation = column?.fieldConfig?.validation;
+          
+          // Clear previous errors for this field
+          delete formState.errors[name];
+          
+          // Check if required
+          if (validation?.required && (value === undefined || value === null || value === '')) {
+            const message = typeof validation.required === 'string'
+              ? validation.required
+              : 'This field is required';
+            formState.errors[name] = { type: 'required', message };
+          }
+          
+          // Check pattern validation for string values
+          else if (validation?.pattern && typeof value === 'string') {
+            const { value: pattern, message } = validation.pattern;
+            if (!pattern.test(value)) {
+              formState.errors[name] = { type: 'pattern', message };
+            }
+          }
+          
+          // Check min validation for number values
+          else if (validation?.min && typeof value === 'number') {
+            const { value: min, message } = validation.min;
+            if (value < min) {
+              formState.errors[name] = { type: 'min', message };
+            }
+          }
+          
+          // Check max validation for number values
+          else if (validation?.max && typeof value === 'number') {
+            const { value: max, message } = validation.max;
+            if (value > max) {
+              formState.errors[name] = { type: 'max', message };
+            }
+          }
+          
+          // Check custom validation function if provided
+          else if (validation?.validate && typeof validation.validate === 'function') {
+            const result = validation.validate(value);
+            if (typeof result === 'string') {
+              formState.errors[name] = { type: 'validate', message: result };
+            } else if (result === false) {
+              formState.errors[name] = { type: 'validate', message: 'Invalid value' };
+            }
+          }
+          
+          // Update form validity state
+          formState.isValid = Object.keys(formState.errors).length === 0;
+        }
+      },
+      setError: (name, error) => {
+        formState.errors[name] = error as FieldError;
+        formState.isValid = Object.keys(formState.errors).length === 0;
+      },
+      clearErrors: () => {
+        formState.errors = {};
+        formState.isValid = true;
+      },
+      trigger: async () => {
+        // Clear all errors first
+        formState.errors = {};
+        
+        // Validate each field
+        for (const field in formState.values) {
+          const value = formState.values[field];
+          const column = columns.find(col => col.field === field);
+          const validation = column?.fieldConfig?.validation;
+          
+          if (!validation) continue;
+          
+          // Check if required
+          if (validation.required && (value === undefined || value === null || value === '')) {
+            const message = typeof validation.required === 'string'
+              ? validation.required
+              : 'This field is required';
+            formState.errors[field] = { type: 'required', message };
+          }
+          
+          // Check pattern validation for string values
+          else if (validation.pattern && typeof value === 'string') {
+            const { value: pattern, message } = validation.pattern;
+            if (!pattern.test(value)) {
+              formState.errors[field] = { type: 'pattern', message };
+            }
+          }
+          
+          // Check min validation for number values
+          else if (validation.min && typeof value === 'number') {
+            const { value: min, message } = validation.min;
+            if (value < min) {
+              formState.errors[field] = { type: 'min', message };
+            }
+          }
+          
+          // Check max validation for number values
+          else if (validation.max && typeof value === 'number') {
+            const { value: max, message } = validation.max;
+            if (value > max) {
+              formState.errors[field] = { type: 'max', message };
+            }
+          }
+          
+          // Check custom validation function if provided
+          else if (validation.validate && typeof validation.validate === 'function') {
+            const result = validation.validate(value);
+            if (typeof result === 'string') {
+              formState.errors[field] = { type: 'validate', message: result };
+            } else if (result === false) {
+              formState.errors[field] = { type: 'validate', message: 'Invalid value' };
+            }
+          }
+        }
+        
+        // Update form validity state
+        formState.isValid = Object.keys(formState.errors).length === 0;
+        return formState.isValid;
+      },
+    };
+    
+    return formMethods;
+  } catch (error) {
+    console.error('Error creating form instance:', error);
+    throw new Error('Failed to create form instance');
+  }
+};
+
+export function GridFormProvider({
+  children,
+  columns,
+  initialRows,
+  onSave,
+  validateRow: validateRowProp,
+  isCompact = false
+}: GridFormProviderProps) {
+  const [rows, setRows] = useState(initialRows);
+  const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
+  const [currentCell, setCurrentCell] = useState<{ rowId: GridRowId; field: string }>();
+  
+  // Add state to track pending changes
+  const [pendingChanges, setPendingChanges] = useState<Map<GridRowId, Record<string, any>>>(new Map());
+  
+  // Use a ref to store form instances to avoid re-renders when they change
+  const formInstancesRef = useRef<Map<GridRowId, FormMethods>>(new Map());
+  
+  // Track original data for each row being edited
+  const originalDataRef = useRef<Map<GridRowId, any>>(new Map());
+  
+  // Track rows that were added (not in the original data)
+  const addedRowsRef = useRef<Set<GridRowId>>(new Set());
+  
+  // Update rows when initialRows changes (for server-side data)
+  useEffect(() => {
+    // Only update if not in the middle of editing
+    if (editingRows.size === 0) {
+      setRows(initialRows);
+      
+      // Clear form instances for rows that no longer exist
+      const newRowIds = new Set(initialRows.map(row => row.id));
+      
+      formInstancesRef.current.forEach((_, rowId) => {
+        if (!newRowIds.has(rowId) && !addedRowsRef.current.has(rowId)) {
+          formInstancesRef.current.delete(rowId);
+          originalDataRef.current.delete(rowId);
+        }
+      });
+    }
+  }, [initialRows, editingRows]);
+  
+  // Log pending changes whenever they change
+  useEffect(() => {
+    console.log('Pending changes:', Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
+      rowId,
+      changes
+    })));
+  }, [pendingChanges]);
+  
+  // Get form methods for a specific row
+  const getFormMethods = useCallback((rowId: GridRowId): FormMethods | undefined => {
+    try {
+      return formInstancesRef.current.get(rowId);
+    } catch (error) {
+      console.error(`Error getting form methods for row ${rowId}:`, error);
+      return undefined;
+    }
+  }, []);
+  
+  // Start editing a row
+  const startEditingRow = useCallback((rowId: GridRowId, field: string) => {
+    try {
+      // If this row isn't already being edited, create a form instance for it
+      if (!formInstancesRef.current.has(rowId)) {
+        const row = rows.find(r => r.id === rowId);
+        if (row) {
+          // Store the original data
+          originalDataRef.current.set(rowId, { ...row });
+          
+          // Create a form instance using our factory function
+          const formMethods = createFormInstance({ ...row }, columns);
+          
+          formInstancesRef.current.set(rowId, formMethods);
+          
+          console.log(`Created form instance for row ${rowId}`);
+        } else {
+          console.warn(`Row with ID ${rowId} not found`);
+          return;
+        }
+      }
+      
+      // Mark the row as being edited
+      setEditingRows(prev => {
+        const next = new Set(prev);
+        next.add(rowId);
+        return next;
+      });
+      
+      // Set the current cell
+      setCurrentCell({ rowId, field });
+    } catch (error) {
+      console.error(`Error starting edit for row ${rowId}:`, error);
+    }
+  }, [rows, columns]);
+  
+  // Stop editing a row
+  const stopEditingRow = useCallback((rowId: GridRowId) => {
+    try {
+      // Remove the row from the editing set
+      setEditingRows(prev => {
+        const next = new Set(prev);
+        next.delete(rowId);
+        return next;
+      });
+      
+      // Clear the current cell if it's for this row
+      if (currentCell?.rowId === rowId) {
+        setCurrentCell(undefined);
+      }
+      
+      // We keep the form instance in case we need it later
+    } catch (error) {
+      console.error(`Error stopping edit for row ${rowId}:`, error);
+    }
+  }, [currentCell]);
+  
+  // Start editing a cell
+  const startEditingCell = useCallback((rowId: GridRowId, field: string) => {
+    try {
+      // If the row isn't being edited yet, start editing it
+      if (!editingRows.has(rowId)) {
+        startEditingRow(rowId, field);
+      } else {
+        // Just update the current cell
+        setCurrentCell({ rowId, field });
+      }
+    } catch (error) {
+      console.error(`Error starting edit for cell ${rowId}.${field}:`, error);
+    }
+  }, [editingRows, startEditingRow]);
+  
+  // Stop editing a cell
+  const stopEditingCell = useCallback(() => {
+    try {
+      setCurrentCell(undefined);
+    } catch (error) {
+      console.error('Error stopping cell edit:', error);
+    }
+  }, []);
+  
+  // Get the current cell
+  const getCurrentCell = useCallback(() => {
+    return currentCell;
+  }, [currentCell]);
+  
+  // Check if a row is being edited
+  const isRowEditing = useCallback((rowId: GridRowId) => {
+    try {
+      return editingRows.has(rowId);
+    } catch (error) {
+      console.error(`Error checking if row ${rowId} is being edited:`, error);
+      return false;
+    }
+  }, [editingRows]);
+  
+  // Check if a row has any dirty fields
+  const isRowDirty = useCallback((rowId: GridRowId) => {
+    try {
+      // Use our explicit pendingChanges tracking
+      return pendingChanges.has(rowId);
+    } catch (error) {
+      console.error(`Error checking if row ${rowId} is dirty:`, error);
+      return false;
+    }
+  }, [pendingChanges]);
+  
+  // Check if a specific field is dirty
+  const isFieldDirty = useCallback((rowId: GridRowId, field: string) => {
+    try {
+      // Use our explicit pendingChanges tracking
+      const rowChanges = pendingChanges.get(rowId);
+      return rowChanges ? field in rowChanges : false;
+    } catch (error) {
+      console.error(`Error checking if field ${rowId}.${field} is dirty:`, error);
+      return false;
+    }
+  }, [pendingChanges]);
+  
+  // Get errors for a row
+  const getRowErrors = useCallback((rowId: GridRowId) => {
+    try {
+      const form = formInstancesRef.current.get(rowId);
+      return form ? form.formState.errors : undefined;
+    } catch (error) {
+      console.error(`Error getting errors for row ${rowId}:`, error);
+      return undefined;
+    }
+  }, []);
+  
+  // Validate a row
+  const validateRow = useCallback(async (rowId: GridRowId): Promise<boolean> => {
+    try {
+      const form = formInstancesRef.current.get(rowId);
+      if (!form) return true;
+      
+      // First validate all fields
+      const isValid = await form.trigger();
+      if (!isValid) return false;
+      
+      // Then run row-level validation if provided
+      if (validateRowProp) {
+        const values = form.getValues();
+        const helpers: ValidationHelpers = {
+          getFieldValue: (field: string) => values[field],
+          setError: (field: string, message: string) => 
+            form.setError(field, { type: 'manual', message })
+        };
+        
+        const errors = await validateRowProp(values, helpers);
+        
+        // Apply any errors from row validation
+        if (errors && Object.keys(errors).length > 0) {
+          Object.entries(errors).forEach(([field, message]) => {
+            form.setError(field, { type: 'manual', message });
+          });
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`Error validating row ${rowId}:`, error);
+      return false;
+    }
+  }, [validateRowProp]);
+  
+  // Update a cell value
+  const updateCellValue = useCallback((rowId: GridRowId, field: string, value: any) => {
+    try {
+      const form = formInstancesRef.current.get(rowId);
+      if (form) {
+        // Get the original value to compare
+        const originalData = originalDataRef.current.get(rowId);
+        
+        // Only mark as dirty if the value has actually changed from the original
+        const hasChanged = originalData && 
+          JSON.stringify(value) !== JSON.stringify(originalData[field]);
+        
+        form.setValue(field, value, { 
+          shouldDirty: hasChanged,
+          shouldValidate: true 
+        });
+        
+        // Track changes explicitly in our pendingChanges state
+        setPendingChanges(prev => {
+          const newChanges = new Map(prev);
+          
+          // Get or create row changes
+          let rowChanges = newChanges.get(rowId) || {};
+          
+          // Only track if value has changed from original
+          if (originalData && JSON.stringify(value) !== JSON.stringify(originalData[field])) {
+            rowChanges = { ...rowChanges, [field]: value };
+            newChanges.set(rowId, rowChanges);
+          } else {
+            // If value is back to original, remove it from changes
+            if (field in rowChanges) {
+              const { [field]: _, ...rest } = rowChanges;
+              
+              // If row has no changes, remove it from the map
+              if (Object.keys(rest).length === 0) {
+                newChanges.delete(rowId);
+              } else {
+                newChanges.set(rowId, rest);
+              }
+            }
+          }
+          
+          return newChanges;
+        });
+        
+        // Force a re-render to update the UI
+        setTimeout(() => {
+          setEditingRows(prev => new Set(prev));
+        }, 0);
+      }
+    } catch (error) {
+      console.error(`Error updating cell value ${rowId}.${field}:`, error);
+    }
+  }, []);
+  
+  // Save all changes
+  const saveChanges = useCallback(() => {
+    try {
+      // Prepare the payload for the API
+      const edits: Array<{ id: GridRowId, changes: any }> = [];
+      const additions: Array<any> = [];
+      
+      // Process each edited row
+      editingRows.forEach(rowId => {
+        const form = formInstancesRef.current.get(rowId);
+        const originalData = originalDataRef.current.get(rowId);
+        
+        if (form && originalData) {
+          const currentValues = form.getValues();
+          
+          if (addedRowsRef.current.has(rowId)) {
+            // This is a new row
+            additions.push(currentValues);
+          } else {
+            // This is an existing row - only include changed fields
+            const changes: any = {};
+            let hasChanges = false;
+            
+            Object.keys(currentValues).forEach(key => {
+              if (JSON.stringify(currentValues[key]) !== JSON.stringify(originalData[key])) {
+                changes[key] = currentValues[key];
+                hasChanges = true;
+              }
+            });
+            
+            if (hasChanges) {
+              edits.push({ id: rowId, changes });
+            }
+          }
+        }
+      });
+      
+      // Call the onSave callback if provided
+      if (onSave) {
+        onSave({ edits, additions });
+      }
+      
+      // Update the rows state with the changes
+      setRows(prev => {
+        const newRows = [...prev];
+        
+        // Apply edits
+        edits.forEach(edit => {
+          const index = newRows.findIndex(row => row.id === edit.id);
+          if (index >= 0) {
+            newRows[index] = { ...newRows[index], ...edit.changes };
+          }
+        });
+        
+        return newRows;
+      });
+      
+      // Clear editing state
+      setEditingRows(new Set());
+      setCurrentCell(undefined);
+      setPendingChanges(new Map());
+      
+      // Keep form instances and original data for now
+      // They'll be garbage collected when no longer referenced
+    } catch (error) {
+      console.error('Error saving changes:', error);
+    }
+  }, [editingRows, onSave]);
+  
+  // Cancel all changes
+  const cancelChanges = useCallback(() => {
+    try {
+      // Revert rows to their original state for edits
+      setRows(prev => {
+        let newRows = [...prev];
+        
+        // First handle added rows - remove them
+        if (addedRowsRef.current.size > 0) {
+          newRows = newRows.filter(row => !addedRowsRef.current.has(row.id));
+        }
+        
+        // Then handle edited rows - revert to original values
+        editingRows.forEach(rowId => {
+          if (!addedRowsRef.current.has(rowId)) {
+            const originalData = originalDataRef.current.get(rowId);
+            if (originalData) {
+              const index = newRows.findIndex(row => row.id === rowId);
+              if (index >= 0) {
+                newRows[index] = { ...originalData };
+              }
+            }
+          }
+        });
+        
+        return newRows;
+      });
+      
+      // Reset form instances with original data
+      editingRows.forEach(rowId => {
+        if (!addedRowsRef.current.has(rowId)) {
+          const originalData = originalDataRef.current.get(rowId);
+          if (originalData && formInstancesRef.current.has(rowId)) {
+            // Create a new form instance with the original data
+            const formMethods = createFormInstance({ ...originalData }, columns);
+            formInstancesRef.current.set(rowId, formMethods);
+          }
+        }
+      });
+      
+      // Clear added rows tracking
+      addedRowsRef.current.clear();
+      
+      // Clear editing state
+      setEditingRows(new Set());
+      setCurrentCell(undefined);
+      setPendingChanges(new Map());
+    } catch (error) {
+      console.error('Error canceling changes:', error);
+    }
+  }, [editingRows, columns]);
+  
+  // Add a new row
+  const addRow = useCallback(() => {
+    try {
+      // Generate a new ID
+      const maxId = Math.max(...rows.map(row => Number(row.id)), 0);
+      const newId = maxId + 1;
+      
+      // Create a new row with default values
+      const newRow: any = { id: newId };
+      
+      // Add default values for each column
+      columns.forEach(column => {
+        if (column.fieldConfig?.type === 'select' && column.fieldConfig.options && column.fieldConfig.options.length > 0) {
+          // For select fields, use the first option as default
+          newRow[column.field] = column.fieldConfig.options[0].value;
+        } else if (column.fieldConfig?.type === 'boolean') {
+          // For boolean fields, default to false
+          newRow[column.field] = false;
+        } else if (column.fieldConfig?.type === 'number') {
+          // For number fields, default to 0
+          newRow[column.field] = 0;
+        } else if (column.fieldConfig?.type === 'date') {
+          // For date fields, default to today
+          newRow[column.field] = new Date();
+        } else {
+          // For other fields, default to empty string
+          newRow[column.field] = '';
+        }
+      });
+      
+      // Create a form instance for the new row using our factory function
+      const formMethods = createFormInstance(newRow, columns);
+      
+      formInstancesRef.current.set(newId, formMethods);
+      
+      // Mark this as a new row
+      addedRowsRef.current.add(newId);
+      
+      // Add the row to the editing set
+      setEditingRows(prev => {
+        const next = new Set(prev);
+        next.add(newId);
+        return next;
+      });
+      
+      // Set the current cell to the first editable column
+      const firstEditableField = columns.find(col => col.editable)?.field || columns[0].field;
+      setCurrentCell({ rowId: newId, field: firstEditableField });
+      
+      // Add the row to the grid
+      setRows(prev => [...prev, newRow]);
+      
+      // Mark all fields as dirty in pendingChanges
+      setPendingChanges(prev => {
+        const newChanges = new Map(prev);
+        const rowChanges: Record<string, any> = {};
+        
+        // Add all fields to changes
+        Object.keys(newRow).forEach(field => {
+          if (field !== 'id') {
+            rowChanges[field] = newRow[field];
+          }
+        });
+        
+        newChanges.set(newId, rowChanges);
+        return newChanges;
+      });
+    } catch (error) {
+      console.error('Error adding new row:', error);
+    }
+  }, [columns, rows]);
+  
+  // Check if there are any validation errors
+  const hasValidationErrors = React.useMemo(() => {
+    try {
+      for (const rowId of editingRows) {
+        const form = formInstancesRef.current.get(rowId);
+        if (form && !form.formState.isValid) {
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking validation errors:', error);
+      return false;
+    }
+  }, [editingRows]);
+  
+  // Get a serializable version of all pending changes
+  const getPendingChanges = useCallback(() => {
+    return Array.from(pendingChanges.entries()).map(([rowId, changes]) => ({
+      rowId,
+      changes
+    }));
+  }, [pendingChanges]);
+  
+  // Get the count of rows that have actual changes
+  const getEditedRowCount = useCallback(() => {
+    return pendingChanges.size;
+  }, [pendingChanges]);
+  
+  // Get all validation errors in a structured format
+  const getAllValidationErrors = useCallback(() => {
+    const errors: Array<{ rowId: GridRowId, field: string, message: string }> = [];
+    
+    editingRows.forEach(rowId => {
+      const form = formInstancesRef.current.get(rowId);
+      if (form && form.formState.errors) {
+        Object.entries(form.formState.errors).forEach(([field, error]) => {
+          errors.push({
+            rowId,
+            field,
+            message: error.message || 'Invalid value'
+          });
+        });
+      }
+    });
+    
+    return errors;
+  }, [editingRows]);
+
+  // Get original data for a row
+  const getOriginalRowData = useCallback((rowId: GridRowId): Record<string, any> | undefined => {
+    return originalDataRef.current.get(rowId);
+  }, []);
+
+  // Context value
+  const contextValue: GridFormContextType = {
+    getFormMethods,
+    startEditingRow,
+    stopEditingRow,
+    startEditingCell,
+    stopEditingCell,
+    getCurrentCell,
+    isRowEditing,
+    isRowDirty,
+    isFieldDirty,
+    getRowErrors,
+    validateRow,
+    updateCellValue,
+    saveChanges,
+    cancelChanges,
+    addRow,
+    hasValidationErrors,
+    columns,
+    isCompact,
+    getPendingChanges,
+    getEditedRowCount,
+    getAllValidationErrors,
+    getOriginalRowData
+  };
+  
+  return (
+    <GridFormContext.Provider value={contextValue}>
+      {children}
+    </GridFormContext.Provider>
+  );
+}
+
+export const useGridForm = () => {
+  const context = useContext(GridFormContext);
+  if (!context) {
+    throw new Error('useGridForm must be used within a GridFormProvider');
+  }
+  return context;
+};
+
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/hooks/useSelectionModel.ts
+==========================================================================
+
+import { useState, useCallback } from 'react';
+import { GridRowSelectionModel, GridCallbackDetails } from '@mui/x-data-grid';
+import { SelectionModelState, SelectionOptions } from '../types/selection';
+
+/**
+ * Hook for managing row selection state
+ */
+export function useSelectionModel({
+  selectionModel: initialSelectionModel = [],
+  onSelectionModelChange: externalOnSelectionModelChange,
+}: SelectionOptions = {}): SelectionModelState {
+  // Initialize selection model state
+  const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>(initialSelectionModel);
+  
+  // Use external selection model if provided, otherwise use internal
+  const selectionModel = initialSelectionModel || internalSelectionModel;
+  
+  // Handle selection model change
+  const onSelectionModelChange = useCallback(
+    (newSelectionModel: GridRowSelectionModel, details: GridCallbackDetails) => {
+      // Convert readonly array to mutable array
+      const mutableSelectionModel = [...newSelectionModel];
+      
+      // Update internal state
+      setInternalSelectionModel(mutableSelectionModel);
+      
+      // Call external handler if provided
+      if (externalOnSelectionModelChange) {
+        externalOnSelectionModelChange(mutableSelectionModel);
+      }
+    },
+    [externalOnSelectionModelChange]
+  );
+  
+  return {
+    selectionModel,
+    onSelectionModelChange,
+  };
+}
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/hooks/useRelayGraphQLData.ts
+==========================================================================
+
+import { useState, useEffect } from 'react';
+import { useQuery } from '@apollo/client';
+import { ServerSideResult } from '../types/serverSide';
+
+/**
+ * PageInfo interface from the Relay Cursor Connections specification
+ * Contains information about whether there are more pages in either direction
+ * and cursors for the start and end of the current page
+ */
+interface PageInfo {
+  hasNextPage: boolean;    // Whether there are more items after the end cursor
+  hasPreviousPage: boolean; // Whether there are more items before the start cursor
+  startCursor?: string | null; // Cursor pointing to the first item in the current page
+  endCursor?: string | null;   // Cursor pointing to the last item in the current page
+}
+
+/**
+ * Edge interface from the Relay Cursor Connections specification
+ * Represents a single item in the connection along with its cursor
+ */
+interface Edge<T> {
+  cursor: string; // Base64-encoded cursor for pagination
+  node: T;        // The actual data item
+}
+
+/**
+ * Connection interface from the Relay Cursor Connections specification
+ * Represents a paginated list of items with metadata
+ */
+interface Connection<T> {
+  edges: Edge<T>[];    // Array of edges (items with cursors)
+  pageInfo: PageInfo;  // Pagination metadata
+  totalCount: number;  // Total number of items matching the query
+}
+
+/**
+ * Hook for handling GraphQL data operations with Relay-style cursor-based pagination
+ * Manages fetching data with pagination, sorting, and filtering using Apollo Client
+ * 
+ * This hook is specifically designed to work with a DynamoDB backend that uses
+ * cursor-based pagination following the Relay Connection specification
+ */
+export function useRelayGraphQLData<T>({
+  pageSize,
+  initialPage = 0,
+  initialSortModel = [],
+  initialFilterModel = {},
+  query,
+  variables: customVariables = {},
+  nodeToRow = (node: any) => node as T,
+  enableBackwardPagination = false, // Set to true to enable backward pagination
+}: {
+  pageSize: number;  // Number of items to fetch per page
+  initialPage?: number; // Starting page (0-indexed)
+  initialSortModel?: { field: string; sort: 'asc' | 'desc' }[]; // Initial sort configuration
+  initialFilterModel?: Record<string, any>; // Initial filter configuration
+  query?: any; // GraphQL DocumentNode from Apollo
+  variables?: Record<string, any>; // Additional GraphQL variables
+  nodeToRow?: (node: any) => T; // Function to convert GraphQL nodes to row objects
+  enableBackwardPagination?: boolean; // Whether to enable backward pagination
+}): ServerSideResult<T> {
+  // State for pagination
+  const [page, setPage] = useState(initialPage);
+  const [cursors, setCursors] = useState<Record<number, string>>({});
+  const [paginationDirection, setPaginationDirection] = 
+    useState<'forward' | 'backward'>('forward');
+  
+  // State for sorting and filtering
+  const [sortModel, setSortModel] = useState(initialSortModel);
+  const [filterModel, setFilterModel] = useState(initialFilterModel);
+  
+  /**
+   * Convert MUI DataGrid sort model to the format expected by the backend
+   * The backend expects an array of objects with 'field' and 'direction' properties
+   */
+  const sort = sortModel.length > 0
+    ? [{ 
+        field: sortModel[0].field, 
+        direction: sortModel[0].sort === 'desc' ? 'DESC' : 'ASC' 
+      }]
+    : undefined;
+  
+  /**
+   * Pass filter model directly to the backend
+   * The backend expects a direct object with filter criteria
+   * (not a JSON string as in the previous version)
+   */
+  const filter = Object.keys(filterModel).length > 0
+    ? filterModel
+    : undefined;
+  
+  /**
+   * Prepare variables for GraphQL query based on pagination direction
+   * For forward pagination: use 'first' and 'after'
+   * For backward pagination: use 'last' and 'before'
+   */
+  // Create basic pagination variables
+  const paginationVars = paginationDirection === 'forward'
+    ? { first: pageSize, after: page > 0 ? cursors[page - 1] : null }
+    : { last: pageSize, before: cursors[page + 1] || null };
+  
+  // Create variables object with pagination, sort, and filter
+  const variables = {
+    ...paginationVars,
+    ...(sort && { sort: JSON.stringify(sort) }),
+    ...(filter && { filter: JSON.stringify(filter) }),
+  };
+  
+  /**
+   * Execute the GraphQL query using Apollo Client's useQuery hook
+   * This fetches data from the backend and handles loading/error states
+   */
+  const { data, loading, error, refetch } = useQuery(query, {
+    variables,
+    notifyOnNetworkStatusChange: true, // Update loading state on refetch
+    fetchPolicy: 'cache-and-network',  // Check cache but also fetch from network
+    skip: !query, // Skip if no query is provided
+  });
+  
+  /**
+   * Refetch data when pagination, sorting, or filtering changes
+   * This ensures we get updated data when any parameter changes
+   */
+  useEffect(() => {
+    if (query) {
+      // Use a stable reference to variables
+      const stableVariables = { ...variables };
+      refetch(stableVariables);
+    }
+  }, [page, pageSize, paginationDirection, query, refetch]);
+  
+  // Separate effect for sort and filter changes to avoid unnecessary refetches
+  useEffect(() => {
+    if (query && (sortModel.length > 0 || Object.keys(filterModel).length > 0)) {
+      const stableVariables = { ...variables };
+      refetch(stableVariables);
+    }
+  }, [sortModel, filterModel, query, refetch]);
+  
+  /**
+   * Handle page changes with proper cursor management
+   * This function updates both the page number and pagination direction
+   */
+  const handlePageChange = (newPage: number) => {
+    // Determine if we're going forward or backward
+    if (newPage > page) {
+      setPaginationDirection('forward');
+    } else if (newPage < page && enableBackwardPagination) {
+      setPaginationDirection('backward');
+    }
+    
+    setPage(newPage);
+  };
+  
+  // Extract data from query result - get the first property which should be our connection
+  const queryResult = data ? Object.values(data)[0] : null;
+  
+  // Initialize empty results
+  let rows: T[] = [];
+  let totalCount = 0;
+  
+  /**
+   * Type guard to check if the result matches the Connection interface
+   * This ensures we only process data that has the expected structure
+   */
+  const isConnection = (obj: any): obj is Connection<any> => {
+    return obj && 
+           typeof obj === 'object' && 
+           'edges' in obj && 
+           Array.isArray(obj.edges) &&
+           'pageInfo' in obj &&
+           'totalCount' in obj;
+  };
+  
+  // Only process data if it matches the Connection interface
+  const connection = isConnection(queryResult) ? queryResult : null;
+  
+  if (connection) {
+    // Convert edges to rows using the provided nodeToRow function
+    rows = connection.edges.map((edge) => {
+      // Transform the node into a row
+      const row = nodeToRow(edge.node);
+      
+      // Instead of modifying the original object, create a new one with the id property
+      if (typeof row === 'object' && row !== null && !('id' in row)) {
+        // Look for common ID patterns or fallback to the cursor
+        const id =
+          edge.node.id ||
+          edge.node.uuid ||
+          edge.node.accounting_mtm_history_id ||
+          edge.node[`${Object.keys(edge.node)[0]}_id`] ||
+          edge.cursor;
+        
+        // Create a new object with the id property
+        return { ...row, id };
+      }
+      
+      return row;
+    });
+    
+    // Store the total count for pagination UI
+    totalCount = connection.totalCount;
+    
+    // Store the end cursor for the current page to use for future pagination
+    if (connection.pageInfo.endCursor) {
+      setCursors(prev => ({
+        ...prev,
+        [page]: connection.pageInfo.endCursor as string,
+      }));
+    }
+  }
+  
+  /**
+   * Return an object with all the data and functions needed by the grid component
+   * This follows the ServerSideResult interface expected by the consuming component
+   */
+  return {
+    rows,                       // Transformed data rows
+    totalRows: totalCount,      // Total count for pagination
+    loading,                    // Loading state
+    error: error as Error | null, // Error state
+    setPage: handlePageChange,  // Function to change pages
+    setSortModel,               // Function to update sorting
+    setFilterModel,             // Function to update filtering
+    
+    // Additional properties for pagination info
+    pageInfo: connection?.pageInfo || {
+      hasNextPage: false,
+      hasPreviousPage: false,
+      startCursor: null,
+      endCursor: null
+    },
+    
+    // Function to explicitly set pagination direction if needed
+    setPaginationDirection,
+  };
+}
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/renderers/CellRenderer.tsx
+==========================================================================
+
+import React from 'react';
+import { Tooltip } from '@mui/material';
+import { GridRenderCellParams } from '@mui/x-data-grid';
+import { FieldError } from '../../../types/form';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
+import { ValidationIndicator } from '../components/ValidationIndicator';
+import { useGridForm } from '../context/GridFormContext';
+
+export interface CellRendererProps {
+  params: GridRenderCellParams;
+  column: EnhancedColumnConfig;
+  isDirty: boolean;
+  error?: FieldError;
+}
+
+export const CellRenderer: React.FC<CellRendererProps> = ({
+  params,
+  column,
+  isDirty,
+  error,
+}) => {
+  const { value, row } = params;
+  const { isCompact } = useGridForm();
+  
+  // Use the field config's renderViewMode if provided, otherwise use the legacy fieldType
+  let content: React.ReactNode;
+  if (column.fieldConfig?.renderViewMode) {
+    content = column.fieldConfig.renderViewMode(value, row);
+  } else if (column.fieldType?.renderViewMode) {
+    content = column.fieldType.renderViewMode(value, row);
+  } else {
+    // Default rendering
+    content = value != null ? String(value) : '';
+  }
+  
+  // Use the ValidationIndicator component to handle styling
+  return (
+    <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+      {content}
+    </ValidationIndicator>
+  );
+};
+
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/renderers/EditCellRenderer.tsx
+==========================================================================
+
+import React, { useCallback, useRef } from 'react';
+import { GridRenderEditCellParams } from '@mui/x-data-grid';
+import { TextField, Checkbox, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
+import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
+import { useGridForm } from '../context/GridFormContext';
+import { ValidationIndicator } from '../components/ValidationIndicator';
+
+export interface EditCellRendererProps {
+  params: GridRenderEditCellParams;
+  column: EnhancedColumnConfig;
+}
+
+export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
+  params,
+  column,
+}) => {
+  const { id, field, api, colDef } = params;
+  const { getFormMethods, updateCellValue, startEditingRow, isCompact } = useGridForm();
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Determine field config early
+  const fieldConfig = column.fieldConfig;
+  const fieldType = column.fieldType;
+  
+  // Initialize state at the top level, before any conditional returns
+  // Use empty string/null as initial value, will be updated in useEffect
+  const [localValue, setLocalValue] = React.useState<any>(null);
+  
+  // Track if this is the first render to handle text selection
+  const isFirstRender = React.useRef(true);
+  
+  // Define callbacks at the top level, before any conditional returns
+  // Handle change event
+  const handleChange = useCallback((newValue: any) => {
+    if (id && field) {
+      updateCellValue(id, field, newValue);
+      
+      // Force a re-render to update the UI immediately
+      // This is needed because the form state update might not trigger a re-render
+      setTimeout(() => {
+        if (api && id && field) {
+          try {
+            // Force a refresh of the grid to ensure all cells reflect the latest data
+            api.forceUpdate();
+          } catch (error) {
+            console.error('Error forcing update:', error);
+          }
+        }
+      }, 0);
+    }
+  }, [updateCellValue, id, field, api]);
+  
+  // Create a wrapped handleChange that updates both the form and local state
+  // Define this at the top level too, before any conditional returns
+  const handleChangeWithLocalUpdate = React.useCallback((newValue: any) => {
+    setLocalValue(newValue);
+    handleChange(newValue);
+  }, [handleChange, setLocalValue]);
+  
+  // Handle blur event
+  const handleBlur = useCallback(() => {
+    // Stop editing this cell
+    if (api && id && field) {
+      try {
+        // Ensure the form value is up to date before stopping edit mode
+        const formMethods = getFormMethods(id);
+        if (formMethods) {
+          const currentValue = formMethods.getValues()[field];
+          updateCellValue(id, field, currentValue);
+        }
+        
+        // Stop edit mode and force a refresh to ensure the grid displays the latest value
+        api.stopCellEditMode({ id, field });
+        setTimeout(() => {
+          if (api) {
+            api.forceUpdate();
+          }
+        }, 0);
+      } catch (error) {
+        console.error('Error stopping cell edit mode:', error);
+        // If there's an error, try to force a refresh
+        try {
+          api.forceUpdate();
+        } catch (innerError) {
+          console.error('Error forcing update:', innerError);
+        }
+      }
+    }
+  }, [api, field, id, getFormMethods, updateCellValue]);
+  
+  // If we don't have a form for this row yet, create one
+  React.useEffect(() => {
+    const formMethods = getFormMethods(id);
+    if (!formMethods) {
+      startEditingRow(id, field);
+    }
+  }, [id, field, getFormMethods, startEditingRow]);
+  
+  // Get form methods and handle loading state
+  const formMethods = getFormMethods(id);
+  
+  // Update local value when form value changes or when formMethods becomes available
+  React.useEffect(() => {
+    if (formMethods) {
+      const values = formMethods.getValues();
+      setLocalValue(values[field]);
+      
+      // Always select all text when editing a text field to make it easier to replace
+      if (inputRef.current && 
+          (fieldConfig?.type === 'string' || fieldConfig?.type === 'number' || !fieldConfig?.type)) {
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.select();
+          }
+        }, 50);
+      }
+      isFirstRender.current = false;
+    }
+  }, [formMethods, field, fieldConfig?.type]);
+  
+  // Handle key press events
+  const handleKeyPress = React.useCallback((e: React.KeyboardEvent) => {
+    // If user presses Escape, revert to original value
+    if (e.key === 'Escape') {
+      const originalData = formMethods?.getValues()[field];
+      setLocalValue(originalData);
+      handleBlur();
+    }
+    // If user presses Enter, save and close
+    else if (e.key === 'Enter') {
+      handleBlur();
+    }
+  }, [field, formMethods, handleBlur]);
+  
+  // Early return if formMethods is not available
+  if (!formMethods) {
+    return <div>Initializing form...</div>;
+  }
+  
+  // Get error state and dirty state
+  const error = formMethods.formState.errors[field];
+  const isDirty = !!formMethods.formState.dirtyFields[field];
+  
+  // If the field config has a custom renderEditMode, use it
+  if (fieldConfig?.renderEditMode && typeof fieldConfig.renderEditMode === 'function') {
+    const rendered = fieldConfig.renderEditMode({
+      value: localValue,
+      onChange: handleChangeWithLocalUpdate,
+      ref: inputRef,
+      onBlur: handleBlur,
+      error: !!error,
+      helperText: error?.message,
+      id: `edit-${field}-${id}`,
+      row: params.row,
+      isDirty: isDirty,
+    });
+    return (
+      <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+        {rendered as React.ReactElement}
+      </ValidationIndicator>
+    );
+  }
+  
+  // If the legacy fieldType has a renderEditMode, use it
+  if (fieldType?.renderEditMode && typeof fieldType.renderEditMode === 'function') {
+    const rendered = fieldType.renderEditMode({
+      value: localValue,
+      onChange: handleChangeWithLocalUpdate,
+      onBlur: handleBlur,
+      autoFocus: true,
+      error: !!error,
+      helperText: error?.message,
+      id: `edit-${field}-${id}`,
+      row: params.row,
+      isDirty: isDirty,
+    });
+    return (
+      <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+        {rendered as React.ReactElement}
+      </ValidationIndicator>
+    );
+  }
+  
+  // Otherwise, use default renderers based on field type
+  switch (fieldConfig?.type) {
+    case 'string':
+      return (
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <TextField
+            value={localValue || ''}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
+      );
+      
+    case 'number':
+      return (
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <TextField
+            type="number"
+            value={localValue ?? ''}
+            onChange={(e) => {
+              const val = e.target.value === '' ? null : Number(e.target.value);
+              handleChangeWithLocalUpdate(val);
+            }}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
+      );
+      
+    case 'boolean':
+      return (
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <Checkbox
+            checked={!!localValue}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.checked)}
+            onBlur={handleBlur}
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
+      );
+      
+    case 'date':
+      return (
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <TextField
+            type="date"
+            value={localValue ? new Date(localValue).toISOString().split('T')[0] : ''}
+            onChange={(e) => {
+              const val = e.target.value ? new Date(e.target.value) : null;
+              handleChangeWithLocalUpdate(val);
+            }}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
+      );
+      
+    case 'select':
+      return (
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <FormControl
+            fullWidth
+            size="small"
+            error={!!error}
+            variant="outlined"
+          >
+            <InputLabel>{column.headerName}</InputLabel>
+            <Select
+              value={localValue || ''}
+              onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
+              onBlur={handleBlur}
+              label={column.headerName}
+              inputRef={inputRef}
+            >
+              {fieldConfig.options?.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+            {error && <FormHelperText>{error.message}</FormHelperText>}
+          </FormControl>
+        </ValidationIndicator>
+      );
+      
+    default:
+      // Default to text input
+      return (
+        <ValidationIndicator error={error} isDirty={isDirty} compact={isCompact}>
+          <TextField
+            value={localValue || ''}
+            onChange={(e) => handleChangeWithLocalUpdate(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            error={!!error}
+            helperText={error?.message}
+            variant="outlined"
+            size="small"
+            fullWidth
+            autoFocus
+            inputRef={inputRef}
+          />
+        </ValidationIndicator>
+      );
+  }
+};
+
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/components/ValidationIndicator.tsx
+==========================================================================
+
+import React from 'react';
+import { Tooltip } from '@mui/material';
+import { FieldError } from '../../../types/form';
+
+interface ValidationIndicatorProps {
+  error?: FieldError;
+  isDirty: boolean;
+  children: React.ReactNode;
+  compact?: boolean; // For smaller row heights
+}
+
+export const ValidationIndicator: React.FC<ValidationIndicatorProps> = ({
+  error,
+  isDirty,
+  children,
+  compact = false,
+}) => {
+  // If the field is not dirty, just return the children without styling
+  if (!isDirty) {
+    return <>{children}</>;
+  }
+  
+  // Apply validation styling if needed
+  const style: React.CSSProperties = {};
+  
+  // Set padding based on compact mode
+  style.padding = compact ? '2px' : '4px';
+  
+  if (error) {
+    // Invalid field styling - No border as requested
+    
+    // Option 1: Solid background color
+    style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+    
+    // Option 2: Diagonal striped pattern (commented out, can be toggled)
+    // style.backgroundImage = 'linear-gradient(45deg, rgba(255, 0, 0, 0.1) 25%, transparent 25%, transparent 50%, rgba(255, 0, 0, 0.1) 50%, rgba(255, 0, 0, 0.1) 75%, transparent 75%, transparent)';
+    // style.backgroundSize = '10px 10px';
+  } else {
+    // Valid field styling - No border as requested
+    
+    // Option 1: Solid background color
+    style.backgroundColor = 'rgba(0, 255, 0, 0.1)';
+    
+    // Option 2: Diagonal striped pattern (commented out, can be toggled)
+    // style.backgroundImage = 'linear-gradient(45deg, rgba(0, 255, 0, 0.1) 25%, transparent 25%, transparent 50%, rgba(0, 255, 0, 0.1) 50%, rgba(0, 255, 0, 0.1) 75%, transparent 75%, transparent)';
+    // style.backgroundSize = '10px 10px';
+  }
+  
+  return (
+    <Tooltip title={error ? error.message || 'Invalid' : 'Valid'}>
+      <div style={style}>{children}</div>
+    </Tooltip>
+  );
+};
+
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/components/CellEditHandler.tsx
+==========================================================================
+
+import React, { useEffect } from 'react';
+import { GridApi, GridRowId } from '@mui/x-data-grid';
+import { useGridForm } from '../context/GridFormContext';
+
+interface CellEditHandlerProps {
+  apiRef: React.RefObject<GridApi>;
+}
+
+export const CellEditHandler: React.FC<CellEditHandlerProps> = ({ apiRef }) => {
+  const { startEditingCell, stopEditingCell } = useGridForm();
+  
+  useEffect(() => {
+    // Subscribe to cell edit start event
+    const startSubscription = apiRef.current.subscribeEvent(
+      'cellEditStart',
+      (params: { id: GridRowId; field: string }) => {
+        const { id, field } = params;
+        startEditingCell(id, field);
+      }
+    );
+    
+    // Subscribe to cell edit stop event
+    const stopSubscription = apiRef.current.subscribeEvent(
+      'cellEditStop',
+      () => {
+        stopEditingCell();
+      }
+    );
+    
+    // Cleanup subscriptions on unmount
+    return () => {
+      startSubscription();
+      stopSubscription();
+    };
+  }, [apiRef, startEditingCell, stopEditingCell]);
+  
+  // This component doesn't render anything
+  return null;
+};
+
+
+
+==========================================================================
+FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/components/UnifiedDataGridToolbar.tsx
+==========================================================================
+
+import React, { useState } from 'react';
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Chip,
+  Paper,
+  SelectChangeEvent,
+} from '@mui/material';
+import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
+// Import the filter dialog and its types
+import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog';
+
+// Action icons
+import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpIcon from '@mui/icons-material/Help';
+import BugReportIcon from '@mui/icons-material/BugReport';
+
+// Pagination icons
+
+// Action buttons
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import UploadIcon from '@mui/icons-material/Upload';
+
+// Context and hooks
+import { useGridMode, GridMode } from '../context/GridModeContext';
+import { useGridForm } from '../context/GridFormContext';
+
+// Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
+// interface FilterValues { // Or import from GlobalFilterDialog as done above
+//   birthdayMonthYear: Dayjs | null; 
+//   department: string;
+//   name: string;
+// }
+
+interface UnifiedDataGridToolbarProps {
+  onSave?: () => void;
+  onFilter?: (filters: FilterValues) => void; // Use the imported/defined FilterValues type
+  onExport?: () => void;
+  onUpload?: () => void;
+  onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
+  // Grid capabilities
+  canEditRows?: boolean;
+  canAddRows?: boolean; // Removed default value = true
+  canSelectRows?: boolean;
+  // Custom action buttons
+  customActionButtons?: React.ReactNode;
+}
+
+export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
+  onSave,
+  onFilter,
+  onExport,
+  onUpload,
+  onHelp,
+  canEditRows = true,
+  canAddRows, // Removed default value = true
+  canSelectRows = true,
+  customActionButtons
+}) => {
+  // Get grid mode context
+  const {
+    mode,
+    setMode,
+    editingRowCount,
+    isAddingRow,
+    hasValidationErrors,
+    saveChanges,
+    cancelChanges,
+    addRow,
+    // Get selection model from context
+    selectionModel,
+    onSelectionModelChange,
+    clearSelection
+  } = useGridMode();
+  
+  // Debug: Log selection model changes
+  console.log('UnifiedDataGridToolbar - selectionModel from context:', selectionModel);
+  
+  // Add a visual indicator for debugging
+  if (!selectionModel || selectionModel.length === 0) {
+    console.log('No selection model or empty selection model');
+  }
+
+  // Get grid form context
+  const {
+    getPendingChanges,
+    getEditedRowCount,
+    getAllValidationErrors,
+    getOriginalRowData
+  } = useGridForm();
+
+  // State for dialogs
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [targetMode, setTargetMode] = useState<GridMode>('none');
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false); // State for filter dialog
+  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
+  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
+
+  // Handle mode switching with confirmation when needed
+  const handleModeSwitch = (newMode: GridMode) => {
+    // If in selection mode with multiple rows selected, show confirmation
+    if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
+      setConfirmationDialogOpen(true);
+      setTargetMode(newMode);
+      return;
+    }
+    
+    // Otherwise, switch mode directly
+    setMode(newMode);
+  };
+  
+  // Get the actual count of edited rows
+  const actualEditedRowCount = getEditedRowCount();
+
+  // No pagination handlers needed - using built-in DataGrid pagination
+
+  // Handle add button click
+  const handleAddClick = () => {
+    if (selectionModel.length > 1) {
+      setConfirmationDialogOpen(true);
+      setTargetMode('add');
+      return;
+    }
+    
+    addRow();
+  };
+
+  // Handle save button click
+  const handleSaveClick = () => {
+    saveChanges();
+  };
+
+  // Handle cancel button click
+  const handleCancelClick = () => {
+    cancelChanges();
+  };
+
+  // Handle help button click
+  const handleHelpClick = () => {
+    setHelpDialogOpen(true);
+  };
+
+  // Handle filter button click - opens the dialog
+  const handleFilterClick = () => {
+    setFilterDialogOpen(true);
+  };
+
+  // Handle applying filters from the dialog - update parameter type
+  const handleApplyFilters = (filters: FilterValues) => {
+    // Log the Dayjs object directly, or format it if needed
+    console.log('Applying filters:', {
+      ...filters,
+      // Example: Format the date for logging or sending elsewhere
+      birthday: filters.birthdayMonthYear ? filters.birthdayMonthYear.format('YYYY-MM') : null, 
+    });
+    if (onFilter) {
+      // Pass the filters object (containing the Dayjs object) to the parent
+      // For now, let's assume the parent expects the filters object
+      onFilter(filters); 
+    }
+    setFilterDialogOpen(false); // Close dialog after applying
+  };
+  
+  // Handle debug button click
+  const handleDebugClick = () => {
+    setDebugDialogOpen(true);
+  };
+
+  // Determine button disabled states based on current mode
+  const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+  const canSave = isInEditOrAddMode && !hasValidationErrors;
+  const canCancel = isInEditOrAddMode;
+  const canAdd = canAddRows && !isInEditOrAddMode;
+  const areActionButtonsDisabled = isInEditOrAddMode;
+
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 1,
+      borderBottom: '1px solid #e0e0e0'
+    }}>
+      {/* Left Section: Add/Save/Cancel buttons + Status */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center',
+        gap: 1
+      }}>
+        {/* Add button - only show if canAddRows is true */}
+        {canAddRows && (
+          <Tooltip title={canAdd ? "Add new record" : "Cannot add while editing"}>
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddClick}
+                disabled={!canAdd}
+                sx={{ 
+                  minWidth: 0, 
+                  px: 1,
+                  opacity: canAdd ? 1 : 0.5
+                }}
+              >
+                Add
+              </Button>
+            </span>
+          </Tooltip>
+        )}
+
+        {/* Status section */}
+        {mode !== 'none' && (
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              padding: '4px 8px',
+              borderRadius: 1,
+              backgroundColor: mode === 'edit' ? 'rgba(25, 118, 210, 0.08)' : 
+                              mode === 'add' ? 'rgba(46, 125, 50, 0.08)' : 
+                              'rgba(237, 108, 2, 0.08)'
+            }}
+          >
+            {/* Status content based on mode */}
+            {mode === 'edit' && (
+              <>
+            <Typography variant="body2">
+              Editing {actualEditedRowCount} record{actualEditedRowCount !== 1 ? 's' : ''}
+            </Typography>
+                {hasValidationErrors && (
+                  <Chip
+                    label="Validation errors"
+                    size="small"
+                    color="warning"
+                    sx={{ height: 24, cursor: 'pointer' }}
+                    onClick={() => setValidationDialogOpen(true)}
+                  />
+                )}
+              </>
+            )}
+            
+            {mode === 'add' && (
+              <>
+                <Typography variant="body2">
+                  Adding new record
+                </Typography>
+                {hasValidationErrors && (
+                  <Chip
+                    label="Validation errors"
+                    size="small"
+                    color="warning"
+                    sx={{ height: 24, cursor: 'pointer' }}
+                    onClick={() => setValidationDialogOpen(true)}
+                  />
+                )}
+              </>
+            )}
+
+          </Paper>
+        )}
+
+        {/* Save button */}
+        <Tooltip title={canSave ? "Save changes" : hasValidationErrors ? "Fix validation errors before saving" : "Nothing to save"}>
+          <span>
+            <Button
+              variant="contained"
+              size="small"
+              color="success"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveClick}
+              disabled={!canSave}
+              sx={{ 
+                minWidth: 0, 
+                px: 1,
+                opacity: canSave ? 1 : 0.5
+              }}
+            >
+              Save
+            </Button>
+          </span>
+        </Tooltip>
+        
+        {/* Debug button - only show when in edit mode */}
+        {mode === 'edit' && (
+          <Tooltip title="Debug Edits (Temporary)">
+            <Button
+              variant="outlined"
+              size="small"
+              color="info"
+              startIcon={<BugReportIcon />}
+              onClick={handleDebugClick}
+              sx={{ 
+                minWidth: 0, 
+                px: 1,
+                ml: 1
+              }}
+            >
+              Debug
+            </Button>
+          </Tooltip>
+        )}
+
+        {/* Cancel button */}
+        {canCancel && (
+          <Tooltip title="Cancel changes">
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              startIcon={<CloseIcon />}
+              onClick={handleCancelClick}
+              sx={{ minWidth: 0, px: 1 }}
+            >
+              Cancel
+            </Button>
+          </Tooltip>
+        )}
+
+      </Box>
+
+      {/* Middle Section - Pagination removed in favor of built-in DataGrid pagination */}
+      <Box sx={{ flex: 1 }} />
+
+      {/* Right Section: Selection Status + Action Buttons */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: 1
+      }}>
+        {/* Custom Action Buttons - if provided, render them instead of default buttons */}
+        {customActionButtons ? (
+          customActionButtons
+        ) : (
+          <>
+            {/* Selection Status */}
+            {selectionModel && selectionModel.length > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                  Selected:
+                </Typography>
+                <Chip
+                  label={`${selectionModel.length} rows`}
+                  onDelete={clearSelection}
+                  size="small"
+                />
+              </Box>
+            )}
+            {/* Filter Options - Updated onClick */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
+              <span>
+                <IconButton onClick={handleFilterClick} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <FilterAltIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Upload Options */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot upload while editing" : "Upload"}>
+              <span>
+                <IconButton onClick={onUpload} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <UploadIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Export Options */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot export while editing" : "Export"}>
+              <span>
+                <IconButton onClick={onExport} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <FileDownloadIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Help button */}
+            <Tooltip title="Help">
+              <IconButton size="small" onClick={handleHelpClick}>
+                <HelpIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      </Box>
+
+      {/* Confirmation Dialog */}
+      <Dialog 
+        open={confirmationDialogOpen} 
+        onClose={() => setConfirmationDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Mode Switch</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You have {selectionModel.length} rows selected. Switching to {targetMode} mode will clear your selection. Do you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmationDialogOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={() => {
+              setMode(targetMode);
+              clearSelection();
+              setConfirmationDialogOpen(false);
+              if (targetMode === 'add') {
+                addRow();
+              }
+            }} 
+            color="primary"
+          >
+            Continue
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Use the imported DataGridHelpDialog */}
+      <DataGridHelpDialog 
+        open={helpDialogOpen} 
+        onClose={() => setHelpDialogOpen(false)}
+      />
+
+      {/* Global Filter Dialog */}
+      <GlobalFilterDialog
+        open={filterDialogOpen}
+        onClose={() => setFilterDialogOpen(false)}
+        onApply={handleApplyFilters}
+        // Pass department options if available/needed from parent or context
+        // departmentOptions={...} 
+      />
+
+      {/* Validation Errors Dialog */}
+      <Dialog
+        open={validationDialogOpen}
+        onClose={() => setValidationDialogOpen(false)}
+        maxWidth="md"
+      >
+        <DialogTitle>Validation Errors</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            The following validation errors need to be fixed before saving:
+          </DialogContentText>
+          <Box component="ul" sx={{ mt: 2 }}>
+            {getAllValidationErrors().map((error, index) => (
+              <Typography component="li" key={index}>
+                Row {error.rowId}: {error.field} - {error.message}
+              </Typography>
+            ))}
+            {getAllValidationErrors().length === 0 && (
+              <Typography component="li">
+                {mode === 'edit' && actualEditedRowCount > 0 ? (
+                  "There are validation errors in the current editing session. Please check highlighted fields for specific issues."
+                ) : mode === 'add' && isAddingRow ? (
+                  "There are validation errors in the new row. Please check highlighted fields for specific issues."
+                ) : (
+                  "No specific validation details available"
+                )}
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setValidationDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Debug Dialog */}
+      <Dialog
+        open={debugDialogOpen}
+        onClose={() => setDebugDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Debug Edits</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Current edited fields ({actualEditedRowCount} rows with changes):
+          </DialogContentText>
+          <Box 
+            component="pre" 
+            sx={{ 
+              mt: 2, 
+              p: 2, 
+              bgcolor: '#f5f5f5', 
+              borderRadius: 1,
+              overflow: 'auto',
+              maxHeight: '400px'
+            }}
+          >
+            {JSON.stringify(
+              getPendingChanges().map(item => {
+                const { rowId, changes } = item;
+                
+                // Get the original values for comparison
+                const originalData = getOriginalRowData(rowId);
+                const originalValues: Record<string, any> = {};
+                
+                if (originalData) {
+                  // Extract only the fields that have changed
+                  Object.keys(changes).forEach(field => {
+                    originalValues[field] = originalData[field];
+                  });
+                }
+                
+                return {
+                  rowId,
+                  changes,
+                  originalValues
+                };
+              }), 
+              null, 
+              2
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDebugDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+
+
+==========================================================================
+ANALYSIS OF POTENTIAL CAUSES
+==========================================================================
+
+1. Selection Model Management:
+   - The useSelectionModel hook in EnhancedDataGridGraphQL might be causing a loop
+   - The selectionModel prop is passed to the DataGrid component and also managed internally
+   - The onSelectionModelChange handler might be triggering re-renders
+
+2. Context Provider Nesting:
+   - Multiple nested context providers (GridFormProvider, GridModeProvider) might be causing cascading updates
+   - Each provider might be re-rendering when their values change
+
+3. State Updates During Render:
+   - There might be state updates happening during the render phase
+   - Check for setState calls that aren't in event handlers or useEffect
+
+4. Prop Changes Triggering Re-renders:
+   - The useGraphQL prop toggling might be causing component remounts
+   - The selectionModel prop changes might be causing re-renders
+
+5. Effect Dependencies:
+   - Some useEffect hooks might have missing or incorrect dependencies
+   - This could cause them to run too frequently and update state
+
+==========================================================================
+TOKEN COUNT ESTIMATE
+==========================================================================
+
+Approximate number of tokens: 10643
