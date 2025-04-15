@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -59,6 +59,7 @@ export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderC
   valueGetter?: GridValueGetter;
   valueSetter?: GridValueSetter;
 }
+
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
@@ -109,6 +110,13 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   // Testing and debugging props
   onPageChange?: (page: number) => void; // Callback for page changes
   onRowsChange?: (rows: T[]) => void; // Callback for rows changes
+  
+  // New callback to get grid functions
+  onGridFunctionsInit?: (
+    refetch: () => Promise<any>,
+    resetCursors: () => void,
+    pageInfo: any
+  ) => void;
 }
 
 export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
@@ -151,16 +159,21 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   rowHeight,
   ...props
 }: EnhancedDataGridGraphQLProps<T>) {
+  // Debug logging
+  const debugLog = (message: string, ...args: any[]) => {
+    console.log(`📊 [EnhancedDataGridGraphQL] ${message}`, ...args);
+  };
 
-  // In EnhancedDataGridGraphQL component, add near the top:
-console.log("EnhancedDataGridGraphQL rendering", { 
-  useGraphQL, 
-  forceClientSide, 
-  selectionModel: initialSelectionModel?.length 
-});
+  // Track render count for debugging
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
 
-// In useRelayGraphQLData hook, add:
-console.log("useRelayGraphQLData running with variables:", variables);
+  debugLog(`Rendering (count: ${renderCountRef.current}) with props:`, { 
+    useGraphQL, 
+    forceClientSide, 
+    selectionModel: initialSelectionModel?.length,
+    rows: rows.length
+  });
 
   const apiRef = useGridApiRef();
   
@@ -173,6 +186,9 @@ console.log("useRelayGraphQLData running with variables:", variables);
   // Determine which hook to use based on pagination style
   const isRelayCursorPagination = paginationStyle === 'cursor';
   
+  // Track the current page for controlled pagination
+  const [currentPage, setCurrentPage] = React.useState(0);
+  
   // Use the appropriate hook based on pagination style
   const {
     rows: graphQLRows,
@@ -183,6 +199,9 @@ console.log("useRelayGraphQLData running with variables:", variables);
     setFilterModel,
     pageInfo,
     setPaginationDirection,
+    refetch,
+    debug,
+    resetCursors
   } = useGraphQLFetching
       ? useRelayGraphQLData<T>({
           pageSize,
@@ -207,24 +226,50 @@ console.log("useRelayGraphQLData running with variables:", variables);
           startCursor: null,
           endCursor: null
         },
-        setPaginationDirection: () => {}
+        setPaginationDirection: () => {},
+        refetch: () => Promise.resolve({ data: null }),
+        debug: {},
+        resetCursors: () => {}
       } as ServerSideResult<T>;
   
+  // Call the onGridFunctionsInit callback when grid functions are available
+  useEffect(() => {
+    if (props.onGridFunctionsInit && useGraphQLFetching) {
+      debugLog("Initializing grid functions");
+      props.onGridFunctionsInit(
+        refetch,
+        resetCursors,
+        pageInfo
+      );
+    }
+  }, [props.onGridFunctionsInit, useGraphQLFetching, refetch, resetCursors, pageInfo, debugLog]);
+  
   // Use GraphQL data or client data based on the useGraphQLFetching flag
-  const displayRows = useGraphQLFetching ? graphQLRows : rows;
-  const totalRows = useGraphQLFetching ? graphQLTotalRows : rows.length;
+  const displayRows = useMemo(() => {
+    const rows = useGraphQLFetching ? graphQLRows : rows;
+    debugLog(`Using ${useGraphQLFetching ? 'GraphQL' : 'client'} data with ${rows.length} rows`);
+    return rows;
+  }, [useGraphQLFetching, graphQLRows, rows]);
+  
+  const totalRows = useMemo(() => 
+    useGraphQLFetching ? graphQLTotalRows : rows.length,
+    [useGraphQLFetching, graphQLTotalRows, rows.length]
+  );
   
   // Combine external loading state with GraphQL loading state
-  const loading = externalLoading || graphQLLoading;
+  const loading = useMemo(() => 
+    externalLoading || graphQLLoading,
+    [externalLoading, graphQLLoading]
+  );
   
   // Call the onRowsChange callback when rows change
   useEffect(() => {
     if (props.onRowsChange) {
+      debugLog("Rows changed, calling onRowsChange");
       props.onRowsChange(displayRows);
     }
-  }, [displayRows, props.onRowsChange]);
+  }, [displayRows, props.onRowsChange, debugLog]);
   
-  // Initialize selection model hook
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
     selectionModel: initialSelectionModel,
@@ -288,6 +333,28 @@ console.log("useRelayGraphQLData running with variables:", variables);
   
   // Determine if we're in compact mode based on row height
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
+
+  // Handler for page changes
+  const handlePageChange = useCallback((newPage: number) => {
+    debugLog(`Page change requested: ${currentPage} → ${newPage}`);
+    setCurrentPage(newPage);
+    
+    // If using GraphQL, update the page in the hook
+    if (useGraphQLFetching) {
+      setPage(newPage);
+      
+      // Call the onPageChange callback if provided
+      if (props.onPageChange) {
+        props.onPageChange(newPage);
+      }
+      
+      // Force a refetch after a short delay to ensure state has updated
+      setTimeout(() => {
+        debugLog(`Triggering refetch after page change to ${newPage}`);
+        refetch();
+      }, 50);
+    }
+  }, [currentPage, useGraphQLFetching, setPage, props.onPageChange, refetch, debugLog]);
 
   // Create a wrapper component for DataGrid that uses the grid mode
   const DataGridWithModeControl = () => {
@@ -364,7 +431,7 @@ console.log("useRelayGraphQLData running with variables:", variables);
         columns={gridColumns}
         autoHeight={autoHeight}
         density={density}
-        disableColumnFilter={false} // Always enable column filters
+        disableColumnFilter={disableColumnFilter === undefined ? false : disableColumnFilter}
         disableColumnMenu={disableColumnMenu}
         disableColumnSelector={disableColumnSelector}
         disableDensitySelector={disableDensitySelector}
@@ -374,10 +441,11 @@ console.log("useRelayGraphQLData running with variables:", variables);
         hideFooter={hideFooter}
         hideFooterPagination={hideFooterPagination}
         hideFooterSelectedRowCount={hideFooterSelectedRowCount}
+        
         // Pagination and sorting
         initialState={{
           pagination: {
-            paginationModel: { pageSize, page: 0 },
+            paginationModel: { pageSize, page: currentPage },
           },
           sorting: {
             sortModel: [], // Initialize with empty sort model
@@ -386,43 +454,22 @@ console.log("useRelayGraphQLData running with variables:", variables);
         pageSizeOptions={rowsPerPageOptions}
         paginationMode={useGraphQLFetching ? 'server' : 'client'}
         rowCount={useGraphQLFetching ? totalRows : undefined}
+        
+        // Pagination handler
         onPaginationModelChange={(model) => {
-          // For GraphQL pagination, fetch the data
-          if (useGraphQLFetching) {
-            console.log("Pagination model changed:", model);
-            
-            // For Relay cursor pagination, we need to handle "Next" and "Previous" differently
-            if (paginationStyle === 'cursor') {
-              // If we're going to the next page, set pagination direction to forward
-              if (model.page > 0) {
-                setPaginationDirection("forward");
-              }
-            }
-            
-            // Set the page
-            setPage(model.page);
-            
-            // Force a refetch with a slight delay to ensure state updates have propagated
-            setTimeout(() => {
-              console.log("Forcing refetch after page change to page", model.page);
-              if (useGraphQLFetching) {
-                // Actually call refetch with the hook's refetch function
-                refetch();
-              }
-            }, 50);
-            
-            // Call the onPageChange callback if provided
-            if (props.onPageChange) {
-              props.onPageChange(model.page);
-            }
-          }
+          debugLog(`Pagination model changed: ${JSON.stringify(model)}`);
+          
+          // Update the page
+          handlePageChange(model.page);
         }}
         
         // Sorting and filtering
         sortingMode={useGraphQLFetching ? 'server' : 'client'}
         filterMode={useGraphQLFetching ? 'server' : 'client'}
+        
+        // Sort model change handler
         onSortModelChange={(model) => {
-          console.log('Sort model changed:', model);
+          debugLog('Sort model changed:', model);
           if (useGraphQLFetching) {
             // Only process if there's a valid sort model
             if (model && model.length > 0) {
@@ -430,18 +477,25 @@ console.log("useRelayGraphQLData running with variables:", variables);
                 field: item.field,
                 sort: item.sort as 'asc' | 'desc'
               }));
-              console.log('Processed sort model:', newSortModel);
+              debugLog('Setting sort model:', newSortModel);
               setSortModel(newSortModel);
+              
+              // Reset to page 0 when sorting changes
+              if (currentPage !== 0) {
+                handlePageChange(0);
+              }
             } else {
               // Reset sort model if empty
-              console.log('Resetting sort model');
+              debugLog('Resetting sort model');
               setSortModel([]);
             }
           }
         }}
+        
+        // Filter model change handler
         onFilterModelChange={(model) => {
           if (useGraphQLFetching) {
-            console.log('Filter model changed:', model);
+            debugLog('Filter model changed:', model);
             const filterModel: Record<string, any> = {};
             
             // Process each filter item and capture all relevant information
@@ -455,10 +509,16 @@ console.log("useRelayGraphQLData running with variables:", variables);
               }
             });
             
-            console.log('Processed filter model:', filterModel);
+            debugLog('Setting filter model:', filterModel);
             setFilterModel(filterModel);
+            
+            // Reset to page 0 when filtering changes
+            if (currentPage !== 0) {
+              handlePageChange(0);
+            }
           }
         }}
+        
         // Row selection
         checkboxSelection={checkboxSelection && canSelectRows}
         rowSelectionModel={selectionModel}
@@ -493,6 +553,7 @@ console.log("useRelayGraphQLData running with variables:", variables);
       />
     );
   };
+  
   // Get the GridFormContext functions and state
   const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
     const {

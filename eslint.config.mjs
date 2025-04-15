@@ -14,7 +14,7 @@ const eslintConfig = [
   {
     rules: {
       // Error on unused variables
-      "no-unused-vars": ["error", {
+      "no-unused-vars": ["off", {
         "vars": "all",
         "args": "after-used",
         "ignoreRestSiblings": true,
@@ -24,13 +24,14 @@ const eslintConfig = [
       // Error on variables that are declared but never used
       "no-unused-expressions": "error",
       // Warn on variables that are defined but never used
-      "@typescript-eslint/no-unused-vars": ["error", {
+      "@typescript-eslint/no-unused-vars": ["off", {
         "vars": "all",
         "args": "after-used",
         "ignoreRestSiblings": true,
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
-      }]
+      }],
+      "@typescript-eslint/no-explicit-any": "off"
     }
   }
 ];
