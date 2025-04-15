@@ -1,0 +1,3665 @@
+{
+  "pages": {
+    "0": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00001",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 63.5,
+          "created_at": "2025-04-15T21:28:15.985Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00002",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 54.8,
+          "created_at": "2025-03-19T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00003",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 74.4,
+          "created_at": "2025-03-29T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00004",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 46,
+          "created_at": "2025-03-18T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00005",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 95.3,
+          "created_at": "2025-04-04T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00006",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 50,
+          "created_at": "2025-03-17T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00007",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 15.5,
+          "created_at": "2025-04-07T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00008",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 0.7,
+          "created_at": "2025-04-13T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00009",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 96.2,
+          "created_at": "2025-04-02T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00010",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 32.1,
+          "created_at": "2025-04-15T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00011",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 65.7,
+          "created_at": "2025-03-18T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00012",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 76.7,
+          "created_at": "2025-03-28T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00013",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 71.3,
+          "created_at": "2025-04-02T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00014",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 20.6,
+          "created_at": "2025-03-29T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00015",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 87.3,
+          "created_at": "2025-04-02T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00016",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 14.3,
+          "created_at": "2025-04-04T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00017",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 79.3,
+          "created_at": "2025-03-26T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00018",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 40.4,
+          "created_at": "2025-03-23T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00019",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 24.8,
+          "created_at": "2025-03-20T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00020",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 37.2,
+          "created_at": "2025-04-04T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00021",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 89.6,
+          "created_at": "2025-03-22T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00022",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 78.3,
+          "created_at": "2025-03-28T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00023",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 61.1,
+          "created_at": "2025-03-22T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00024",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 9.2,
+          "created_at": "2025-04-12T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00025",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 37.7,
+          "created_at": "2025-04-07T21:28:16.045Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": false,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDAwMSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0=",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDAyNSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0="
+    },
+    "1": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00026",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 39.2,
+          "created_at": "2025-04-10T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00027",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 73.8,
+          "created_at": "2025-03-23T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00028",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 90.3,
+          "created_at": "2025-03-21T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00029",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 82.1,
+          "created_at": "2025-04-04T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00030",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 2.2,
+          "created_at": "2025-03-17T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00031",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 91.2,
+          "created_at": "2025-04-05T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00032",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 93,
+          "created_at": "2025-03-17T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00033",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 60.3,
+          "created_at": "2025-03-19T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00034",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 77,
+          "created_at": "2025-04-03T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00035",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 49,
+          "created_at": "2025-03-27T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00036",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 38.3,
+          "created_at": "2025-04-04T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00037",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 44.9,
+          "created_at": "2025-04-12T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00038",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 60.3,
+          "created_at": "2025-03-21T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00039",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 45.9,
+          "created_at": "2025-03-29T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00040",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 12.3,
+          "created_at": "2025-03-29T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00041",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 0.1,
+          "created_at": "2025-04-06T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00042",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 91.5,
+          "created_at": "2025-04-13T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00043",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 0.7,
+          "created_at": "2025-04-13T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00044",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 22.1,
+          "created_at": "2025-04-09T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00045",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 38,
+          "created_at": "2025-04-15T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00046",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 9.7,
+          "created_at": "2025-03-26T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00047",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 7.6,
+          "created_at": "2025-03-28T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00048",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 52.6,
+          "created_at": "2025-04-07T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00049",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 74.4,
+          "created_at": "2025-04-06T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00050",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 9.4,
+          "created_at": "2025-04-12T21:28:16.045Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDAyNiIsImNvbW1vZGl0eSI6IkNvYWwifQ==",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDA1MCIsImNvbW1vZGl0eSI6IkNvYWwifQ=="
+    },
+    "2": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00051",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 93.2,
+          "created_at": "2025-04-08T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00052",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 22.1,
+          "created_at": "2025-04-03T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00053",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 85.5,
+          "created_at": "2025-04-09T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00054",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 96.7,
+          "created_at": "2025-04-06T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00055",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 72.5,
+          "created_at": "2025-04-11T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00056",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 38.9,
+          "created_at": "2025-04-07T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00057",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 64.2,
+          "created_at": "2025-03-21T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00058",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 46.2,
+          "created_at": "2025-03-24T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00059",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 5,
+          "created_at": "2025-03-21T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00060",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 57.4,
+          "created_at": "2025-03-21T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00061",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 75.8,
+          "created_at": "2025-03-20T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00062",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 56.6,
+          "created_at": "2025-03-19T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00063",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 51.2,
+          "created_at": "2025-04-01T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00064",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 34.7,
+          "created_at": "2025-03-26T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00065",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 14.7,
+          "created_at": "2025-03-22T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00066",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 7,
+          "created_at": "2025-03-31T21:28:16.045Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00067",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 28.6,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00068",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 86.4,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00069",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 60.9,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00070",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 13.6,
+          "created_at": "2025-03-19T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00071",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 68.2,
+          "created_at": "2025-04-03T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00072",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 43,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00073",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 35.4,
+          "created_at": "2025-04-04T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00074",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 85.5,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00075",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 70.6,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDA1MSIsImNvbW1vZGl0eSI6IkNvYWwifQ==",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDA3NSIsImNvbW1vZGl0eSI6IkdhcyJ9"
+    },
+    "3": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00076",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 6.4,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00077",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 57.2,
+          "created_at": "2025-03-22T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00078",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 81.1,
+          "created_at": "2025-04-09T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00079",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 62.1,
+          "created_at": "2025-04-03T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00080",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 5.7,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00081",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 99.4,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00082",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 64.6,
+          "created_at": "2025-04-02T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00083",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 51.4,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00084",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 53.9,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00085",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 45.2,
+          "created_at": "2025-03-20T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00086",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 61.7,
+          "created_at": "2025-03-21T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00087",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 85.5,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00088",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 3.8,
+          "created_at": "2025-04-15T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00089",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 44.3,
+          "created_at": "2025-03-26T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00090",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 16.3,
+          "created_at": "2025-04-04T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00091",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 6,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00092",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 4.4,
+          "created_at": "2025-03-23T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00093",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 69.2,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00094",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 46.7,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00095",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 5.2,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00096",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 57.2,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00097",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 71.5,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00098",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 1.7,
+          "created_at": "2025-04-15T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00099",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 82.8,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00100",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 72.4,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDA3NiIsImNvbW1vZGl0eSI6IkNvYWwifQ==",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDEwMCIsImNvbW1vZGl0eSI6IkNvYWwifQ=="
+    },
+    "4": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00101",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 37.8,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00102",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 16.9,
+          "created_at": "2025-03-31T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00103",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 1.9,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00104",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 25.1,
+          "created_at": "2025-03-19T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00105",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 46.5,
+          "created_at": "2025-03-23T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00106",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 70.9,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00107",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 44.9,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00108",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 11.6,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00109",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 23.6,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00110",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 41.8,
+          "created_at": "2025-04-03T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00111",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 70.4,
+          "created_at": "2025-03-23T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00112",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 5.6,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00113",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 99,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00114",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 63.1,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00115",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 69,
+          "created_at": "2025-04-03T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00116",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 14.6,
+          "created_at": "2025-04-14T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00117",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 63.1,
+          "created_at": "2025-03-31T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00118",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 80.2,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00119",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 19.7,
+          "created_at": "2025-03-24T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00120",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 35.9,
+          "created_at": "2025-03-21T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00121",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 22.6,
+          "created_at": "2025-03-17T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00122",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 6.4,
+          "created_at": "2025-03-21T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00123",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 46.1,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00124",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 13.2,
+          "created_at": "2025-03-27T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00125",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 57.1,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDEwMSIsImNvbW1vZGl0eSI6Ik9pbCJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDEyNSIsImNvbW1vZGl0eSI6IkNvYWwifQ=="
+    },
+    "5": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00126",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 79.7,
+          "created_at": "2025-03-26T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00127",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 72.7,
+          "created_at": "2025-04-02T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00128",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 92.4,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00129",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 75,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00130",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 18.3,
+          "created_at": "2025-03-27T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00131",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 81.2,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00132",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 78.3,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00133",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 70.3,
+          "created_at": "2025-03-24T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00134",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 77.3,
+          "created_at": "2025-03-19T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00135",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 66.5,
+          "created_at": "2025-04-03T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00136",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 90.4,
+          "created_at": "2025-03-21T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00137",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 78.1,
+          "created_at": "2025-03-23T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00138",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 5,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00139",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 93.3,
+          "created_at": "2025-03-21T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00140",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 19.6,
+          "created_at": "2025-04-04T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00141",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 31.5,
+          "created_at": "2025-03-19T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00142",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 98.8,
+          "created_at": "2025-03-27T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00143",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 52,
+          "created_at": "2025-03-27T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00144",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 84.2,
+          "created_at": "2025-03-23T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00145",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 17.6,
+          "created_at": "2025-03-27T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00146",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 61.9,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00147",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 15.5,
+          "created_at": "2025-04-14T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00148",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 86.2,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00149",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 33.7,
+          "created_at": "2025-03-23T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00150",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 59.2,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDEyNiIsImNvbW1vZGl0eSI6IkdhcyJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDE1MCIsImNvbW1vZGl0eSI6IkdhcyJ9"
+    },
+    "6": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00151",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 94.6,
+          "created_at": "2025-03-22T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00152",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 67.4,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00153",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 43.6,
+          "created_at": "2025-03-19T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00154",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 73.7,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00155",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 95,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00156",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 66,
+          "created_at": "2025-04-02T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00157",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 33.8,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00158",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 62.5,
+          "created_at": "2025-04-11T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00159",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 73.3,
+          "created_at": "2025-04-11T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00160",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 72.5,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00161",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 69.9,
+          "created_at": "2025-03-31T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00162",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 13.7,
+          "created_at": "2025-04-08T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00163",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 93.1,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00164",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 86.1,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00165",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 52.7,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00166",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 1.8,
+          "created_at": "2025-04-04T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00167",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 81.5,
+          "created_at": "2025-04-04T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00168",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 71,
+          "created_at": "2025-03-26T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00169",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 74.6,
+          "created_at": "2025-04-02T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00170",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 44.6,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00171",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 85.1,
+          "created_at": "2025-04-08T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00172",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 12.6,
+          "created_at": "2025-03-25T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00173",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 75.6,
+          "created_at": "2025-03-31T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00174",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 59.2,
+          "created_at": "2025-04-11T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00175",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 26.5,
+          "created_at": "2025-03-19T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDE1MSIsImNvbW1vZGl0eSI6IkNvYWwifQ==",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDE3NSIsImNvbW1vZGl0eSI6Ik9pbCJ9"
+    },
+    "7": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00176",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 73.7,
+          "created_at": "2025-04-14T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00177",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 99.9,
+          "created_at": "2025-03-24T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00178",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 18.2,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00179",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 60.3,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00180",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 50.8,
+          "created_at": "2025-04-15T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00181",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 51.6,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00182",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 5.9,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00183",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 29.7,
+          "created_at": "2025-03-26T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00184",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 30.2,
+          "created_at": "2025-03-20T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00185",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 51.8,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00186",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 75,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00187",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 22.2,
+          "created_at": "2025-03-24T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00188",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 44.8,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00189",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 93.9,
+          "created_at": "2025-04-04T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00190",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 2.2,
+          "created_at": "2025-04-15T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00191",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 26.5,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00192",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 29.4,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00193",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 0.6,
+          "created_at": "2025-04-08T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00194",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 45,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00195",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 88.3,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00196",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 77.9,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00197",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 79.7,
+          "created_at": "2025-04-14T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00198",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 97.4,
+          "created_at": "2025-04-09T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00199",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 66.5,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00200",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 99,
+          "created_at": "2025-03-18T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDE3NiIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0=",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDIwMCIsImNvbW1vZGl0eSI6IkdhcyJ9"
+    },
+    "8": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00201",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 80.6,
+          "created_at": "2025-03-17T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00202",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 46.9,
+          "created_at": "2025-03-24T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00203",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 90,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00204",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 72.6,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00205",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 50.4,
+          "created_at": "2025-04-15T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00206",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 30,
+          "created_at": "2025-04-08T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00207",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 13.3,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00208",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 6.1,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00209",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 90.2,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00210",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 88.8,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00211",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 73.1,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00212",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 90.3,
+          "created_at": "2025-03-17T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00213",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 11.4,
+          "created_at": "2025-03-20T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00214",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 27.3,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00215",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 44.5,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00216",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 56.4,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00217",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 91.7,
+          "created_at": "2025-04-07T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00218",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 67.5,
+          "created_at": "2025-04-09T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00219",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 97.2,
+          "created_at": "2025-04-09T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00220",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 31.5,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00221",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 32,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00222",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 5.8,
+          "created_at": "2025-03-28T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00223",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 51.9,
+          "created_at": "2025-03-31T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00224",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 95.2,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00225",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 11.7,
+          "created_at": "2025-03-20T21:28:16.046Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDIwMSIsImNvbW1vZGl0eSI6IkdhcyJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDIyNSIsImNvbW1vZGl0eSI6IkdhcyJ9"
+    },
+    "9": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00226",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 69.2,
+          "created_at": "2025-04-01T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00227",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 36.1,
+          "created_at": "2025-04-05T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00228",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 35.7,
+          "created_at": "2025-03-31T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00229",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 45.8,
+          "created_at": "2025-03-29T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00230",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 71.2,
+          "created_at": "2025-03-24T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00231",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 41.1,
+          "created_at": "2025-03-20T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00232",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 6.4,
+          "created_at": "2025-04-10T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00233",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 40.7,
+          "created_at": "2025-03-30T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00234",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 68.9,
+          "created_at": "2025-03-27T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00235",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 77.5,
+          "created_at": "2025-04-06T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00236",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 81.6,
+          "created_at": "2025-04-15T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00237",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 50.4,
+          "created_at": "2025-04-13T21:28:16.046Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00238",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 18.2,
+          "created_at": "2025-04-10T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00239",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 32,
+          "created_at": "2025-04-07T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00240",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 13.3,
+          "created_at": "2025-03-18T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00241",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 33.2,
+          "created_at": "2025-04-15T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00242",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 30.8,
+          "created_at": "2025-04-03T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00243",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 23.4,
+          "created_at": "2025-04-12T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00244",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 86.9,
+          "created_at": "2025-03-27T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00245",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 7.4,
+          "created_at": "2025-04-14T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00246",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 30.3,
+          "created_at": "2025-03-26T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00247",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 58.6,
+          "created_at": "2025-04-07T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00248",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 78,
+          "created_at": "2025-03-24T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00249",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 8,
+          "created_at": "2025-04-14T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00250",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 8.2,
+          "created_at": "2025-03-17T21:28:16.047Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDIyNiIsImNvbW1vZGl0eSI6IkdhcyJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDI1MCIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0="
+    },
+    "10": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00251",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 89.6,
+          "created_at": "2025-04-03T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00252",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 8.3,
+          "created_at": "2025-04-10T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00253",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 42.5,
+          "created_at": "2025-04-01T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00254",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 80.4,
+          "created_at": "2025-04-08T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00255",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 68.8,
+          "created_at": "2025-04-15T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00256",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 1.9,
+          "created_at": "2025-04-01T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00257",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 47.7,
+          "created_at": "2025-03-31T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00258",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 43.3,
+          "created_at": "2025-03-25T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00259",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 6.2,
+          "created_at": "2025-04-04T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00260",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 41.6,
+          "created_at": "2025-04-10T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00261",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 45.5,
+          "created_at": "2025-03-31T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00262",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 30.2,
+          "created_at": "2025-04-09T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00263",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 24.7,
+          "created_at": "2025-04-09T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00264",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 25.2,
+          "created_at": "2025-03-18T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00265",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 99.3,
+          "created_at": "2025-04-06T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00266",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 67.5,
+          "created_at": "2025-04-03T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00267",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 17.1,
+          "created_at": "2025-03-23T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00268",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 21.7,
+          "created_at": "2025-04-14T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00269",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 70.2,
+          "created_at": "2025-04-02T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00270",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 30.8,
+          "created_at": "2025-04-07T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00271",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 2.2,
+          "created_at": "2025-04-09T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00272",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 27.4,
+          "created_at": "2025-03-26T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00273",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 73.4,
+          "created_at": "2025-04-01T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00274",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 1.3,
+          "created_at": "2025-04-09T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00275",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 80.6,
+          "created_at": "2025-03-19T21:28:16.047Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDI1MSIsImNvbW1vZGl0eSI6IkdhcyJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDI3NSIsImNvbW1vZGl0eSI6IkdhcyJ9"
+    },
+    "11": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00276",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 22.5,
+          "created_at": "2025-04-13T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00277",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 34.4,
+          "created_at": "2025-04-01T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00278",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 22,
+          "created_at": "2025-04-01T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00279",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 91.6,
+          "created_at": "2025-03-21T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00280",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 27,
+          "created_at": "2025-04-13T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00281",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 45,
+          "created_at": "2025-04-12T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00282",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 54.1,
+          "created_at": "2025-03-31T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00283",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 68.8,
+          "created_at": "2025-03-24T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00284",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 57.1,
+          "created_at": "2025-04-07T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00285",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 20.1,
+          "created_at": "2025-04-14T21:28:16.047Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00286",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 32.9,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00287",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 97,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00288",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 81.5,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00289",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 53.2,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00290",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 24.4,
+          "created_at": "2025-04-14T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00291",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 68,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00292",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 77.5,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00293",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 73.3,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00294",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 81.5,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00295",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 36.8,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00296",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 87.5,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00297",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 0.9,
+          "created_at": "2025-04-02T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00298",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 99.9,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00299",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 78.4,
+          "created_at": "2025-04-13T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00300",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 74.8,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDI3NiIsImNvbW1vZGl0eSI6IkNvYWwifQ==",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDMwMCIsImNvbW1vZGl0eSI6Ik9pbCJ9"
+    },
+    "12": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00301",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 4.2,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00302",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 74.9,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00303",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 43.3,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00304",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 80.6,
+          "created_at": "2025-03-18T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00305",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 55.3,
+          "created_at": "2025-03-25T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00306",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 57.3,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00307",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 14.4,
+          "created_at": "2025-04-07T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00308",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 79.3,
+          "created_at": "2025-04-07T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00309",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 86.7,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00310",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 9.5,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00311",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 62.9,
+          "created_at": "2025-03-21T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00312",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 35.5,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00313",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 47.4,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00314",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 62.2,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00315",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 4.5,
+          "created_at": "2025-03-27T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00316",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 60.1,
+          "created_at": "2025-03-29T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00317",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 59.2,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00318",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 70.4,
+          "created_at": "2025-03-27T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00319",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 56,
+          "created_at": "2025-04-09T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00320",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 66.1,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00321",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 72.6,
+          "created_at": "2025-03-30T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00322",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 69.5,
+          "created_at": "2025-04-07T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00323",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 91.1,
+          "created_at": "2025-03-17T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00324",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 25.5,
+          "created_at": "2025-03-21T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00325",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 23.8,
+          "created_at": "2025-04-01T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDMwMSIsImNvbW1vZGl0eSI6Ik9pbCJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDMyNSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0="
+    },
+    "13": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00326",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 31.9,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00327",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 97.1,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00328",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 25.2,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00329",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 90.2,
+          "created_at": "2025-04-13T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00330",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 23,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00331",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 30.8,
+          "created_at": "2025-03-27T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00332",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 23.1,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00333",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 47,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00334",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 57.6,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00335",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 74.9,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00336",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 4.7,
+          "created_at": "2025-04-06T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00337",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 23.4,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00338",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 55.7,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00339",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 94.2,
+          "created_at": "2025-03-27T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00340",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 39.1,
+          "created_at": "2025-04-06T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00341",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 59,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00342",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 99.7,
+          "created_at": "2025-04-14T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00343",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 92,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00344",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 35.5,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00345",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 59.7,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00346",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 89.6,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00347",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 66.1,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00348",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 99.1,
+          "created_at": "2025-04-13T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00349",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 54.3,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00350",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 99.9,
+          "created_at": "2025-04-15T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDMyNiIsImNvbW1vZGl0eSI6IkNvYWwifQ==",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDM1MCIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0="
+    },
+    "14": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00351",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 65.1,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00352",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 87.7,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00353",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 50.6,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00354",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 35.6,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00355",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 45,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00356",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 67.7,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00357",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 91.5,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00358",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 88.7,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00359",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 25,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00360",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 70.4,
+          "created_at": "2025-03-27T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00361",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 11.6,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00362",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 94,
+          "created_at": "2025-04-13T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00363",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 43.9,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00364",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 48.4,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00365",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 93.1,
+          "created_at": "2025-03-29T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00366",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 85.7,
+          "created_at": "2025-04-04T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00367",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 16.5,
+          "created_at": "2025-03-17T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00368",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 31.8,
+          "created_at": "2025-04-06T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00369",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 22.3,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00370",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 53.8,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00371",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 89.7,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00372",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 84.1,
+          "created_at": "2025-04-09T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00373",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 45.7,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00374",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 99.7,
+          "created_at": "2025-04-04T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00375",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 98.6,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDM1MSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0=",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDM3NSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0="
+    },
+    "15": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00376",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 59,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00377",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 26.4,
+          "created_at": "2025-03-30T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00378",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 93.3,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00379",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 23.1,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00380",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 56.3,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00381",
+          "adj_description": "Price adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 0.1,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00382",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 28.5,
+          "created_at": "2025-03-30T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00383",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 44.1,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00384",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 78.3,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00385",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 31.6,
+          "created_at": "2025-03-27T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00386",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 79.8,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00387",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 99.3,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00388",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 86,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00389",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 71,
+          "created_at": "2025-04-09T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00390",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 58.8,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00391",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 40.1,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00392",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 55.2,
+          "created_at": "2025-03-21T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00393",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 9.7,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00394",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 69.7,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00395",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 87.3,
+          "created_at": "2025-04-09T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00396",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 33,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00397",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 37.1,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00398",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 66.5,
+          "created_at": "2025-03-17T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00399",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 87.7,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00400",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 93.9,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDM3NiIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0=",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDQwMCIsImNvbW1vZGl0eSI6IkdhcyJ9"
+    },
+    "16": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00401",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 96.5,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00402",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 8.4,
+          "created_at": "2025-04-04T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00403",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 70.2,
+          "created_at": "2025-03-17T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00404",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 96.2,
+          "created_at": "2025-03-17T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00405",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 41.5,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00406",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 16.6,
+          "created_at": "2025-04-01T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00407",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 2.1,
+          "created_at": "2025-04-04T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00408",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 38,
+          "created_at": "2025-04-15T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00409",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 92,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00410",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 30.4,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00411",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 45.2,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00412",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 13.7,
+          "created_at": "2025-03-21T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00413",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 91,
+          "created_at": "2025-04-01T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00414",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 63.2,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00415",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 12.4,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00416",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 70,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00417",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 60.2,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00418",
+          "adj_description": "Transport fee",
+          "commodity": "Coal",
+          "deal_volume": 59.1,
+          "created_at": "2025-04-07T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00419",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 23.5,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00420",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 62.5,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00421",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 56.6,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00422",
+          "adj_description": "Contract amendment",
+          "commodity": "Coal",
+          "deal_volume": 49.2,
+          "created_at": "2025-04-15T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00423",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 61.9,
+          "created_at": "2025-04-01T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00424",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 11.5,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00425",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 29,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDQwMSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0=",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDQyNSIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0="
+    },
+    "17": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00426",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 7.3,
+          "created_at": "2025-04-01T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00427",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 30.5,
+          "created_at": "2025-04-14T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00428",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 58.7,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00429",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 73.5,
+          "created_at": "2025-04-14T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00430",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 6.9,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00431",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 8,
+          "created_at": "2025-03-17T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00432",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 23.2,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00433",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 90.6,
+          "created_at": "2025-03-25T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00434",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 76.6,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00435",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 5.4,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00436",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 57.6,
+          "created_at": "2025-03-24T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00437",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 40.8,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00438",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 57.4,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00439",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 22,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00440",
+          "adj_description": "Price adjustment",
+          "commodity": "Oil",
+          "deal_volume": 4.7,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00441",
+          "adj_description": "Transport fee",
+          "commodity": "Electricity",
+          "deal_volume": 1.1,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00442",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 57.8,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00443",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 1.8,
+          "created_at": "2025-04-15T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00444",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 53.3,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00445",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 21.5,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00446",
+          "adj_description": "Transport fee",
+          "commodity": "Gas",
+          "deal_volume": 11,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00447",
+          "adj_description": "Quality premium",
+          "commodity": "Gas",
+          "deal_volume": 89.5,
+          "created_at": "2025-04-14T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00448",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 94.8,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00449",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 80.8,
+          "created_at": "2025-04-11T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00450",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 30.6,
+          "created_at": "2025-04-15T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDQyNiIsImNvbW1vZGl0eSI6IkdhcyJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDQ1MCIsImNvbW1vZGl0eSI6Ik9pbCJ9"
+    },
+    "18": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00451",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 87.1,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00452",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 79.2,
+          "created_at": "2025-03-28T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00453",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 43.1,
+          "created_at": "2025-04-13T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00454",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 67,
+          "created_at": "2025-04-07T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00455",
+          "adj_description": "Market fluctuation",
+          "commodity": "Oil",
+          "deal_volume": 9.9,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00456",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Coal",
+          "deal_volume": 71.5,
+          "created_at": "2025-04-04T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00457",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 14,
+          "created_at": "2025-04-10T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00458",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 63.8,
+          "created_at": "2025-04-09T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00459",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 42.9,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00460",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 7.7,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00461",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 96.9,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00462",
+          "adj_description": "Regulatory change",
+          "commodity": "Gas",
+          "deal_volume": 13.9,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00463",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 96.9,
+          "created_at": "2025-03-18T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00464",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 51.5,
+          "created_at": "2025-03-29T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00465",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 49,
+          "created_at": "2025-04-06T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00466",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 15.5,
+          "created_at": "2025-04-06T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00467",
+          "adj_description": "Volume correction",
+          "commodity": "Oil",
+          "deal_volume": 64.8,
+          "created_at": "2025-04-08T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00468",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 50.2,
+          "created_at": "2025-04-02T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00469",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Gas",
+          "deal_volume": 38.1,
+          "created_at": "2025-04-05T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00470",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 29,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00471",
+          "adj_description": "Quality premium",
+          "commodity": "Oil",
+          "deal_volume": 78,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00472",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 90.9,
+          "created_at": "2025-03-26T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00473",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 98.2,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00474",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 32.6,
+          "created_at": "2025-03-30T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00475",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 62.5,
+          "created_at": "2025-03-20T21:28:16.048Z"
+        }
+      ],
+      "hasNextPage": true,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDQ1MSIsImNvbW1vZGl0eSI6IkdhcyJ9",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDQ3NSIsImNvbW1vZGl0eSI6IkNvYWwifQ=="
+    },
+    "19": {
+      "items": [
+        {
+          "accounting_mtm_history_id": "MTM-00476",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 57.2,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00477",
+          "adj_description": "Quality premium",
+          "commodity": "Coal",
+          "deal_volume": 86.3,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00478",
+          "adj_description": "Contract amendment",
+          "commodity": "Gas",
+          "deal_volume": 78.9,
+          "created_at": "2025-04-15T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00479",
+          "adj_description": "Quality premium",
+          "commodity": "Electricity",
+          "deal_volume": 95,
+          "created_at": "2025-04-03T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00480",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 84.7,
+          "created_at": "2025-03-23T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00481",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 38.1,
+          "created_at": "2025-03-29T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00482",
+          "adj_description": "Market fluctuation",
+          "commodity": "Electricity",
+          "deal_volume": 51.2,
+          "created_at": "2025-03-29T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00483",
+          "adj_description": "Price adjustment",
+          "commodity": "Coal",
+          "deal_volume": 59.7,
+          "created_at": "2025-04-12T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00484",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 18.2,
+          "created_at": "2025-04-02T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00485",
+          "adj_description": "Price adjustment",
+          "commodity": "Gas",
+          "deal_volume": 24.9,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00486",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 19.2,
+          "created_at": "2025-03-31T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00487",
+          "adj_description": "Contract amendment",
+          "commodity": "Oil",
+          "deal_volume": 3.7,
+          "created_at": "2025-04-02T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00488",
+          "adj_description": "Regulatory change",
+          "commodity": "Coal",
+          "deal_volume": 67.1,
+          "created_at": "2025-03-22T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00489",
+          "adj_description": "Transport fee",
+          "commodity": "Oil",
+          "deal_volume": 9.3,
+          "created_at": "2025-03-19T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00490",
+          "adj_description": "Volume correction",
+          "commodity": "Gas",
+          "deal_volume": 96.3,
+          "created_at": "2025-04-04T21:28:16.048Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00491",
+          "adj_description": "Volume correction",
+          "commodity": "Electricity",
+          "deal_volume": 94.2,
+          "created_at": "2025-03-20T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00492",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 61.9,
+          "created_at": "2025-03-24T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00493",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Electricity",
+          "deal_volume": 1.6,
+          "created_at": "2025-04-01T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00494",
+          "adj_description": "Volume correction",
+          "commodity": "Coal",
+          "deal_volume": 94.6,
+          "created_at": "2025-03-31T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00495",
+          "adj_description": "Market fluctuation",
+          "commodity": "Gas",
+          "deal_volume": 73.9,
+          "created_at": "2025-04-02T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00496",
+          "adj_description": "Regulatory change",
+          "commodity": "Oil",
+          "deal_volume": 11,
+          "created_at": "2025-03-30T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00497",
+          "adj_description": "Contract amendment",
+          "commodity": "Electricity",
+          "deal_volume": 16.3,
+          "created_at": "2025-03-27T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00498",
+          "adj_description": "Seasonal adjustment",
+          "commodity": "Oil",
+          "deal_volume": 82.1,
+          "created_at": "2025-04-08T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00499",
+          "adj_description": "Regulatory change",
+          "commodity": "Electricity",
+          "deal_volume": 17.9,
+          "created_at": "2025-03-24T21:28:16.049Z"
+        },
+        {
+          "accounting_mtm_history_id": "MTM-00500",
+          "adj_description": "Market fluctuation",
+          "commodity": "Coal",
+          "deal_volume": 56.1,
+          "created_at": "2025-04-10T21:28:16.049Z"
+        }
+      ],
+      "hasNextPage": false,
+      "hasPreviousPage": true,
+      "startCursor": "eyJpZCI6Ik1UTS0wMDQ3NiIsImNvbW1vZGl0eSI6IkVsZWN0cmljaXR5In0=",
+      "endCursor": "eyJpZCI6Ik1UTS0wMDUwMCIsImNvbW1vZGl0eSI6IkNvYWwifQ=="
+    }
+  },
+  "totalCount": 500
+}

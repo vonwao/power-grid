@@ -59,7 +59,6 @@ export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderC
   valueGetter?: GridValueGetter;
   valueSetter?: GridValueSetter;
 }
-
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
@@ -105,6 +104,11 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   hideFooter?: boolean;
   hideFooterPagination?: boolean;
   hideFooterSelectedRowCount?: boolean;
+  rowHeight?: number; // Custom row height in pixels
+  
+  // Testing and debugging props
+  onPageChange?: (page: number) => void; // Callback for page changes
+  onRowsChange?: (rows: T[]) => void; // Callback for rows changes
   rowHeight?: number; // Custom row height in pixels
 }
 
@@ -213,6 +217,13 @@ console.log("useRelayGraphQLData running with variables:", variables);
   
   // Combine external loading state with GraphQL loading state
   const loading = externalLoading || graphQLLoading;
+  
+  // Call the onRowsChange callback when rows change
+  useEffect(() => {
+    if (props.onRowsChange) {
+      props.onRowsChange(displayRows);
+    }
+  }, [displayRows, props.onRowsChange]);
   
   // Initialize selection model hook
   // Initialize selection model hook
@@ -379,7 +390,23 @@ console.log("useRelayGraphQLData running with variables:", variables);
         onPaginationModelChange={(model) => {
           // For GraphQL pagination, fetch the data
           if (useGraphQLFetching) {
+            console.log("Pagination model changed:", model);
+            
+            // For Relay cursor pagination, we need to handle "Next" and "Previous" differently
+            if (paginationStyle === 'cursor') {
+              // If we're going to the next page, set pagination direction to forward
+              if (model.page > 0) {
+                setPaginationDirection("forward");
+              }
+            }
+            
+            // Set the page
             setPage(model.page);
+            
+            // Call the onPageChange callback if provided
+            if (props.onPageChange) {
+              props.onPageChange(model.page);
+            }
           }
         }}
         

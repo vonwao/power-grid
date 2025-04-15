@@ -1,7 +1,14 @@
 /**
  * Enhanced MTM History resolver with improved pagination, sorting, and filtering
  * This implementation simulates DynamoDB behavior with cursor-based pagination
+ * Now using stable data generation for consistent testing
  */
+
+const {
+  generateStableMTMHistoryData,
+  loadDataFromFile,
+  saveDataToFile
+} = require('../../utils/stableDataGenerator');
 
 // Define the MTM History item interface
 interface MTMHistoryItem {
@@ -12,48 +19,41 @@ interface MTMHistoryItem {
   created_at?: string; // Optional timestamp for sorting
 }
 
-// Generate mock MTM History data with more realistic values
-function generateMTMHistoryData(count = 100): MTMHistoryItem[] {
-  const commodities = ['Oil', 'Gas', 'Electricity', 'Coal'];
-  const descriptions = [
-    'Price adjustment',
-    'Volume correction',
-    'Contract amendment',
-    'Market fluctuation',
-    'Regulatory change',
-    'Seasonal adjustment',
-    'Quality premium',
-    'Transport fee',
-  ];
-
-  return Array.from({ length: count }, (_, i) => {
-    // Generate a date within the last 30 days
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-    
-    return {
-      accounting_mtm_history_id: `MTM-${(i + 1).toString().padStart(5, '0')}`,
-      adj_description: descriptions[Math.floor(Math.random() * descriptions.length)],
-      commodity: commodities[Math.floor(Math.random() * commodities.length)],
-      deal_volume: Math.round(Math.random() * 1000) / 10,
-      created_at: date.toISOString(),
-    };
-  });
-}
+// File path for stable data
+const STABLE_DATA_FILE = './data/stable-mtm-history.json';
 
 // Cache generated data
 let cachedMTMHistory: MTMHistoryItem[] | null = null;
 
-// Get or generate MTM History data
+// Get or generate MTM History data with stable seed
 function getMTMHistoryData(): MTMHistoryItem[] {
   if (!cachedMTMHistory) {
-    console.log('Generating MTM History data...');
-    cachedMTMHistory = generateMTMHistoryData(500);
-    console.log('MTM History data generation complete.');
-    console.log('Sample data (first 2 items):', JSON.stringify(cachedMTMHistory.slice(0, 2), null, 2));
-    console.log('Total items generated:', cachedMTMHistory.length);
+    console.log('Loading or generating MTM History data...');
+    
+    // Try to load from file first
+    const loadedData = loadDataFromFile(STABLE_DATA_FILE);
+    
+    if (loadedData && loadedData.length > 0) {
+      console.log(`Loaded ${loadedData.length} items from ${STABLE_DATA_FILE}`);
+      cachedMTMHistory = loadedData;
+    } else {
+      // Generate new data with fixed seed
+      console.log('Generating new stable data with fixed seed...');
+      const newData = generateStableMTMHistoryData(500, 12345);
+      cachedMTMHistory = newData;
+      
+      // Save to file for future use
+      saveDataToFile(newData, STABLE_DATA_FILE);
+      console.log(`Generated and saved ${newData.length} items to ${STABLE_DATA_FILE}`);
+    }
+    
+    if (cachedMTMHistory) {
+      console.log('Sample data (first 2 items):', JSON.stringify(cachedMTMHistory.slice(0, 2), null, 2));
+      console.log('Total items available:', cachedMTMHistory.length);
+    }
   }
-  return cachedMTMHistory;
+  
+  return cachedMTMHistory || [];
 }
 
 /**

@@ -86,6 +86,7 @@ const [cursors, setCursors] = useState<Record<number, string>>({});
 const [paginationDirection, setPaginationDirection] = useState<"forward" | "backward">("forward");
 const [sortModel, setSortModel] = useState(initialSortModel);
 const [filterModel, setFilterModel] = useState(initialFilterModel);
+const [lastFetchedPage, setLastFetchedPage] = useState<number | null>(null);
 
   // Debug log when hook runs
   console.log("useRelayGraphQLData hook running with page:", page);
@@ -122,13 +123,23 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
     // Ensure pageSize has a fallback value
     const effectivePageSize = pageSize || 25;
 
-    // Add null checks for cursor access
-    return paginationDirection === "forward"
-      ? {
-          first: effectivePageSize,
-          after: page > 0 && cursors[page - 1] ? cursors[page - 1] : null,
-        }
-      : { last: effectivePageSize, before: cursors[page + 1] || null };
+    // For forward pagination, use the cursor from the previous page
+    // For backward pagination, use the cursor from the next page
+    if (paginationDirection === "forward") {
+      // If we're on page 0, don't use a cursor
+      if (page === 0) {
+        return { first: effectivePageSize, after: null };
+      }
+      
+      // Otherwise, use the cursor from the previous page
+      const cursor = cursors[page - 1];
+      console.log(`Using cursor for page ${page}: ${cursor}`);
+      return { first: effectivePageSize, after: cursor || null };
+    } else {
+      // For backward pagination
+      const cursor = cursors[page + 1];
+      return { last: effectivePageSize, before: cursor || null };
+    }
   }, [paginationDirection, pageSize, page, cursors]);
 
   // Add additional validation - Fixed to return empty object instead of null
@@ -160,12 +171,22 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
   // Stable page change handler with useCallback
   const handlePageChange = useCallback(
     (newPage: number) => {
+      console.log(`Page change requested: ${page} -> ${newPage}`);
+      
+      // Set pagination direction based on the page change
       if (newPage > page) {
         setPaginationDirection("forward");
+        console.log("Setting pagination direction to forward");
       } else if (newPage < page && enableBackwardPagination) {
         setPaginationDirection("backward");
+        console.log("Setting pagination direction to backward");
       }
+      
+      // Update the page
       setPage(newPage);
+      
+      // Track that we're fetching this page
+      setLastFetchedPage(newPage);
     },
     [page, enableBackwardPagination]
   );
@@ -252,6 +273,9 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
         if (prev[page] === connection.pageInfo.endCursor) {
           return prev;
         }
+        
+        console.log(`Storing cursor for page ${page}: ${connection.pageInfo.endCursor}`);
+        
         return {
           ...prev,
           [page]: connection.pageInfo.endCursor as string,
@@ -259,6 +283,12 @@ const [filterModel, setFilterModel] = useState(initialFilterModel);
       });
     }
   }, [connection, page]);
+  
+  // Debug effect to log cursor state
+  useEffect(() => {
+    console.log("Current cursors state:", cursors);
+    console.log("Current page:", page);
+  }, [cursors, page]);
 
   // Memoize the pageInfo object
   const pageInfo = useMemo(
