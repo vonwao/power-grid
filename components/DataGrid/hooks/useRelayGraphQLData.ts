@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { ServerSideResult } from "../types/serverSide";
 
@@ -34,6 +34,19 @@ interface Connection<T> {
 }
 
 /**
+ * Define GraphQLVariables type to fix type issues
+ */
+interface GraphQLVariables {
+  first?: number;
+  last?: number;
+  after?: string | null;
+  before?: string | null;
+  sort?: string;
+  filter?: string;
+  [key: string]: any;
+}
+
+/**
  * Hook for handling GraphQL data operations with Relay-style cursor-based pagination
  * Manages fetching data with pagination, sorting, and filtering using Apollo Client
  *
@@ -59,14 +72,23 @@ export function useRelayGraphQLData<T>({
   nodeToRow?: (node: any) => T;
   enableBackwardPagination?: boolean;
 }): ServerSideResult<T> {
+  // Track last fetch time to prevent excessive fetching
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+  const FETCH_COOLDOWN = 500; // ms
+
+  // Keep a ref of previous variables to spot changes
+  const prevVariablesRef = useRef<GraphQLVariables | null>(null);
+  
   // State with proper initialization
-  const [page, setPage] = useState(initialPage);
-  const [cursors, setCursors] = useState<Record<number, string>>({});
-  const [paginationDirection, setPaginationDirection] = useState<
-    "forward" | "backward"
-  >("forward");
-  const [sortModel, setSortModel] = useState(initialSortModel);
-  const [filterModel, setFilterModel] = useState(initialFilterModel);
+  // State with proper initialization
+const [page, setPage] = useState(initialPage);
+const [cursors, setCursors] = useState<Record<number, string>>({});
+const [paginationDirection, setPaginationDirection] = useState<"forward" | "backward">("forward");
+const [sortModel, setSortModel] = useState(initialSortModel);
+const [filterModel, setFilterModel] = useState(initialFilterModel);
+
+  // Debug log when hook runs
+  console.log("useRelayGraphQLData hook running with page:", page);
 
   // Memoize the sort configuration to prevent recreating on every render
   const sort = useMemo(() => {
@@ -86,7 +108,6 @@ export function useRelayGraphQLData<T>({
   }, [filterModel]);
 
   // Memoize pagination variables
-  // Add null checks and default values
   const paginationVars = useMemo(() => {
     // Ensure pageSize has a fallback value
     const effectivePageSize = pageSize || 25;
@@ -100,12 +121,12 @@ export function useRelayGraphQLData<T>({
       : { last: effectivePageSize, before: cursors[page + 1] || null };
   }, [paginationDirection, pageSize, page, cursors]);
 
-  // Add additional validation
+  // Add additional validation - Fixed to return empty object instead of null
   const variables = useMemo(() => {
     // Check if paginationVars is valid before creating the object
     if (!paginationVars) {
       console.warn("Invalid pagination variables");
-      return null; // Return null to prevent calling the API with bad params
+      return {} as GraphQLVariables; // Return empty object instead of null
     }
 
     return {
@@ -113,8 +134,18 @@ export function useRelayGraphQLData<T>({
       ...customVariables,
       ...(sort ? { sort: JSON.stringify(sort) } : {}),
       ...(filter ? { filter: JSON.stringify(filter) } : {}),
-    };
+    } as GraphQLVariables;
   }, [paginationVars, customVariables, sort, filter]);
+
+  // Debug log when variables change
+  useEffect(() => {
+    console.log("Variables changed:", {
+      variables,
+      prevVariablesJson: JSON.stringify(prevVariablesRef.current || {}),
+      currentVariablesJson: JSON.stringify(variables || {})
+    });
+    prevVariablesRef.current = variables;
+  }, [variables]);
 
   // Stable page change handler with useCallback
   const handlePageChange = useCallback(
@@ -130,22 +161,27 @@ export function useRelayGraphQLData<T>({
   );
 
   // Execute query with stable variables
-  // Add a skip condition to prevent requests with undefined variables
   const { data, loading, error, refetch } = useQuery(query, {
-    variables,
+    variables, // Now properly typed
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
-    skip: !query || !variables, // Skip if variables is null or undefined
+    skip: !query || Object.keys(variables).length === 0, // Skip if variables is empty
   });
 
-  // Separate effects for different concerns
-
-  // Effect for pagination changes
+  // Effect for pagination changes with throttling
   useEffect(() => {
-    if (query) {
-      refetch(variables);
+    if (!query || Object.keys(variables).length === 0) return;
+    
+    const now = Date.now();
+    if (now - lastFetchTime < FETCH_COOLDOWN) {
+      console.log('Throttling refetch - too soon since last fetch');
+      return;
     }
-  }, [query, refetch, variables]);
+    
+    console.log('Refetching with variables:', variables);
+    setLastFetchTime(now);
+    refetch(variables);
+  }, [query, refetch, variables, lastFetchTime]);
 
   // Process and transform data
   const queryResult = data ? Object.values(data)[0] : null;
