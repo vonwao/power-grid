@@ -189,6 +189,19 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // Track the current page for controlled pagination
   const [currentPage, setCurrentPage] = React.useState(0);
   
+  const graphQLResult = useRelayGraphQLData<T>({
+    pageSize,
+    initialPage: 0,
+    initialSortModel: [],
+    initialFilterModel: {},
+    query,
+    variables,
+    nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
+    // Add this to completely skip the hook's functionality when not using GraphQL
+    // todo: add
+    // skipExecution: !useGraphQLFetching
+  });
+
   // Use the appropriate hook based on pagination style
   const {
     rows: graphQLRows,
@@ -202,35 +215,25 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     refetch,
     debug,
     resetCursors
-  } = useGraphQLFetching
-      ? useRelayGraphQLData<T>({
-          pageSize,
-          initialPage: 0,
-          initialSortModel: [],
-          initialFilterModel: {},
-          query,
-          variables,
-          nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
-        })
-    : {
-        rows: [] as T[],
-        totalRows: 0,
-        loading: false,
-        error: null as Error | null,
-        setPage: () => {},
-        setSortModel: () => {},
-        setFilterModel: () => {},
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null
-        },
-        setPaginationDirection: () => {},
-        refetch: () => Promise.resolve({ data: null }),
-        debug: {},
-        resetCursors: () => {}
-      } as ServerSideResult<T>;
+  } = useGraphQLFetching ? graphQLResult : {
+    rows: [] as T[],
+    totalRows: 0,
+    loading: false,
+    error: null as Error | null,
+    setPage: () => {},
+    setSortModel: () => {},
+    setFilterModel: () => {},
+    pageInfo: {
+      hasNextPage: false,
+      hasPreviousPage: false,
+      startCursor: null,
+      endCursor: null
+    },
+    setPaginationDirection: () => {},
+    refetch: () => Promise.resolve({ data: null }),
+    debug: {},
+    resetCursors: () => {}
+  } as ServerSideResult<T>;
   
   // Call the onGridFunctionsInit callback when grid functions are available
   useEffect(() => {
@@ -246,9 +249,9 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   
   // Use GraphQL data or client data based on the useGraphQLFetching flag
   const displayRows = useMemo(() => {
-    const rows = useGraphQLFetching ? graphQLRows : rows;
-    debugLog(`Using ${useGraphQLFetching ? 'GraphQL' : 'client'} data with ${rows.length} rows`);
-    return rows;
+    const displayedRows = useGraphQLFetching ? graphQLRows : rows;
+    debugLog(`Using ${useGraphQLFetching ? 'GraphQL' : 'client'} data with ${displayedRows.length} rows`);
+    return displayedRows;
   }, [useGraphQLFetching, graphQLRows, rows]);
   
   const totalRows = useMemo(() => 
