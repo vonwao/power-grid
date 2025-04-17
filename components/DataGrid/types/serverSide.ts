@@ -1,17 +1,7 @@
 /**
  * Types for server-side data loading
  */
-
-/**
- * PageInfo interface for Relay-style pagination
- */
-export interface PageInfo {
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  startCursor?: string | null;
-  endCursor?: string | null;
-}
-
+ 
 /**
  * Server-side data parameters
  */
@@ -22,7 +12,7 @@ export interface ServerSideParams {
   initialSortModel?: { field: string; sort: 'asc' | 'desc' }[];
   initialFilterModel?: Record<string, any>;
 }
-
+ 
 /**
  * Server-side data result
  */
@@ -34,8 +24,25 @@ export interface ServerSideResult<T> {
   setPage: (page: number) => void;
   setSortModel: (sortModel: { field: string; sort: 'asc' | 'desc' }[]) => void;
   setFilterModel: (filterModel: Record<string, any>) => void;
-  
-  // Optional properties for Relay-style pagination
-  pageInfo?: PageInfo;
-  setPaginationDirection?: (direction: 'forward' | 'backward') => void;
+  pageInfo: PageInfo;
+  refetch: () => Promise<any>;
+  resetCursors?: () => void;
 }
+ 
+/**
+ * Core interfaces for cursor pagination
+ */
+export interface PageInfo {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  startCursor?: string | null;
+  endCursor?: string | null;
+}
+ 
+export interface Connection<T> {
+  edges: { cursor: string; node: T }[];
+  pageInfo: PageInfo;
+  totalCount: number;
+}
+ 
+ 
