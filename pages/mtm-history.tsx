@@ -34,6 +34,34 @@ const GET_MTM_HISTORY = gql`
   }
 `;
 
+// Placeholder GraphQL Mutations (Replace with actual mutations)
+const UPDATE_MTM_HISTORY_ITEM = gql`
+  mutation UpdateMtmHistoryItem($input: UpdateMtmHistoryItemInput!) {
+    updateMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after update
+    }
+  }
+`;
+
+const CREATE_MTM_HISTORY_ITEM = gql`
+  mutation CreateMtmHistoryItem($input: CreateMtmHistoryItemInput!) {
+    createMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after creation
+    }
+
+const DELETE_MTM_HISTORY_ITEMS = gql`
+  mutation DeleteMtmHistoryItems($ids: [ID!]!) {
+    deleteMtmHistoryItems(ids: $ids) {
+      success
+      deletedCount
+    }
+  }
+`;
+
+  }
+`;
+
+
 // Define columns
 const mtmHistoryColumns: EnhancedColumnConfig[] = [
   {
@@ -90,6 +118,59 @@ export default function MTMHistoryPage() {
     setSelectionModel(newSelection);
   };
   
+  // Handler for saving changes (edits and additions)
+  const handleSave = async (changes: { edits: any[]; additions: any[] }) => {
+    console.log('Saving changes:', changes);
+
+    // Placeholder logic - replace with actual mutation calls
+    try {
+      // Process edits
+      for (const edit of changes.edits) {
+        console.log('Updating item:', edit.id, edit);
+        // Example: await updateItemMutation({ variables: { input: { id: edit.id, ...edit } } });
+      }
+
+      // Process additions
+  // Handler for deleting selected rows
+  const handleDelete = async (ids: GridRowId[]) => {
+    console.log('Deleting rows with IDs:', ids);
+
+    // Placeholder logic - replace with actual mutation call
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
+      return; // Early exit if user cancels
+    }
+
+    try {
+      // Example: await deleteItemsMutation({ variables: { ids } });
+      console.log(`Simulating deletion of ${ids.length} items.`);
+
+      // Refetch data after deleting (important!)
+      // refetch(); 
+
+      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
+    } catch (error) {
+      console.error('Error deleting rows:', error);
+      alert('Error deleting rows. Check console.');
+    }
+  };
+
+
+      for (const addition of changes.additions) {
+        console.log('Creating item:', addition);
+        // Example: await createItemMutation({ variables: { input: { ...addition } } });
+      }
+
+      // Refetch data after saving (optional, depends on mutation response/cache updates)
+      // refetch(); 
+
+      alert('Changes saved (simulated). Check console.');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Error saving changes. Check console.');
+    }
+  };
+
+
   return (
     <div className="h-full w-full flex flex-col p-4">
       <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
@@ -124,16 +205,22 @@ export default function MTMHistoryPage() {
           onSelectionModelChange={handleSelectionChange}
           
           // Grid capabilities
-          canEditRows={false}
-          canAddRows={false}
+          canEditRows={true}
+          canAddRows={true}
           canSelectRows={true}
+          canDeleteRows={true} // Enable deletion
           
           // UI options
           density="standard"
           disableSelectionOnClick={true}
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
-        />
+          
+          // Save handler
+          onSave={handleSave}
+          // Delete handler
+          onDelete={handleDelete}
+         />
       </Paper>
     </div>
   );

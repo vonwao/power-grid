@@ -89,7 +89,11 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   canEditRows?: boolean;
   canAddRows?: boolean;
   canSelectRows?: boolean;
+  canDeleteRows?: boolean;
+
  
+  onDelete?: (ids: GridRowId[]) => void; // Callback for row deletion
+
   // Custom components
   customActionButtons?: React.ReactNode;
  
@@ -144,6 +148,8 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   canEditRows = true,
   canAddRows = true,
   canSelectRows = true,
+  canDeleteRows = false, // Default to false
+  onDelete,
   // UI options
   className,
   autoHeight,
@@ -570,6 +576,9 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
           // Adapter function to match the expected signature
           handleSelectionModelChange(selectionModel, {} as any);
         }}
+        // Pass delete props
+        canDeleteRows={canDeleteRows}
+        onDelete={onDelete}
       >
         {children}
       </GridModeProvider>

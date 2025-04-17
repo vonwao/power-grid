@@ -24,6 +24,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpIcon from '@mui/icons-material/Help';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
 
 // Pagination icons
 
@@ -81,7 +82,10 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     // Get selection model from context
     selectionModel,
     onSelectionModelChange,
-    clearSelection
+    clearSelection,
+    // Get delete context
+    canDeleteRows,
+    deleteRows
   } = useGridMode();
   
   // Debug: Log selection model changes
@@ -107,6 +111,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   const [filterDialogOpen, setFilterDialogOpen] = useState(false); // State for filter dialog
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
+  const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] = useState(false); // State for delete confirmation
 
   // Handle mode switching with confirmation when needed
   const handleModeSwitch = (newMode: GridMode) => {
@@ -178,11 +183,25 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     setDebugDialogOpen(true);
   };
 
+  // Handle delete button click - opens confirmation dialog
+  const handleDeleteClick = () => {
+    if (selectionModel.length > 0 && canDeleteRows) {
+      setDeleteConfirmationDialogOpen(true);
+    }
+  };
+
+  // Handle confirming deletion
+  const handleConfirmDelete = () => {
+    deleteRows(selectionModel);
+    setDeleteConfirmationDialogOpen(false);
+  };
+
   // Determine button disabled states based on current mode
   const isInEditOrAddMode = mode === 'edit' || mode === 'add';
   const canSave = isInEditOrAddMode && !hasValidationErrors;
   const canCancel = isInEditOrAddMode;
   const canAdd = canAddRows && !isInEditOrAddMode;
+  const canDeleteSelected = canDeleteRows && selectionModel.length > 0 && !isInEditOrAddMode;
   const areActionButtonsDisabled = isInEditOrAddMode;
 
   return (
@@ -360,6 +379,22 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
                   onDelete={clearSelection}
                   size="small"
                 />
+                {/* Delete Button - Show only if deletion is allowed and rows are selected */}
+                {canDeleteRows && selectionModel.length > 0 && (
+                  <Tooltip title={canDeleteSelected ? `Delete ${selectionModel.length} selected row(s)` : "Cannot delete while editing"}>
+                    <span> {/* Span needed for disabled Tooltip */}
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={handleDeleteClick}
+                        disabled={!canDeleteSelected}
+                        sx={{ ml: 0.5, opacity: canDeleteSelected ? 1 : 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
               </Box>
             )}
             {/* Filter Options - Updated onClick */}
@@ -535,6 +570,25 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+     {/* Delete Confirmation Dialog */}
+     <Dialog
+       open={deleteConfirmationDialogOpen}
+       onClose={() => setDeleteConfirmationDialogOpen(false)}
+     >
+       <DialogTitle>Confirm Deletion</DialogTitle>
+       <DialogContent>
+         <DialogContentText>
+           Are you sure you want to delete {selectionModel.length} selected row(s)? This action cannot be undone.
+         </DialogContentText>
+       </DialogContent>
+       <DialogActions>
+         <Button onClick={() => setDeleteConfirmationDialogOpen(false)}>Cancel</Button>
+         <Button onClick={handleConfirmDelete} color="error">
+           Delete
+         </Button>
+       </DialogActions>
+     </Dialog>
     </Box>
   );
 };

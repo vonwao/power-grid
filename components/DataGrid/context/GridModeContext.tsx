@@ -48,7 +48,15 @@ interface GridModeContextType {
   saveChanges: () => void;
   cancelChanges: () => void;
   addRow: () => void;
+  deleteRows: (ids: GridRowId[]) => void; // Function to handle deletion
+
   
+  // Capabilities
+  canEditRows: boolean;
+  canAddRows: boolean;
+  canSelectRows: boolean;
+  canDeleteRows: boolean;
+
   // Pagination
   page: number;
   pageSize: number;
@@ -76,7 +84,12 @@ interface GridModeProviderProps {
   canEditRows?: boolean;
   canAddRows?: boolean;
   canSelectRows?: boolean;
+  canDeleteRows?: boolean;
+
   // Selection model
+  // Action handlers from parent
+  onDelete?: (ids: GridRowId[]) => void;
+
   selectionModel?: any[];
   onSelectionModelChange?: (selectionModel: any[]) => void;
 }
@@ -97,9 +110,12 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   canEditRows = true,
   canAddRows = true,
   canSelectRows = true,
+  canDeleteRows = false, // Default to false
   // Selection model
   selectionModel: externalSelectionModel,
-  onSelectionModelChange: externalOnSelectionModelChange
+  onSelectionModelChange: externalOnSelectionModelChange,
+  // Delete handler
+  onDelete: formOnDelete
 }) => {
   // State for the current mode
   const [mode, setMode] = useState<GridMode>(initialMode);
@@ -194,6 +210,18 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     formAddRow();
     setMode('add');
   }, [formAddRow]);
+
+  // Delete handler
+  const deleteRows = useCallback((ids: GridRowId[]) => {
+    if (formOnDelete) {
+      formOnDelete(ids);
+      // Optionally clear selection or change mode after deletion
+      clearSelection();
+      // setMode('none'); // Or keep selection mode? Decide based on desired UX
+    } else {
+      console.warn('onDelete handler not provided to GridModeProvider');
+    }
+  }, [formOnDelete, clearSelection]);
   
   // Context value
   const contextValue: GridModeContextType = {
@@ -209,6 +237,13 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     saveChanges,
     cancelChanges,
     addRow,
+    deleteRows, // Add delete handler
+    // Capabilities
+    canEditRows,
+    canAddRows,
+    canSelectRows,
+    canDeleteRows, // Add delete capability flag
+    // Pagination
     page,
     pageSize,
     totalRows,
