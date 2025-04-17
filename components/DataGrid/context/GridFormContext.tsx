@@ -697,7 +697,7 @@ export function GridFormProvider({
       setCurrentCell({ rowId: newId, field: firstEditableField });
       
       // Add the row to the grid
-      setRows(prev => [...prev, newRow]);
+      setRows(prev => [newRow, ...prev]);
       
       // Mark all fields as dirty in pendingChanges
       setPendingChanges(prev => {

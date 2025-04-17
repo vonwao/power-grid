@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
 import { Paper } from '@mui/material';
 import { gql } from '@apollo/client';
@@ -48,6 +48,8 @@ const CREATE_MTM_HISTORY_ITEM = gql`
     createMtmHistoryItem(input: $input) {
       accounting_mtm_history_id # Or fields needed after creation
     }
+  }
+`;
 
 const DELETE_MTM_HISTORY_ITEMS = gql`
   mutation DeleteMtmHistoryItems($ids: [ID!]!) {
@@ -58,9 +60,6 @@ const DELETE_MTM_HISTORY_ITEMS = gql`
   }
 `;
 
-  }
-`;
-
 
 // Define columns
 const mtmHistoryColumns: EnhancedColumnConfig[] = [
@@ -68,25 +67,49 @@ const mtmHistoryColumns: EnhancedColumnConfig[] = [
     field: 'accounting_mtm_history_id',
     headerName: 'ID',
     width: 120,
-    fieldConfig: { type: 'string' as const },
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'ID is required'
+      }
+    },
   },
   {
     field: 'adj_description',
     headerName: 'Description',
     width: 200,
-    fieldConfig: { type: 'string' as const },
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Description is required'
+      }
+    },
   },
   {
     field: 'commodity',
     headerName: 'Commodity',
     width: 150,
-    fieldConfig: { type: 'string' as const },
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Commodity is required'
+      }
+    },
   },
   {
     field: 'deal_volume',
     headerName: 'Deal Volume',
     width: 150,
-    fieldConfig: { type: 'number' as const },
+    fieldConfig: {
+      type: 'number' as const,
+      validation: {
+        required: 'Deal Volume is required',
+        min: {
+          value: 0,
+          message: 'Deal Volume must be a positive number'
+        }
+      }
+    },
   },
 ];
 
@@ -111,11 +134,44 @@ const sampleMTMHistory = [
 export default function MTMHistoryPage() {
   // State for grid
   const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
-  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true); 
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true);
+  // Use a ref to store the refetch function to avoid re-renders
+  const refetchDataRef = useRef<() => Promise<any>>(() => Promise.resolve({ data: null }));
+  
+  // Helper function to call the refetch function
+  const refetchData = useCallback(() => {
+    return refetchDataRef.current();
+  }, []);
   
   // Handler for selection changes
   const handleSelectionChange = (newSelection: GridRowId[]) => {
     setSelectionModel(newSelection);
+  };
+  
+  // Handler for grid functions initialization
+  const handleGridFunctionsInit = (
+    refetch: () => Promise<any>,
+    resetCursors: () => void,
+    pageInfo: any
+  ) => {
+    console.log('Grid functions initialized');
+    refetchDataRef.current = refetch;
+  };
+  
+  // Row-level validation function
+  const validateMtmHistoryRow = (values: any, helpers: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Check if deal_volume is a positive number
+    if (values.deal_volume !== undefined && values.deal_volume !== null) {
+      if (isNaN(values.deal_volume) || values.deal_volume < 0) {
+        errors.deal_volume = 'Deal Volume must be a positive number';
+      }
+    }
+    
+    // Additional custom validations can be added here
+    
+    return errors;
   };
   
   // Handler for saving changes (edits and additions)
@@ -136,8 +192,8 @@ export default function MTMHistoryPage() {
         // Example: await createItemMutation({ variables: { input: { ...addition } } });
       }
 
-      // Refetch data after saving (optional, depends on mutation response/cache updates)
-      // refetch(); 
+      // Refetch data after saving
+      refetchData();
 
       alert('Changes saved (simulated). Check console.');
     } catch (error) {
@@ -159,8 +215,8 @@ export default function MTMHistoryPage() {
       // Example: await deleteItemsMutation({ variables: { ids } });
       console.log(`Simulating deletion of ${ids.length} items.`);
 
-      // Refetch data after deleting (important!)
-      // refetch();
+      // Refetch data after deleting
+      refetchData();
 
       alert(`${ids.length} row(s) deleted (simulated). Check console.`);
     } catch (error) {
@@ -196,6 +252,12 @@ export default function MTMHistoryPage() {
           query={GET_MTM_HISTORY}
           // No need to pass variables, let the hook handle it
           paginationStyle="cursor" // Use cursor-based pagination
+          
+          // Grid functions initialization
+          onGridFunctionsInit={handleGridFunctionsInit}
+          
+          // Validation
+          validateRow={validateMtmHistoryRow}
           
           // Selection options
           checkboxSelection={true}

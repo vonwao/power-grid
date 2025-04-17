@@ -221,6 +221,9 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     setPage,
     setSortModel,
     setFilterModel,
+    refetch,
+    pageInfo,
+    resetCursors,
   } = useGraphQLFetching
     ? graphQLResult
     : ({
@@ -270,6 +273,35 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
       props.onRowsChange(displayRows);
     }
   }, [displayRows, props.onRowsChange, debugLog]);
+
+  // Call onGridFunctionsInit callback if provided
+  // Use a ref to track if we've already initialized the grid functions
+  const gridFunctionsInitializedRef = useRef(false);
+  
+  useEffect(() => {
+    // Only initialize once to prevent infinite loops
+    if (props.onGridFunctionsInit && useGraphQLFetching && !gridFunctionsInitializedRef.current) {
+      debugLog('Initializing grid functions');
+      // Ensure all functions are defined before passing them
+      const safeRefetch = refetch || (() => Promise.resolve({ data: null }));
+      const safeResetCursors = resetCursors || (() => {});
+      const safePageInfo = pageInfo || {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      };
+      
+      props.onGridFunctionsInit(
+        safeRefetch,
+        safeResetCursors,
+        safePageInfo
+      );
+      
+      // Mark as initialized
+      gridFunctionsInitializedRef.current = true;
+    }
+  }, [props.onGridFunctionsInit, refetch, resetCursors, pageInfo, useGraphQLFetching, debugLog]);
  
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } =
