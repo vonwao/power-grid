@@ -651,8 +651,11 @@ export function GridFormProvider({
   const addRow = useCallback(() => {
     try {
       // Generate a new ID
-      const maxId = Math.max(...rows.map(row => Number(row.id)), 0);
-      const newId = maxId + 1;
+      const maxId = Math.max(...rows.map(row => {
+        const id = row.id.toString();
+        return id.startsWith('new-') ? 0 : Number(id);
+      }), 0);
+      const newId = `new-${maxId + 1}`;
       
       // Create a new row with default values
       const newRow: any = { id: newId };
