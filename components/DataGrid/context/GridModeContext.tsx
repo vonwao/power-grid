@@ -16,6 +16,8 @@ import { usePagination } from '../hooks/usePagination';
  *
  * The context also manages the interactions between these modes and handles
  * conflicts (e.g., can't select rows while editing).
+ * 
+ * It also provides row deletion functionality when enabled.
  */
 
 // Define the grid mode type
@@ -49,7 +51,6 @@ interface GridModeContextType {
   cancelChanges: () => void;
   addRow: () => void;
   deleteRows: (ids: GridRowId[]) => void; // Function to handle deletion
-
   
   // Capabilities
   canEditRows: boolean;
@@ -85,11 +86,11 @@ interface GridModeProviderProps {
   canAddRows?: boolean;
   canSelectRows?: boolean;
   canDeleteRows?: boolean;
-
-  // Selection model
+  
   // Action handlers from parent
   onDelete?: (ids: GridRowId[]) => void;
-
+  
+  // Selection model
   selectionModel?: any[];
   onSelectionModelChange?: (selectionModel: any[]) => void;
 }
@@ -266,7 +267,7 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
  * - Read the current grid mode
  * - Change the grid mode
  * - Access selection state
- * - Perform actions like save, cancel, add
+ * - Perform actions like save, cancel, add, delete
  *
  * It throws an error if used outside of a GridModeProvider.
  */

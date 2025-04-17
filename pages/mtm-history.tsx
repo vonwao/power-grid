@@ -131,30 +131,6 @@ export default function MTMHistoryPage() {
       }
 
       // Process additions
-  // Handler for deleting selected rows
-  const handleDelete = async (ids: GridRowId[]) => {
-    console.log('Deleting rows with IDs:', ids);
-
-    // Placeholder logic - replace with actual mutation call
-    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
-      return; // Early exit if user cancels
-    }
-
-    try {
-      // Example: await deleteItemsMutation({ variables: { ids } });
-      console.log(`Simulating deletion of ${ids.length} items.`);
-
-      // Refetch data after deleting (important!)
-      // refetch(); 
-
-      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
-    } catch (error) {
-      console.error('Error deleting rows:', error);
-      alert('Error deleting rows. Check console.');
-    }
-  };
-
-
       for (const addition of changes.additions) {
         console.log('Creating item:', addition);
         // Example: await createItemMutation({ variables: { input: { ...addition } } });
@@ -170,6 +146,28 @@ export default function MTMHistoryPage() {
     }
   };
 
+  // Handler for deleting selected rows
+  const handleDelete = async (ids: GridRowId[]) => {
+    console.log('Deleting rows with IDs:', ids);
+
+    // Placeholder logic - replace with actual mutation call
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
+      return; // Early exit if user cancels
+    }
+
+    try {
+      // Example: await deleteItemsMutation({ variables: { ids } });
+      console.log(`Simulating deletion of ${ids.length} items.`);
+
+      // Refetch data after deleting (important!)
+      // refetch();
+
+      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
+    } catch (error) {
+      console.error('Error deleting rows:', error);
+      alert('Error deleting rows. Check console.');
+    }
+  };
 
   return (
     <div className="h-full w-full flex flex-col p-4">

@@ -54,6 +54,7 @@ interface UnifiedDataGridToolbarProps {
   canEditRows?: boolean;
   canAddRows?: boolean; // Removed default value = true
   canSelectRows?: boolean;
+  canDeleteRows?: boolean; // Added for row deletion capability
   // Custom action buttons
   customActionButtons?: React.ReactNode;
 }

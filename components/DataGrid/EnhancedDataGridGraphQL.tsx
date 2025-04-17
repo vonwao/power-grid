@@ -601,6 +601,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
             canEditRows={canEditRows}
             canAddRows={canAddRows}
             canSelectRows={canSelectRows}
+            canDeleteRows={canDeleteRows}
             customActionButtons={props.customActionButtons}
           />
  
