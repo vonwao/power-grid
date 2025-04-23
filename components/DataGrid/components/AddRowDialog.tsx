@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,12 +9,24 @@ import {
   Typography,
   FormHelperText
 } from '@mui/material';
-import { EnhancedColumnConfig } from '../EnhancedDataGridGraphQL';
-import { ValidationResult, FieldValidator } from '../validation/types';
+import { EditCellRenderer } from '../renderers/EditCellRenderer';
+import { EnhancedColumnConfig } from '..//EnhancedDataGridGraphQL';
+// import { ValidationIndicator } from '../components/DataGrid/components/ValidationIndicator';
 
-// Interface for form field errors
-interface FormErrors {
-  [key: string]: string;
+// Mock FormMethods interface - should match your actual interface
+interface FormMethods {
+  formState: {
+    values: Record<string, any>;
+    errors: Record<string, any>;
+    dirtyFields: Record<string, boolean>;
+    isDirty: boolean;
+    isValid: boolean;
+  };
+  getValues: () => Record<string, any>;
+  setValue: (name: string, value: any, options?: any) => void;
+  setError: (name: string, error: any) => void;
+  clearErrors: () => void;
+  trigger: () => Promise<boolean>;
 }
 
 // Interface for the dialog props
@@ -26,7 +38,7 @@ interface AddRowDialogProps {
   validateRow?: (values: any) => Record<string, string>;
 }
 
-// Main Dialog Component
+// AddRowDialog component
 export const AddRowDialog: React.FC<AddRowDialogProps> = ({
   open,
   onClose,
@@ -34,44 +46,50 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
   columns,
   validateRow
 }) => {
-  // Initialize form state based on columns
+  // State to manage form data
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, any>>({});
+  const [dirtyFields, setDirtyFields] = useState<Record<string, boolean>>({});
+  const [currentField, setCurrentField] = useState<string | null>(null);
   
   // Initialize form data when dialog opens
   useEffect(() => {
     if (open) {
       const initialData: Record<string, any> = {};
-      const initialTouched: Record<string, boolean> = {};
       
       // Generate default values for each field based on column config
       columns.forEach(column => {
         if (column.field !== 'id' && column.field !== 'accounting_mtm_history_id') {
-          // Use fieldType's getDefaultValue if available, otherwise use fieldConfig
-          if (column.fieldType && typeof column.fieldType.getDefaultValue === 'function') {
-            initialData[column.field] = column.fieldType.getDefaultValue();
-          } else if (column.fieldConfig) {
-            // Use simpler default value logic based on fieldConfig
-            initialData[column.field] = getDefaultValueFromConfig(column.fieldConfig);
-          } else {
-            // Fallback to empty string
-            initialData[column.field] = '';
-          }
-          
-          // Initialize all fields as untouched
-          initialTouched[column.field] = false;
+          initialData[column.field] = getDefaultValue(column);
         }
       });
       
       setFormData(initialData);
-      setTouched(initialTouched);
       setErrors({});
+      setDirtyFields({});
+      
+      // Set focus to the first editable field
+      const firstEditableField = columns.find(col => 
+        col.field !== 'id' && 
+        col.field !== 'accounting_mtm_history_id' && 
+        col.editable !== false
+      )?.field;
+      
+      if (firstEditableField) {
+        setCurrentField(firstEditableField);
+      }
     }
   }, [open, columns]);
   
-  // Helper function to get default value from fieldConfig
-  const getDefaultValueFromConfig = (fieldConfig: any) => {
+  // Helper to get default value based on column config
+  const getDefaultValue = (column: EnhancedColumnConfig) => {
+    // Use fieldType's getDefaultValue if available
+    if (column.fieldType && typeof column.fieldType.getDefaultValue === 'function') {
+      return column.fieldType.getDefaultValue();
+    }
+    
+    // Otherwise use fieldConfig type
+    const fieldConfig = column.fieldConfig;
     if (!fieldConfig) return '';
     
     switch (fieldConfig.type) {
@@ -92,39 +110,85 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
     }
   };
   
-  // Handle field change
-  const handleFieldChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Mark field as touched
-    if (!touched[field]) {
-      setTouched(prev => ({
-        ...prev,
-        [field]: true
-      }));
-    }
-    
-    // Validate field on change
-    validateField(field, value);
-  };
+  // Mock a form methods object for EditCellRenderer
+  const createFormMethods = useCallback((field: string): FormMethods => {
+    return {
+      formState: {
+        values: formData,
+        errors,
+        dirtyFields,
+        isDirty: Object.keys(dirtyFields).length > 0,
+        isValid: Object.keys(errors).length === 0
+      },
+      getValues: () => formData,
+      setValue: (name, value, options) => {
+        const newFormData = { ...formData, [name]: value };
+        setFormData(newFormData);
+        
+        // Mark field as dirty
+        if (options?.shouldDirty) {
+          setDirtyFields(prev => ({ ...prev, [name]: true }));
+        }
+        
+        // Validate if needed
+        if (options?.shouldValidate) {
+          validateField(name, value);
+        }
+      },
+      setError: (name, error) => {
+        setErrors(prev => ({ ...prev, [name]: error }));
+      },
+      clearErrors: () => {
+        setErrors({});
+      },
+      trigger: async () => {
+        // Validate all fields
+        let isValid = true;
+        
+        for (const field in formData) {
+          const column = columns.find(col => col.field === field);
+          if (column) {
+            const fieldValid = validateField(field, formData[field]);
+            if (!fieldValid) isValid = false;
+          }
+        }
+        
+        // Run row-level validation if provided
+        if (validateRow && isValid) {
+          const rowErrors = validateRow(formData);
+          if (Object.keys(rowErrors).length > 0) {
+            for (const [field, message] of Object.entries(rowErrors)) {
+              setErrors(prev => ({ ...prev, [field]: { type: 'manual', message } }));
+            }
+            isValid = false;
+          }
+        }
+        
+        return isValid;
+      }
+    };
+  }, [formData, errors, dirtyFields, columns, validateRow]);
   
   // Validate a single field
-  const validateField = (field: string, value: any) => {
+  const validateField = (field: string, value: any): boolean => {
     const column = columns.find(col => col.field === field);
-    if (!column) return;
+    if (!column) return true;
     
-    let error: string | undefined = undefined;
+    let isValid = true;
+    let errorMessage = '';
     
     // Use fieldType's validator if available
     if (column.fieldType && column.validator) {
-      const validator = column.validator as FieldValidator;
-      const result: ValidationResult = validator.validate(value);
-      
-      if (!result.valid) {
-        error = result.message;
+      try {
+        const result = column.validator.validate(value);
+        if (!result.valid) {
+          isValid = false;
+          errorMessage = result.message || 'Invalid value';
+        }
+      } catch (err) {
+        console.error(`Error validating field ${field}:`, err);
+        isValid = false;
+        errorMessage = 'Validation error';
       }
     } 
     // Otherwise use fieldConfig validation
@@ -133,7 +197,8 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
       
       // Required validation
       if (validation.required && (value === undefined || value === null || value === '')) {
-        error = typeof validation.required === 'string' 
+        isValid = false;
+        errorMessage = typeof validation.required === 'string' 
           ? validation.required 
           : `${column.headerName} is required`;
       }
@@ -142,7 +207,8 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
       else if (validation.pattern && typeof value === 'string') {
         const { value: pattern, message } = validation.pattern;
         if (!pattern.test(value)) {
-          error = message;
+          isValid = false;
+          errorMessage = message;
         }
       }
       
@@ -150,7 +216,8 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
       else if (validation.min && typeof value === 'number') {
         const { value: min, message } = validation.min;
         if (value < min) {
-          error = message;
+          isValid = false;
+          errorMessage = message;
         }
       }
       
@@ -158,84 +225,83 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
       else if (validation.max && typeof value === 'number') {
         const { value: max, message } = validation.max;
         if (value > max) {
-          error = message;
-        }
-      }
-      
-      // Custom validation function
-      else if (validation.validate && typeof validation.validate === 'function') {
-        const result = validation.validate(value);
-        if (typeof result === 'string') {
-          error = result;
-        } else if (result === false) {
-          error = 'Invalid value';
+          isValid = false;
+          errorMessage = message;
         }
       }
     }
     
     // Update errors state
-    setErrors(prev => {
-      if (error) {
-        return { ...prev, [field]: error };
-      } else {
+    if (!isValid) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [field]: { 
+          type: 'validation', 
+          message: errorMessage 
+        } 
+      }));
+    } else {
+      setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
-      }
-    });
-  };
-  
-  // Validate form before saving
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    
-    // Mark all fields as touched
-    const allTouched: Record<string, boolean> = {};
-    Object.keys(formData).forEach(field => {
-      allTouched[field] = true;
-    });
-    setTouched(allTouched);
-    
-    // Validate each field
-    columns.forEach(column => {
-      if (column.field !== 'id' && column.field !== 'accounting_mtm_history_id') {
-        const value = formData[column.field];
-        
-        // Use fieldType's validator if available
-        if (column.fieldType && column.validator) {
-          const validator = column.validator as FieldValidator;
-          const result: ValidationResult = validator.validate(value);
-          
-          if (!result.valid) {
-            newErrors[column.field] = result.message || 'Invalid value';
-          }
-        } 
-        // Otherwise use fieldConfig validation
-        else if (column.fieldConfig?.validation) {
-          validateField(column.field, value);
-          if (errors[column.field]) {
-            newErrors[column.field] = errors[column.field];
-          }
-        }
-      }
-    });
-    
-    // Row-level validation if provided
-    if (validateRow) {
-      const rowErrors = validateRow(formData);
-      Object.assign(newErrors, rowErrors);
+      });
     }
     
-    // Update error state
-    setErrors(newErrors);
+    return isValid;
+  };
+  
+  // Update a field value
+  const updateFieldValue = useCallback((field: string, value: any) => {
+    setFormData(prev => {
+      // Check if value has actually changed
+      if (JSON.stringify(prev[field]) === JSON.stringify(value)) {
+        return prev;
+      }
+      
+      const newFormData = { ...prev, [field]: value };
+      
+      // Mark as dirty
+      setDirtyFields(prevDirty => ({ ...prevDirty, [field]: true }));
+      
+      // Validate the field
+      validateField(field, value);
+      
+      return newFormData;
+    });
+  }, []);
+  
+  // Validate the entire form
+  const validateForm = async (): Promise<boolean> => {
+    let isValid = true;
     
-    // Form is valid if there are no errors
-    return Object.keys(newErrors).length === 0;
+    // Validate each field
+    for (const field in formData) {
+      const column = columns.find(col => col.field === field);
+      if (column) {
+        const fieldValid = validateField(field, formData[field]);
+        if (!fieldValid) isValid = false;
+      }
+    }
+    
+    // Run row-level validation if provided
+    if (validateRow && isValid) {
+      const rowErrors = validateRow(formData);
+      if (Object.keys(rowErrors).length > 0) {
+        for (const [field, message] of Object.entries(rowErrors)) {
+          setErrors(prev => ({ ...prev, [field]: { type: 'manual', message } }));
+        }
+        isValid = false;
+      }
+    }
+    
+    return isValid;
   };
   
   // Handle save button click
-  const handleSave = () => {
-    if (validateForm()) {
+  const handleSave = async () => {
+    const isValid = await validateForm();
+    if (isValid) {
       // Generate a new ID
       const newId = `new-${Date.now()}`;
       
@@ -252,7 +318,7 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
         }
       });
       
-      // Create the row data with generated ID and parsed values
+      // Create the row data with generated ID
       const rowData = {
         id: newId,
         accounting_mtm_history_id: newId,
@@ -267,6 +333,22 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
     }
   };
   
+  // Mock the grid API for EditCellRenderer
+  const mockGridApi = {
+    getCellMode: () => 'edit',
+    setCellMode: () => {},
+    stopCellEditMode: () => {},
+    forceUpdate: () => {}
+  };
+  
+  // Mock the GridForm context functions
+  const mockGridFormFunctions = {
+    getFormMethods: (id: string) => createFormMethods(currentField || ''),
+    updateCellValue: updateFieldValue,
+    startEditingRow: () => {},
+    isCompact: false
+  };
+  
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Add New Record</DialogTitle>
@@ -278,68 +360,31 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
               column.field !== 'accounting_mtm_history_id' &&
               column.editable !== false
             )
-            .map(column => {
-              // Get current value and error for this field
-              const value = formData[column.field];
-              const error = touched[column.field] ? errors[column.field] : undefined;
-              
-              // Render field using fieldType's renderEditMode if available
-              if (column.fieldType && typeof column.fieldType.renderEditMode === 'function') {
-                return (
-                  <Box key={column.field} sx={{ my: 2 }}>
-                    <Typography variant="body2" component="div" sx={{ mb: 1 }}>
-                      {column.headerName}
-                    </Typography>
-                    {column.fieldType.renderEditMode({
-                      value,
-                      onChange: (newValue) => handleFieldChange(column.field, newValue),
-                      onBlur: () => {
-                        setTouched(prev => ({ ...prev, [column.field]: true }));
-                        validateField(column.field, value);
-                      },
-                      autoFocus: false,
-                      error: !!error,
-                      helperText: error,
-                      id: `add-dialog-${column.field}`,
-                      row: formData
-                    })}
-                    {error && (
-                      <FormHelperText error>{error}</FormHelperText>
-                    )}
-                  </Box>
-                );
-              }
-              
-              // Otherwise use fieldConfig-based rendering from the original component
-              else if (column.fieldConfig) {
-                // Import the FieldRenderer component or inline its logic here
-                // Since this is part of an artifact, I'll implement a simplified version
-                return (
-                  <Box key={column.field} sx={{ my: 2 }}>
-                    <Typography variant="body2" component="div" sx={{ mb: 1 }}>
-                      {column.headerName}
-                    </Typography>
-                    
-                    {/* This is a placeholder for the actual field rendering */}
-                    {/* In a real implementation, you would render different input types based on fieldConfig.type */}
-                    <div style={{ color: error ? 'red' : 'inherit' }}>
-                      {/* This is where your existing field rendering logic would go */}
-                      <div>Field renderer for {column.headerName} ({column.fieldConfig.type})</div>
-                      {error && <div style={{ color: 'red' }}>{error}</div>}
-                    </div>
-                  </Box>
-                );
-              }
-              
-              // Fallback for columns without fieldType or fieldConfig
-              return (
-                <Box key={column.field} sx={{ my: 2 }}>
-                  <Typography>
-                    {column.headerName} (No renderer available)
-                  </Typography>
-                </Box>
-              );
-            })}
+            .map(column => (
+              <Box key={column.field} sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  {column.headerName}
+                </Typography>
+                
+                {/* Use EditCellRenderer with mock context */}
+                <EditCellRendererAdapter
+                  column={column}
+                  value={formData[column.field]}
+                  onChange={(newValue) => updateFieldValue(column.field, newValue)}
+                  formMethods={createFormMethods(column.field)}
+                  updateCellValue={updateFieldValue}
+                  id={`new-row`}
+                  field={column.field}
+                  isCompact={false}
+                />
+                
+                {errors[column.field] && (
+                  <FormHelperText error>
+                    {errors[column.field].message}
+                  </FormHelperText>
+                )}
+              </Box>
+            ))}
         </Box>
       </DialogContent>
       <DialogActions>
@@ -351,5 +396,64 @@ export const AddRowDialog: React.FC<AddRowDialogProps> = ({
         </Button>
       </DialogActions>
     </Dialog>
+  );
+};
+
+// Adapter component to bridge between dialog state and EditCellRenderer
+interface EditCellRendererAdapterProps {
+  column: EnhancedColumnConfig;
+  value: any;
+  onChange: (value: any) => void;
+  formMethods: FormMethods;
+  updateCellValue: (field: string, value: any) => void;
+  id: string;
+  field: string;
+  isCompact: boolean;
+}
+
+const EditCellRendererAdapter: React.FC<EditCellRendererAdapterProps> = ({
+  column,
+  value,
+  onChange,
+  formMethods,
+  updateCellValue,
+  id,
+  field,
+  isCompact
+}) => {
+  // Create mock GridForm context with the functions EditCellRenderer expects
+  const GridFormContext = React.createContext<any>(null);
+  
+  // Create mock params that EditCellRenderer expects
+  const mockParams = {
+    id,
+    field,
+    value,
+    row: { [field]: value },
+    api: {
+      getCellMode: () => 'edit',
+      setCellMode: () => {},
+      stopCellEditMode: () => {},
+      forceUpdate: () => {}
+    },
+    colDef: column
+  };
+  
+  return (
+    <GridFormContext.Provider
+      value={{
+        getFormMethods: () => formMethods,
+        updateCellValue: (id: string, field: string, value: any) => {
+          onChange(value);
+        },
+        startEditingRow: () => {},
+        isCompact
+      }}
+    >
+      <EditCellRenderer
+        params={mockParams as any}
+        column={column}
+      />
+    </GridFormContext.Provider>
   );
 };
