@@ -394,6 +394,10 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
     
+    // Track filter model and panel state
+    const [localFilterModel, setLocalFilterModel] = useState<GridFilterModel>({ items: [] });
+    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+    
     // Use a ref to track if the filter panel is open
     const filterPanelOpenRef = useRef(false);
  
@@ -529,10 +533,14 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         }}
         // Filter model change handler
         onFilterModelChange={(model) => {
+          console.log('Filter model changing to:', model);
+          setLocalFilterModel(model);
+          
           if (useGraphQLFetching) {
-            // Only process if the panel is open or if filters are being applied
-            if (filterPanelOpenRef.current || model.items.some(item => item.value)) {
-              debugLog('Filter model changed:', model);
+            // Only process if we have valid filters with actual values
+            // This prevents closing the panel when typing
+            if (model.items.some(item => item.value && item.value.toString().length > 0)) {
+              debugLog('Filter model changed with valid values:', model);
               const filterModel: Record<string, any> = {};
    
               // Process each filter item and capture all relevant information
@@ -548,18 +556,22 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
    
               debugLog('Setting filter model:', filterModel);
               
-              // Delay filter application to prevent UI flicker
-              setTimeout(() => {
+              // Use debounce to prevent rapid filter changes during typing
+              const timer = setTimeout(() => {
+                console.log('Applying filter after debounce:', filterModel);
                 setFilterModel(filterModel);
    
                 // Reset to page 0 when filtering changes
                 if (currentPage !== 0) {
                   handlePageChange(0);
                 }
-              }, 0);
+              }, 300); // 300ms debounce
+              
+              return () => clearTimeout(timer);
             }
           }
         }}
+        filterModel={localFilterModel}
         // Row selection
         checkboxSelection={checkboxSelection && canSelectRows}
         rowSelectionModel={selectionModel}
@@ -579,18 +591,34 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
             </div>
           ),
           filterPanel: (props) => {
-            // Mark when filter panel opens
-            useEffect(() => {
-              filterPanelOpenRef.current = true;
-              return () => {
-                // Slight delay to prevent flickering during transitions
-                setTimeout(() => {
-                  filterPanelOpenRef.current = false;
-                }, 100);
-              };
-            }, []);
+            // Create a custom filter panel component that prevents auto-closing
+            const CustomFilterPanel = () => {
+              // Mark when filter panel opens
+              useEffect(() => {
+                console.log('Filter panel opened');
+                filterPanelOpenRef.current = true;
+                setIsFilterPanelOpen(true);
+                
+                // Cleanup function when component unmounts
+                return () => {
+                  console.log('Filter panel closed');
+                  setTimeout(() => {
+                    filterPanelOpenRef.current = false;
+                    setIsFilterPanelOpen(false);
+                  }, 100);
+                };
+              }, []);
+              
+              return (
+                <div className="custom-filter-panel">
+                  <GridFilterPanel
+                    {...props}
+                  />
+                </div>
+              );
+            };
             
-            return <GridFilterPanel {...props} />;
+            return <CustomFilterPanel />;
           }
         }}
         sx={{

@@ -653,12 +653,14 @@ export function GridFormProvider({
     try {
       // Generate a new ID with timestamp for better uniqueness
       const newId = `new-${Date.now()}`;
+      console.log('Generated new ID:', newId);
       
       // Create a new row with default values
       const newRow: any = { id: newId };
       
       // Add default values for each column
       columns.forEach(column => {
+        console.log(`Setting default for ${column.field}`);
         if (column.fieldConfig?.type === 'select' && column.fieldConfig.options && column.fieldConfig.options.length > 0) {
           // For select fields, use the first option as default
           newRow[column.field] = column.fieldConfig.options[0].value;
@@ -677,55 +679,59 @@ export function GridFormProvider({
         }
       });
       
+      console.log('New row created:', newRow);
+      
       // Create form instance and setup references
       const formMethods = createFormInstance(newRow, columns);
       formInstancesRef.current.set(newId, formMethods);
+      console.log('Form instance created and stored');
+      
       addedRowsRef.current.add(newId);
+      console.log('Row marked as added');
       
-      // Batch state updates to reduce re-renders
-      const batchUpdates = () => {
-        // Update editing state
-        setEditingRows(prev => {
-          const next = new Set(prev);
-          next.add(newId);
-          return next;
-        });
-        
-        // Set current cell
-        const firstEditableField = columns.find(col => col.editable)?.field || columns[0].field;
-        setCurrentCell({ rowId: newId, field: firstEditableField });
-        
-        // Add the row to the grid
-        console.log('GridFormContext: Adding new row to grid with ID:', newId);
-        setRows(prev => {
-          const newRows = [newRow, ...prev];
-          console.log('GridFormContext: Updated rows:', newRows);
-          return newRows;
-        });
-        
-        // Track changes
-        setPendingChanges(prev => {
-          const newChanges = new Map(prev);
-          const rowChanges: Record<string, any> = {};
-          
-          // Add all fields to changes
-          Object.keys(newRow).forEach(field => {
-            if (field !== 'id') {
-              rowChanges[field] = newRow[field];
-            }
-          });
-          
-          newChanges.set(newId, rowChanges);
-          return newChanges;
-        });
-      };
+      // CRITICAL: Add the row to the grid FIRST before other state updates
+      console.log('Current rows before update:', rows);
+      setRows(prev => {
+        const newRows = [newRow, ...prev];
+        console.log('GridFormContext: Updated rows:', newRows);
+        return newRows;
+      });
       
-      // Use setTimeout to batch updates
-      setTimeout(batchUpdates, 0);
+      // Update editing state
+      setEditingRows(prev => {
+        const next = new Set(prev);
+        next.add(newId);
+        console.log('Editing rows updated:', Array.from(next));
+        return next;
+      });
+      
+      // Set current cell
+      const firstEditableField = columns.find(col => col.editable !== false)?.field || columns[0].field;
+      setCurrentCell({ rowId: newId, field: firstEditableField });
+      console.log('Current cell set to:', { rowId: newId, field: firstEditableField });
+      
+      // Track changes
+      setPendingChanges(prev => {
+        const newChanges = new Map(prev);
+        const rowChanges: Record<string, any> = {};
+        
+        // Add all fields to changes
+        Object.keys(newRow).forEach(field => {
+          if (field !== 'id') {
+            rowChanges[field] = newRow[field];
+          }
+        });
+        
+        newChanges.set(newId, rowChanges);
+        console.log('Pending changes updated:', Array.from(newChanges.entries()));
+        return newChanges;
+      });
+      
+      console.log('Add row process completed');
     } catch (error) {
       console.error('Error adding new row:', error);
     }
-  }, [columns]);
+  }, [columns, rows]);
   
   // Check if there are any validation errors
   const hasValidationErrors = React.useMemo(() => {
