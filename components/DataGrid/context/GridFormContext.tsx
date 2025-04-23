@@ -649,6 +649,7 @@ export function GridFormProvider({
   
   // Add a new row
   const addRow = useCallback(() => {
+    console.log('GridFormContext: addRow called');
     try {
       // Generate a new ID
       const maxId = Math.max(...rows.map(row => {
@@ -700,7 +701,13 @@ export function GridFormProvider({
       setCurrentCell({ rowId: newId, field: firstEditableField });
       
       // Add the row to the grid
-      setRows(prev => [newRow, ...prev]);
+      console.log('GridFormContext: Adding new row to grid with ID:', newId);
+      console.log('GridFormContext: New row data:', newRow);
+      setRows(prev => {
+        const newRows = [newRow, ...prev];
+        console.log('GridFormContext: Updated rows:', newRows);
+        return newRows;
+      });
       
       // Mark all fields as dirty in pendingChanges
       setPendingChanges(prev => {

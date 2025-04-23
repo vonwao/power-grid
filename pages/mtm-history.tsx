@@ -134,9 +134,11 @@ const sampleMTMHistory = [
 export default function MTMHistoryPage() {
   // State for grid
   const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
-  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false); // Set to false by default for testing
   // Use a ref to store the refetch function to avoid re-renders
   const refetchDataRef = useRef<() => Promise<any>>(() => Promise.resolve({ data: null }));
+  // State for client-side rows
+  const [clientRows, setClientRows] = useState(sampleMTMHistory);
   
   // Helper function to call the refetch function
   const refetchData = useCallback(() => {
@@ -156,6 +158,28 @@ export default function MTMHistoryPage() {
   ) => {
     console.log('Grid functions initialized');
     refetchDataRef.current = refetch;
+  };
+  
+  // Function to handle adding a row directly
+  const handleAddRow = () => {
+    console.log('MTMHistoryPage: handleAddRow called');
+    if (!useGraphQLFetching) {
+      // Generate a new ID for the client-side row
+      const newId = `new-${Date.now()}`;
+      
+      // Create a new row with default values
+      const newRow = {
+        id: newId,
+        accounting_mtm_history_id: newId,
+        adj_description: '',
+        commodity: '',
+        deal_volume: 0
+      };
+      
+      // Add the row to the client-side rows
+      setClientRows(prev => [newRow, ...prev]);
+      console.log('MTMHistoryPage: Added new row with ID:', newId);
+    }
   };
   
   // Row-level validation function
@@ -184,16 +208,38 @@ export default function MTMHistoryPage() {
       for (const edit of changes.edits) {
         console.log('Updating item:', edit.id, edit);
         // Example: await updateItemMutation({ variables: { input: { id: edit.id, ...edit } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          setClientRows(prev =>
+            prev.map(row => row.id === edit.id ? { ...row, ...edit.changes } : row)
+          );
+        }
       }
 
       // Process additions
       for (const addition of changes.additions) {
         console.log('Creating item:', addition);
         // Example: await createItemMutation({ variables: { input: { ...addition } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          // Generate a new ID for the client-side row
+          const newId = `MTM-${Date.now()}`;
+          const newRow = {
+            ...addition,
+            id: newId,
+            accounting_mtm_history_id: newId
+          };
+          
+          setClientRows(prev => [newRow, ...prev]);
+        }
       }
 
       // Refetch data after saving
-      refetchData();
+      if (useGraphQLFetching) {
+        refetchData();
+      }
 
       alert('Changes saved (simulated). Check console.');
     } catch (error) {
@@ -215,8 +261,13 @@ export default function MTMHistoryPage() {
       // Example: await deleteItemsMutation({ variables: { ids } });
       console.log(`Simulating deletion of ${ids.length} items.`);
 
-      // Refetch data after deleting
-      refetchData();
+      // Update client-side rows
+      if (!useGraphQLFetching) {
+        setClientRows(prev => prev.filter(row => !ids.includes(row.id)));
+      } else {
+        // Refetch data after deleting
+        refetchData();
+      }
 
       alert(`${ids.length} row(s) deleted (simulated). Check console.`);
     } catch (error) {
@@ -229,7 +280,7 @@ export default function MTMHistoryPage() {
     <div className="h-full w-full flex flex-col p-4">
       <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
       
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <label className="flex items-center">
           <input
             type="checkbox"
@@ -239,13 +290,23 @@ export default function MTMHistoryPage() {
           />
           Use GraphQL Fetching
         </label>
+        
+        {/* Custom Add Button */}
+        {!useGraphQLFetching && (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleAddRow}
+          >
+            Add Row Directly
+          </button>
+        )}
       </div>
       
       {/* Data Grid */}
       <Paper elevation={0} className="flex-grow w-full overflow-auto">
         <EnhancedDataGridGraphQL
           columns={mtmHistoryColumns}
-          rows={sampleMTMHistory} // Used as fallback when not using GraphQL
+          rows={clientRows} // Use state variable instead of static array
           
           // GraphQL options
           useGraphQL={useGraphQLFetching}

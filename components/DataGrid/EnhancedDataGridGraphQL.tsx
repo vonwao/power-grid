@@ -252,6 +252,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     debugLog(
       `Using ${useGraphQLFetching ? 'GraphQL' : 'client'} data with ${displayedRows.length} rows`
     );
+    console.log('EnhancedDataGridGraphQL: displayRows updated:', displayedRows);
     return displayedRows;
   }, [useGraphQLFetching, graphQLRows, rows]);
  
@@ -456,6 +457,9 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         apiRef={apiRef}
         rows={displayRows}
         columns={gridColumns}
+        onStateChange={(state) => {
+          console.log('DataGrid: state changed', state);
+        }}
         autoHeight={autoHeight}
         density={density}
         disableColumnFilter={

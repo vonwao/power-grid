@@ -134,13 +134,17 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
 
   // Handle add button click
   const handleAddClick = () => {
+    console.log('Add button clicked');
     if (selectionModel.length > 1) {
+      console.log('Multiple rows selected, showing confirmation dialog');
       setConfirmationDialogOpen(true);
       setTargetMode('add');
       return;
     }
     
+    console.log('Calling addRow function');
     addRow();
+    console.log('addRow function called');
   };
 
   // Handle save button click

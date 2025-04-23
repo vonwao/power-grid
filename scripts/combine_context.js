@@ -59,15 +59,6 @@ function countTokens(text) {
 // Main function to combine files
 function combineFiles() {
   let combinedContent = `
-COMBINED CONTEXT FOR DEBUGGING "Too many re-renders" ISSUE
-==========================================================================
-
-This file contains the combined content of all relevant files related to the
-"Too many re-renders" issue in the mtm-history.tsx page and EnhancedDataGridGraphQL component.
-
-The issue occurs when using the EnhancedDataGridGraphQL component with the following error:
-"Error: Too many re-renders. React limits the number of renders to prevent an infinite loop."
-
 Files included:
 ${relevantFiles.map(file => `- ${file}`).join('\n')}
 

@@ -1,13 +1,4 @@
 
-COMBINED CONTEXT FOR DEBUGGING "Too many re-renders" ISSUE
-==========================================================================
-
-This file contains the combined content of all relevant files related to the
-"Too many re-renders" issue in the mtm-history.tsx page and EnhancedDataGridGraphQL component.
-
-The issue occurs when using the EnhancedDataGridGraphQL component with the following error:
-"Error: Too many re-renders. React limits the number of renders to prevent an infinite loop."
-
 Files included:
 - pages/mtm-history.tsx
 - components/DataGrid/EnhancedDataGridGraphQL.tsx
@@ -28,7 +19,7 @@ Files included:
 FILE: /Users/ottwacht/code/grid_test/my-app/pages/mtm-history.tsx
 ==========================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
 import { Paper } from '@mui/material';
 import { gql } from '@apollo/client';
@@ -64,31 +55,82 @@ const GET_MTM_HISTORY = gql`
   }
 `;
 
+// Placeholder GraphQL Mutations (Replace with actual mutations)
+const UPDATE_MTM_HISTORY_ITEM = gql`
+  mutation UpdateMtmHistoryItem($input: UpdateMtmHistoryItemInput!) {
+    updateMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after update
+    }
+  }
+`;
+
+const CREATE_MTM_HISTORY_ITEM = gql`
+  mutation CreateMtmHistoryItem($input: CreateMtmHistoryItemInput!) {
+    createMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after creation
+    }
+  }
+`;
+
+const DELETE_MTM_HISTORY_ITEMS = gql`
+  mutation DeleteMtmHistoryItems($ids: [ID!]!) {
+    deleteMtmHistoryItems(ids: $ids) {
+      success
+      deletedCount
+    }
+  }
+`;
+
+
 // Define columns
 const mtmHistoryColumns: EnhancedColumnConfig[] = [
   {
     field: 'accounting_mtm_history_id',
     headerName: 'ID',
     width: 120,
-    fieldConfig: { type: 'string' as const },
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'ID is required'
+      }
+    },
   },
   {
     field: 'adj_description',
     headerName: 'Description',
     width: 200,
-    fieldConfig: { type: 'string' as const },
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Description is required'
+      }
+    },
   },
   {
     field: 'commodity',
     headerName: 'Commodity',
     width: 150,
-    fieldConfig: { type: 'string' as const },
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Commodity is required'
+      }
+    },
   },
   {
     field: 'deal_volume',
     headerName: 'Deal Volume',
     width: 150,
-    fieldConfig: { type: 'number' as const },
+    fieldConfig: {
+      type: 'number' as const,
+      validation: {
+        required: 'Deal Volume is required',
+        min: {
+          value: 0,
+          message: 'Deal Volume must be a positive number'
+        }
+      }
+    },
   },
 ];
 
@@ -113,18 +155,153 @@ const sampleMTMHistory = [
 export default function MTMHistoryPage() {
   // State for grid
   const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
-  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true); 
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false); // Set to false by default for testing
+  // Use a ref to store the refetch function to avoid re-renders
+  const refetchDataRef = useRef<() => Promise<any>>(() => Promise.resolve({ data: null }));
+  // State for client-side rows
+  const [clientRows, setClientRows] = useState(sampleMTMHistory);
+  
+  // Helper function to call the refetch function
+  const refetchData = useCallback(() => {
+    return refetchDataRef.current();
+  }, []);
   
   // Handler for selection changes
   const handleSelectionChange = (newSelection: GridRowId[]) => {
     setSelectionModel(newSelection);
   };
   
+  // Handler for grid functions initialization
+  const handleGridFunctionsInit = (
+    refetch: () => Promise<any>,
+    resetCursors: () => void,
+    pageInfo: any
+  ) => {
+    console.log('Grid functions initialized');
+    refetchDataRef.current = refetch;
+  };
+  
+  // Function to handle adding a row directly
+  const handleAddRow = () => {
+    console.log('MTMHistoryPage: handleAddRow called');
+    if (!useGraphQLFetching) {
+      // Generate a new ID for the client-side row
+      const newId = `new-${Date.now()}`;
+      
+      // Create a new row with default values
+      const newRow = {
+        id: newId,
+        accounting_mtm_history_id: newId,
+        adj_description: '',
+        commodity: '',
+        deal_volume: 0
+      };
+      
+      // Add the row to the client-side rows
+      setClientRows(prev => [newRow, ...prev]);
+      console.log('MTMHistoryPage: Added new row with ID:', newId);
+    }
+  };
+  
+  // Row-level validation function
+  const validateMtmHistoryRow = (values: any, helpers: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Check if deal_volume is a positive number
+    if (values.deal_volume !== undefined && values.deal_volume !== null) {
+      if (isNaN(values.deal_volume) || values.deal_volume < 0) {
+        errors.deal_volume = 'Deal Volume must be a positive number';
+      }
+    }
+    
+    // Additional custom validations can be added here
+    
+    return errors;
+  };
+  
+  // Handler for saving changes (edits and additions)
+  const handleSave = async (changes: { edits: any[]; additions: any[] }) => {
+    console.log('Saving changes:', changes);
+
+    // Placeholder logic - replace with actual mutation calls
+    try {
+      // Process edits
+      for (const edit of changes.edits) {
+        console.log('Updating item:', edit.id, edit);
+        // Example: await updateItemMutation({ variables: { input: { id: edit.id, ...edit } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          setClientRows(prev =>
+            prev.map(row => row.id === edit.id ? { ...row, ...edit.changes } : row)
+          );
+        }
+      }
+
+      // Process additions
+      for (const addition of changes.additions) {
+        console.log('Creating item:', addition);
+        // Example: await createItemMutation({ variables: { input: { ...addition } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          // Generate a new ID for the client-side row
+          const newId = `MTM-${Date.now()}`;
+          const newRow = {
+            ...addition,
+            id: newId,
+            accounting_mtm_history_id: newId
+          };
+          
+          setClientRows(prev => [newRow, ...prev]);
+        }
+      }
+
+      // Refetch data after saving
+      if (useGraphQLFetching) {
+        refetchData();
+      }
+
+      alert('Changes saved (simulated). Check console.');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Error saving changes. Check console.');
+    }
+  };
+
+  // Handler for deleting selected rows
+  const handleDelete = async (ids: GridRowId[]) => {
+    console.log('Deleting rows with IDs:', ids);
+
+    // Placeholder logic - replace with actual mutation call
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
+      return; // Early exit if user cancels
+    }
+
+    try {
+      // Example: await deleteItemsMutation({ variables: { ids } });
+      console.log(`Simulating deletion of ${ids.length} items.`);
+
+      // Update client-side rows
+      if (!useGraphQLFetching) {
+        setClientRows(prev => prev.filter(row => !ids.includes(row.id)));
+      } else {
+        // Refetch data after deleting
+        refetchData();
+      }
+
+      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
+    } catch (error) {
+      console.error('Error deleting rows:', error);
+      alert('Error deleting rows. Check console.');
+    }
+  };
+
   return (
     <div className="h-full w-full flex flex-col p-4">
       <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
       
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <label className="flex items-center">
           <input
             type="checkbox"
@@ -134,13 +311,23 @@ export default function MTMHistoryPage() {
           />
           Use GraphQL Fetching
         </label>
+        
+        {/* Custom Add Button */}
+        {!useGraphQLFetching && (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleAddRow}
+          >
+            Add Row Directly
+          </button>
+        )}
       </div>
       
       {/* Data Grid */}
       <Paper elevation={0} className="flex-grow w-full overflow-auto">
         <EnhancedDataGridGraphQL
           columns={mtmHistoryColumns}
-          rows={sampleMTMHistory} // Used as fallback when not using GraphQL
+          rows={clientRows} // Use state variable instead of static array
           
           // GraphQL options
           useGraphQL={useGraphQLFetching}
@@ -148,22 +335,34 @@ export default function MTMHistoryPage() {
           // No need to pass variables, let the hook handle it
           paginationStyle="cursor" // Use cursor-based pagination
           
+          // Grid functions initialization
+          onGridFunctionsInit={handleGridFunctionsInit}
+          
+          // Validation
+          validateRow={validateMtmHistoryRow}
+          
           // Selection options
           checkboxSelection={true}
           selectionModel={selectionModel}
           onSelectionModelChange={handleSelectionChange}
           
           // Grid capabilities
-          canEditRows={false}
-          canAddRows={false}
+          canEditRows={true}
+          canAddRows={true}
           canSelectRows={true}
+          canDeleteRows={true} // Enable deletion
           
           // UI options
           density="standard"
           disableSelectionOnClick={true}
           pageSize={25}
           rowsPerPageOptions={[10, 25, 50, 100]}
-        />
+          
+          // Save handler
+          onSave={handleSave}
+          // Delete handler
+          onDelete={handleDelete}
+         />
       </Paper>
     </div>
   );
@@ -174,7 +373,7 @@ export default function MTMHistoryPage() {
 FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/EnhancedDataGridGraphQL.tsx
 ==========================================================================
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -184,84 +383,95 @@ import {
   GridValueSetter,
   useGridApiRef,
   GridRenderCellParams,
-  GridRowSelectionModel as _GridRowSelectionModel,
-  GridCallbackDetails as _GridCallbackDetails,
 } from '@mui/x-data-grid';
 import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
 import { EditCellRenderer } from './renderers/EditCellRenderer';
-import { GridFormProvider, useGridForm, ValidationHelpers } from './context/GridFormContext';
+import {
+  GridFormProvider,
+  useGridForm,
+  ValidationHelpers,
+} from './context/GridFormContext';
 import { CellEditHandler, UnifiedDataGridToolbar } from './components';
 import { SelectFieldType } from './fieldTypes/SelectField';
-import { useGridNavigation, useRelayGraphQLData, useSelectionModel } from './hooks';
+import { useGridNavigation, useGraphQLData, useSelectionModel } from './hooks';
 import { GridModeProvider, useGridMode } from './context/GridModeContext';
 import { ServerSideResult } from './types/serverSide';
-
+ 
 // Field configuration for React Hook Form integration
 export interface FieldConfig<T = any> {
   // Basic properties
   type: 'string' | 'number' | 'date' | 'boolean' | 'select';
-  
+ 
   // For select fields
-  options?: Array<{value: any, label: string}>;
-  
+  options?: Array<{ value: any; label: string }>;
+ 
   // Rendering (optional - can use defaults)
   renderViewMode?: (_value: T | null, _row: any) => React.ReactNode;
   renderEditMode?: (_props: any) => React.ReactNode;
-  
+ 
   // Validation
   validation?: ValidationOptions;
-  
+ 
   // Transform functions (optional)
   parse?: (_value: any) => T | null;
   format?: (_value: T | null) => string;
 }
-
+ 
 // Enhanced column configuration
-export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
+export interface EnhancedColumnConfig<T = any>
+  extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
   // Field configuration for React Hook Form
   fieldConfig: FieldConfig<T>;
-  
+ 
   // Legacy field type (for backward compatibility)
   fieldType?: any;
-  
+ 
   // Legacy validation (for backward compatibility)
   required?: boolean;
   validationRules?: any[];
   validator?: any;
-  
+ 
   // Value accessors
   valueGetter?: GridValueGetter;
   valueSetter?: GridValueSetter;
 }
+ 
 export interface EnhancedDataGridGraphQLProps<T = any> {
   columns: EnhancedColumnConfig[];
   rows: T[];
-  onSave?: (_changes: { edits: any[], additions: any[] }) => void;
-  validateRow?: (_values: any, _helpers: ValidationHelpers) => Record<string, string> | Promise<Record<string, string>>;
-  
+  onSave?: (_changes: { edits: any[]; additions: any[] }) => void;
+  validateRow?: (
+    _values: any,
+    _helpers: ValidationHelpers
+  ) => Record<string, string> | Promise<Record<string, string>>;
+ 
   // GraphQL options
   useGraphQL?: boolean;
   forceClientSide?: boolean; // Escape hatch - not recommended for large datasets
   query?: DocumentNode; // New prop for GraphQL query
   variables?: Record<string, any>;
   paginationStyle?: 'offset' | 'cursor'; // Pagination style: offset (default) or cursor (Relay)
-  
+ 
   // Selection options
   checkboxSelection?: boolean;
   selectionModel?: any[];
   onSelectionModelChange?: (_selectionModel: any[]) => void;
   disableMultipleSelection?: boolean;
-  
+ 
   // Grid capabilities
   canEditRows?: boolean;
   canAddRows?: boolean;
   canSelectRows?: boolean;
-  
+  canDeleteRows?: boolean;
+
+ 
+  onDelete?: (ids: GridRowId[]) => void; // Callback for row deletion
+
   // Custom components
   customActionButtons?: React.ReactNode;
-  
+ 
   // UI options
   className?: string;
   autoHeight?: boolean;
@@ -281,12 +491,19 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   hideFooterPagination?: boolean;
   hideFooterSelectedRowCount?: boolean;
   rowHeight?: number; // Custom row height in pixels
-  
+ 
   // Testing and debugging props
   onPageChange?: (page: number) => void; // Callback for page changes
   onRowsChange?: (rows: T[]) => void; // Callback for rows changes
+ 
+  // New callback to get grid functions
+  onGridFunctionsInit?: (
+    refetch: () => Promise<any>,
+    resetCursors: () => void,
+    pageInfo: any
+  ) => void;
 }
-
+ 
 export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   columns,
   rows,
@@ -297,7 +514,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   forceClientSide = false,
   query,
   variables,
-  paginationStyle = 'offset',
   // Selection options
   checkboxSelection = false,
   selectionModel: initialSelectionModel,
@@ -307,6 +523,8 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   canEditRows = true,
   canAddRows = true,
   canSelectRows = true,
+  canDeleteRows = false, // Default to false
+  onDelete,
   // UI options
   className,
   autoHeight,
@@ -327,28 +545,49 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   rowHeight,
   ...props
 }: EnhancedDataGridGraphQLProps<T>) {
-
-  // In EnhancedDataGridGraphQL component, add near the top:
-console.log("EnhancedDataGridGraphQL rendering", { 
-  useGraphQL, 
-  forceClientSide, 
-  selectionModel: initialSelectionModel?.length 
-});
-
-// In useRelayGraphQLData hook, add:
-console.log("useRelayGraphQLData running with variables:", variables);
-
+  // Debug logging
+  const debugLog = (message: string, ...args: any[]) => {
+    console.log(`📊 [EnhancedDataGridGraphQL] ${message}`, ...args);
+  };
+ 
+  // Track render count for debugging
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
+ 
+  debugLog(`Rendering (count: ${renderCountRef.current}) with props:`, {
+    useGraphQL,
+    forceClientSide,
+    selectionModel: initialSelectionModel?.length,
+    // rows: rows.length
+  });
+ 
   const apiRef = useGridApiRef();
-  
+ 
   // Use GraphQL data if enabled and not forcing client-side
-  const useGraphQLFetching = useMemo(() => 
-    useGraphQL && !forceClientSide, 
+  const useGraphQLFetching = useMemo(
+    () => useGraphQL && !forceClientSide,
     [useGraphQL, forceClientSide]
   );
-
-  // Determine which hook to use based on pagination style
-  const isRelayCursorPagination = paginationStyle === 'cursor';
-  
+ 
+  // Track the current page for controlled pagination
+  const [currentPage, setCurrentPage] = React.useState(0);
+ 
+  const graphQLResult = useGraphQLData<T>({
+    pageSize,
+    initialPage: 0,
+    initialSortModel: [],
+    initialFilterModel: {},
+    query,
+    variables,
+    nodeToRow: (node) => ({
+      ...node,
+      id: node.accounting_mtm_history_id || node.id,
+    }),
+    // Add this to completely skip the hook's functionality when not using GraphQL
+    // todo: add
+    // skipExecution: !useGraphQLFetching
+  });
+ 
   // Use the appropriate hook based on pagination style
   const {
     rows: graphQLRows,
@@ -357,19 +596,12 @@ console.log("useRelayGraphQLData running with variables:", variables);
     setPage,
     setSortModel,
     setFilterModel,
+    refetch,
     pageInfo,
-    setPaginationDirection,
+    resetCursors,
   } = useGraphQLFetching
-      ? useRelayGraphQLData<T>({
-          pageSize,
-          initialPage: 0,
-          initialSortModel: [],
-          initialFilterModel: {},
-          query,
-          variables,
-          nodeToRow: (node) => ({ ...node, id: node.accounting_mtm_history_id || node.id }),
-        })
-    : {
+    ? graphQLResult
+    : ({
         rows: [] as T[],
         totalRows: 0,
         loading: false,
@@ -381,98 +613,160 @@ console.log("useRelayGraphQLData running with variables:", variables);
           hasNextPage: false,
           hasPreviousPage: false,
           startCursor: null,
-          endCursor: null
+          endCursor: null,
         },
-        setPaginationDirection: () => {}
-      } as ServerSideResult<T>;
-  
+        setPaginationDirection: () => {},
+        refetch: () => Promise.resolve({ data: null }),
+        debug: {},
+        resetCursors: () => {},
+      } as ServerSideResult<T>);
+ 
   // Use GraphQL data or client data based on the useGraphQLFetching flag
-  const displayRows = useGraphQLFetching ? graphQLRows : rows;
-  const totalRows = useGraphQLFetching ? graphQLTotalRows : rows.length;
-  
+  const displayRows = useMemo(() => {
+    const displayedRows = useGraphQLFetching ? graphQLRows : rows;
+    debugLog(
+      `Using ${useGraphQLFetching ? 'GraphQL' : 'client'} data with ${displayedRows.length} rows`
+    );
+    console.log('EnhancedDataGridGraphQL: displayRows updated:', displayedRows);
+    return displayedRows;
+  }, [useGraphQLFetching, graphQLRows, rows]);
+ 
+  const totalRows = useMemo(
+    () => (useGraphQLFetching ? graphQLTotalRows : rows.length),
+    [useGraphQLFetching, graphQLTotalRows, rows.length]
+  );
+ 
   // Combine external loading state with GraphQL loading state
-  const loading = externalLoading || graphQLLoading;
-  
+  const loading = useMemo(
+    () => externalLoading || graphQLLoading,
+    [externalLoading, graphQLLoading]
+  );
+ 
   // Call the onRowsChange callback when rows change
   useEffect(() => {
     if (props.onRowsChange) {
+      debugLog('Rows changed, calling onRowsChange');
       props.onRowsChange(displayRows);
     }
-  }, [displayRows, props.onRowsChange]);
-  
-  // Initialize selection model hook
-  // Initialize selection model hook
-  const { selectionModel, onSelectionModelChange: handleSelectionModelChange } = useSelectionModel({
-    selectionModel: initialSelectionModel,
-    onSelectionModelChange,
-  });
-  
-  // Define a navigation handler that uses the correct API methods
-  const handleNavigate = useCallback((id: GridRowId, field: string) => {
-    try {
-      // Check if the cell is already in edit mode
-      const cellMode = apiRef.current.getCellMode(id, field);
-      if (cellMode === 'view') {
-        apiRef.current.startCellEditMode({ id, field });
-      }
-    } catch (error) {
-      console.error('Error navigating to cell:', error);
-    }
-  }, [apiRef]);
+  }, [displayRows, props.onRowsChange, debugLog]);
 
+  // Call onGridFunctionsInit callback if provided
+  // Use a ref to track if we've already initialized the grid functions
+  const gridFunctionsInitializedRef = useRef(false);
+  
+  useEffect(() => {
+    // Only initialize once to prevent infinite loops
+    if (props.onGridFunctionsInit && useGraphQLFetching && !gridFunctionsInitializedRef.current) {
+      debugLog('Initializing grid functions');
+      // Ensure all functions are defined before passing them
+      const safeRefetch = refetch || (() => Promise.resolve({ data: null }));
+      const safeResetCursors = resetCursors || (() => {});
+      const safePageInfo = pageInfo || {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      };
+      
+      props.onGridFunctionsInit(
+        safeRefetch,
+        safeResetCursors,
+        safePageInfo
+      );
+      
+      // Mark as initialized
+      gridFunctionsInitializedRef.current = true;
+    }
+  }, [props.onGridFunctionsInit, refetch, resetCursors, pageInfo, useGraphQLFetching, debugLog]);
+ 
+  // Initialize selection model hook
+  const { selectionModel, onSelectionModelChange: handleSelectionModelChange } =
+    useSelectionModel({
+      selectionModel: initialSelectionModel,
+      onSelectionModelChange,
+    });
+ 
+  // Define a navigation handler that uses the correct API methods
+  const handleNavigate = useCallback(
+    (id: GridRowId, field: string) => {
+      try {
+        // Check if the cell is already in edit mode
+        const cellMode = apiRef.current.getCellMode(id, field);
+        if (cellMode === 'view') {
+          apiRef.current.startCellEditMode({ id, field });
+        }
+      } catch (error) {
+        console.error('Error navigating to cell:', error);
+      }
+    },
+    [apiRef]
+  );
+ 
   // Initialize grid navigation hook
   const { handleKeyDown } = useGridNavigation({
     api: apiRef.current,
     columns,
     rows: displayRows,
-    onNavigate: handleNavigate
+    onNavigate: handleNavigate,
   });
-  
+ 
   // Create SelectFieldType instances for select fields
-  columns.forEach(column => {
+  columns.forEach((column) => {
     if (column.fieldConfig?.type === 'select' && !column.fieldType) {
       column.fieldType = new SelectFieldType({
         options: column.fieldConfig.options || [],
         valueKey: 'value',
-        labelKey: 'label'
+        labelKey: 'label',
       });
     }
   });
-  
+ 
   // Convert enhanced columns to MUI X Data Grid columns
-  const gridColumns: GridColDef[] = columns.map(column => {
+  const gridColumns: GridColDef[] = columns.map((column) => {
     return {
       ...column,
       renderCell: (params) => {
-        return (
-          <CellRendererWrapper 
-            params={params} 
-            column={column}
-          />
-        );
+        return <CellRendererWrapper params={params} column={column} />;
       },
       renderEditCell: (params) => {
-        return (
-          <EditCellRenderer
-            params={params}
-            column={column}
-          />
-        );
+        return <EditCellRenderer params={params} column={column} />;
       },
     };
   });
-  
+ 
   // Determine if we're in compact mode based on row height
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
-
+ 
+  // Handler for page changes
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      debugLog(`Page change requested: ${currentPage} → ${newPage}`);
+ 
+      // Update local state
+      setCurrentPage(newPage);
+ 
+      // If using GraphQL, update the page in the hook
+      if (useGraphQLFetching) {
+        // Prevent race conditions by setting page without timeout
+        setPage(newPage);
+ 
+        // Call the onPageChange callback if provided
+        if (props.onPageChange) {
+          props.onPageChange(newPage);
+        }
+      }
+    },
+    [currentPage, useGraphQLFetching, setPage, props.onPageChange, debugLog]
+  );
+ 
   // Create a wrapper component for DataGrid that uses the grid mode
   const DataGridWithModeControl = () => {
     // Get the current mode from context
     const { mode, setMode } = useGridMode();
-    
+ 
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
-    
+ 
     // Handle cell click
     const handleCellClick = (params: any) => {
       // If we're already in edit mode, allow single click to edit cells
@@ -481,10 +775,10 @@ console.log("useRelayGraphQLData running with variables:", variables);
         if (params.field === '__check__' || params.field === '__actions__') {
           return;
         }
-        
+ 
         const { id, field } = params;
-        const column = columns.find(col => col.field === field);
-        
+        const column = columns.find((col) => col.field === field);
+ 
         // Only allow editing if the column is editable and editing is enabled
         if (column?.editable !== false && canEditRows) {
           try {
@@ -500,28 +794,28 @@ console.log("useRelayGraphQLData running with variables:", variables);
       }
       // In other modes, single click does nothing - we'll use double click for initial editing
     };
-    
+ 
     // Handle cell double click to enter edit mode
     const handleCellDoubleClick = (params: any) => {
       // Disable cell editing when in add mode for existing rows
       if (mode === 'add' && !params.id.toString().startsWith('new-')) {
         return;
       }
-      
+ 
       // Don't handle double clicks on checkboxes or action columns
       if (params.field === '__check__' || params.field === '__actions__') {
         return;
       }
-      
+ 
       const { id, field } = params;
-      const column = columns.find(col => col.field === field);
-      
+      const column = columns.find((col) => col.field === field);
+ 
       // Only allow editing if the column is editable and editing is enabled
       if (column?.editable !== false && canEditRows) {
         try {
           // Set the grid mode to edit
           setMode('edit');
-          
+ 
           // Start cell edit mode
           const cellMode = apiRef.current.getCellMode(id, field);
           if (cellMode === 'view') {
@@ -532,19 +826,26 @@ console.log("useRelayGraphQLData running with variables:", variables);
         }
       }
     };
-    
+ 
     return (
       <DataGrid
         apiRef={apiRef}
         rows={displayRows}
         columns={gridColumns}
+        onStateChange={(state) => {
+          console.log('DataGrid: state changed', state);
+        }}
         autoHeight={autoHeight}
         density={density}
-        disableColumnFilter={false} // Always enable column filters
+        disableColumnFilter={
+          disableColumnFilter === undefined ? false : disableColumnFilter
+        }
         disableColumnMenu={disableColumnMenu}
         disableColumnSelector={disableColumnSelector}
         disableDensitySelector={disableDensitySelector}
-        disableRowSelectionOnClick={isInEditOrAddMode || disableSelectionOnClick}
+        disableRowSelectionOnClick={
+          isInEditOrAddMode || disableSelectionOnClick
+        }
         disableVirtualization={disableVirtualization}
         loading={loading}
         hideFooter={hideFooter}
@@ -553,7 +854,7 @@ console.log("useRelayGraphQLData running with variables:", variables);
         // Pagination and sorting
         initialState={{
           pagination: {
-            paginationModel: { pageSize, page: 0 },
+            paginationModel: { pageSize, page: currentPage },
           },
           sorting: {
             sortModel: [], // Initialize with empty sort model
@@ -562,69 +863,48 @@ console.log("useRelayGraphQLData running with variables:", variables);
         pageSizeOptions={rowsPerPageOptions}
         paginationMode={useGraphQLFetching ? 'server' : 'client'}
         rowCount={useGraphQLFetching ? totalRows : undefined}
+        // Pagination handler
         onPaginationModelChange={(model) => {
-          // For GraphQL pagination, fetch the data
-          if (useGraphQLFetching) {
-            console.log("Pagination model changed:", model);
-            
-            // For Relay cursor pagination, we need to handle "Next" and "Previous" differently
-            if (paginationStyle === 'cursor') {
-              // If we're going to the next page, set pagination direction to forward
-              if (model.page > 0) {
-                setPaginationDirection("forward");
-              }
-            }
-            
-            // Set the page
-            setPage(model.page);
-            
-            // Force a refetch with a slight delay to ensure state updates have propagated
-            setTimeout(() => {
-              console.log("Forcing refetch after page change to page", model.page);
-              // This will trigger the useEffect in the hook that watches variables
-              const currentVars = { ...variables };
-              if (paginationStyle === 'cursor') {
-                // For cursor pagination, we need to ensure we're using the right cursor
-                // We don't have direct access to cursors here, so we'll just trigger a refetch
-                // The hook will handle the cursor management
-              }
-            }, 50);
-            
-            // Call the onPageChange callback if provided
-            if (props.onPageChange) {
-              props.onPageChange(model.page);
-            }
-          }
+          debugLog(`Pagination model changed: ${JSON.stringify(model)}`);
+ 
+          // Update the page
+          handlePageChange(model.page);
         }}
-        
         // Sorting and filtering
         sortingMode={useGraphQLFetching ? 'server' : 'client'}
         filterMode={useGraphQLFetching ? 'server' : 'client'}
+        // Sort model change handler
         onSortModelChange={(model) => {
-          console.log('Sort model changed:', model);
+          debugLog('Sort model changed:', model);
           if (useGraphQLFetching) {
             // Only process if there's a valid sort model
             if (model && model.length > 0) {
-              const newSortModel = model.map(item => ({
+              const newSortModel = model.map((item) => ({
                 field: item.field,
-                sort: item.sort as 'asc' | 'desc'
+                sort: item.sort as 'asc' | 'desc',
               }));
-              console.log('Processed sort model:', newSortModel);
+              debugLog('Setting sort model:', newSortModel);
               setSortModel(newSortModel);
+ 
+              // Reset to page 0 when sorting changes
+              if (currentPage !== 0) {
+                handlePageChange(0);
+              }
             } else {
               // Reset sort model if empty
-              console.log('Resetting sort model');
+              debugLog('Resetting sort model');
               setSortModel([]);
             }
           }
         }}
+        // Filter model change handler
         onFilterModelChange={(model) => {
           if (useGraphQLFetching) {
-            console.log('Filter model changed:', model);
+            debugLog('Filter model changed:', model);
             const filterModel: Record<string, any> = {};
-            
+ 
             // Process each filter item and capture all relevant information
-            model.items.forEach(item => {
+            model.items.forEach((item) => {
               if (item.field && item.value !== undefined) {
                 // Include the operator and value in the filter model
                 filterModel[item.field] = {
@@ -633,9 +913,14 @@ console.log("useRelayGraphQLData running with variables:", variables);
                 };
               }
             });
-            
-            console.log('Processed filter model:', filterModel);
+ 
+            debugLog('Setting filter model:', filterModel);
             setFilterModel(filterModel);
+ 
+            // Reset to page 0 when filtering changes
+            if (currentPage !== 0) {
+              handlePageChange(0);
+            }
           }
         }}
         // Row selection
@@ -644,7 +929,6 @@ console.log("useRelayGraphQLData running with variables:", variables);
         onRowSelectionModelChange={handleSelectionModelChange}
         disableMultipleRowSelection={disableMultipleSelection}
         isRowSelectable={() => !isInEditOrAddMode}
-        
         // Editing
         editMode="cell"
         rowHeight={rowHeight}
@@ -656,7 +940,7 @@ console.log("useRelayGraphQLData running with variables:", variables);
             <div className="flex items-center justify-center h-full">
               <Typography>No rows</Typography>
             </div>
-          )
+          ),
         }}
         sx={{
           border: 'none',
@@ -664,14 +948,16 @@ console.log("useRelayGraphQLData running with variables:", variables);
             outline: 'none',
           },
           height: '100%',
+          width: 'calc(100vw - 70px)',
           '& .MuiDataGrid-main': {
             overflow: 'auto',
-          }
+          },
         }}
         {...props}
       />
     );
   };
+ 
   // Get the GridFormContext functions and state
   const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
     const {
@@ -680,9 +966,9 @@ console.log("useRelayGraphQLData running with variables:", variables);
       addRow,
       hasValidationErrors,
       isRowEditing,
-      isRowDirty
+      isRowDirty,
     } = useGridForm();
-
+ 
     return (
       <GridModeProvider
         totalRows={totalRows}
@@ -701,32 +987,35 @@ console.log("useRelayGraphQLData running with variables:", variables);
           // Adapter function to match the expected signature
           handleSelectionModelChange(selectionModel, {} as any);
         }}
+        // Pass delete props
+        canDeleteRows={canDeleteRows}
+        onDelete={onDelete}
       >
         {children}
       </GridModeProvider>
     );
   };
-  
+ 
   // Get the saveChanges function from GridFormContext
   const GridFormWithToolbar = () => {
     const { saveChanges } = useGridForm();
-    
+ 
     return (
       <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
           {/* Unified Toolbar */}
           <UnifiedDataGridToolbar
             onSave={saveChanges}
-            onFilter={() => console.log('Filter clicked')}
             onExport={() => console.log('Export clicked')}
             onUpload={() => console.log('Upload clicked')}
             onHelp={() => console.log('Help clicked')}
             canEditRows={canEditRows}
             canAddRows={canAddRows}
             canSelectRows={canSelectRows}
+            canDeleteRows={canDeleteRows}
             customActionButtons={props.customActionButtons}
           />
-
+ 
           <Paper elevation={0} className="flex-grow w-full overflow-auto">
             <CellEditHandler apiRef={apiRef} />
             <DataGridWithModeControl />
@@ -735,7 +1024,7 @@ console.log("useRelayGraphQLData running with variables:", variables);
       </GridFormWrapper>
     );
   };
-  
+ 
   return (
     <GridFormProvider
       columns={columns}
@@ -748,24 +1037,32 @@ console.log("useRelayGraphQLData running with variables:", variables);
     </GridFormProvider>
   );
 }
-
+ 
 // Wrapper for CellRenderer that gets validation state from context
-const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams, column: EnhancedColumnConfig }) => {
+const CellRendererWrapper = ({
+  params,
+  column,
+}: {
+  params: GridRenderCellParams;
+  column: EnhancedColumnConfig;
+}) => {
   const { isFieldDirty, getRowErrors, getFormMethods } = useGridForm();
   const isDirty = isFieldDirty(params.id, params.field);
   const errors = getRowErrors(params.id);
   const error = errors?.[params.field];
-  
+ 
   // Get the latest value from the form state if available
   const formMethods = getFormMethods(params.id);
-  const formValue = formMethods ? formMethods.getValues()[params.field] : undefined;
-  
+  const formValue = formMethods
+    ? formMethods.getValues()[params.field]
+    : undefined;
+ 
   // Create a new params object with the updated value from form state
   const updatedParams = {
     ...params,
-    value: formValue !== undefined ? formValue : params.value
+    value: formValue !== undefined ? formValue : params.value,
   };
-  
+ 
   return (
     <CellRenderer
       params={updatedParams}
@@ -775,6 +1072,8 @@ const CellRendererWrapper = ({ params, column }: { params: GridRenderCellParams,
     />
   );
 };
+ 
+ 
 
 
 ==========================================================================
@@ -799,6 +1098,8 @@ import { usePagination } from '../hooks/usePagination';
  *
  * The context also manages the interactions between these modes and handles
  * conflicts (e.g., can't select rows while editing).
+ * 
+ * It also provides row deletion functionality when enabled.
  */
 
 // Define the grid mode type
@@ -831,7 +1132,14 @@ interface GridModeContextType {
   saveChanges: () => void;
   cancelChanges: () => void;
   addRow: () => void;
+  deleteRows: (ids: GridRowId[]) => void; // Function to handle deletion
   
+  // Capabilities
+  canEditRows: boolean;
+  canAddRows: boolean;
+  canSelectRows: boolean;
+  canDeleteRows: boolean;
+
   // Pagination
   page: number;
   pageSize: number;
@@ -859,6 +1167,11 @@ interface GridModeProviderProps {
   canEditRows?: boolean;
   canAddRows?: boolean;
   canSelectRows?: boolean;
+  canDeleteRows?: boolean;
+  
+  // Action handlers from parent
+  onDelete?: (ids: GridRowId[]) => void;
+  
   // Selection model
   selectionModel?: any[];
   onSelectionModelChange?: (selectionModel: any[]) => void;
@@ -880,9 +1193,12 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   canEditRows = true,
   canAddRows = true,
   canSelectRows = true,
+  canDeleteRows = false, // Default to false
   // Selection model
   selectionModel: externalSelectionModel,
-  onSelectionModelChange: externalOnSelectionModelChange
+  onSelectionModelChange: externalOnSelectionModelChange,
+  // Delete handler
+  onDelete: formOnDelete
 }) => {
   // State for the current mode
   const [mode, setMode] = useState<GridMode>(initialMode);
@@ -974,9 +1290,24 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   }, [formCancelChanges]);
   
   const addRow = useCallback(() => {
+    console.log('GridModeContext: addRow called');
     formAddRow();
+    console.log('GridModeContext: formAddRow called');
     setMode('add');
+    console.log('GridModeContext: mode set to add');
   }, [formAddRow]);
+
+  // Delete handler
+  const deleteRows = useCallback((ids: GridRowId[]) => {
+    if (formOnDelete) {
+      formOnDelete(ids);
+      // Optionally clear selection or change mode after deletion
+      clearSelection();
+      // setMode('none'); // Or keep selection mode? Decide based on desired UX
+    } else {
+      console.warn('onDelete handler not provided to GridModeProvider');
+    }
+  }, [formOnDelete, clearSelection]);
   
   // Context value
   const contextValue: GridModeContextType = {
@@ -992,6 +1323,13 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
     saveChanges,
     cancelChanges,
     addRow,
+    deleteRows, // Add delete handler
+    // Capabilities
+    canEditRows,
+    canAddRows,
+    canSelectRows,
+    canDeleteRows, // Add delete capability flag
+    // Pagination
     page,
     pageSize,
     totalRows,
@@ -1014,7 +1352,7 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
  * - Read the current grid mode
  * - Change the grid mode
  * - Access selection state
- * - Perform actions like save, cancel, add
+ * - Perform actions like save, cancel, add, delete
  *
  * It throws an error if used outside of a GridModeProvider.
  */
@@ -1691,10 +2029,14 @@ export function GridFormProvider({
   
   // Add a new row
   const addRow = useCallback(() => {
+    console.log('GridFormContext: addRow called');
     try {
       // Generate a new ID
-      const maxId = Math.max(...rows.map(row => Number(row.id)), 0);
-      const newId = maxId + 1;
+      const maxId = Math.max(...rows.map(row => {
+        const id = row.id.toString();
+        return id.startsWith('new-') ? 0 : Number(id);
+      }), 0);
+      const newId = `new-${maxId + 1}`;
       
       // Create a new row with default values
       const newRow: any = { id: newId };
@@ -1739,7 +2081,13 @@ export function GridFormProvider({
       setCurrentCell({ rowId: newId, field: firstEditableField });
       
       // Add the row to the grid
-      setRows(prev => [...prev, newRow]);
+      console.log('GridFormContext: Adding new row to grid with ID:', newId);
+      console.log('GridFormContext: New row data:', newRow);
+      setRows(prev => {
+        const newRows = [newRow, ...prev];
+        console.log('GridFormContext: Updated rows:', newRows);
+        return newRows;
+      });
       
       // Mark all fields as dirty in pendingChanges
       setPendingChanges(prev => {
@@ -1912,70 +2260,14 @@ export function useSelectionModel({
 FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/hooks/useRelayGraphQLData.ts
 ==========================================================================
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useQuery } from "@apollo/client";
-import { ServerSideResult } from "../types/serverSide";
-
-/**
- * PageInfo interface from the Relay Cursor Connections specification
- * Contains information about whether there are more pages in either direction
- * and cursors for the start and end of the current page
- */
-interface PageInfo {
-  hasNextPage: boolean; // Whether there are more items after the end cursor
-  hasPreviousPage: boolean; // Whether there are more items before the start cursor
-  startCursor?: string | null; // Cursor pointing to the first item in the current page
-  endCursor?: string | null; // Cursor pointing to the last item in the current page
-}
-
-/**
- * Edge interface from the Relay Cursor Connections specification
- * Represents a single item in the connection along with its cursor
- */
-interface Edge<T> {
-  cursor: string; // Base64-encoded cursor for pagination
-  node: T; // The actual data item
-}
-
-/**
- * Connection interface from the Relay Cursor Connections specification
- * Represents a paginated list of items with metadata
- */
-interface Connection<T> {
-  edges: Edge<T>[]; // Array of edges (items with cursors)
-  pageInfo: PageInfo; // Pagination metadata
-  totalCount: number; // Total number of items matching the query
-}
-
-/**
- * Define GraphQLVariables type to fix type issues
- */
-interface GraphQLVariables {
-  first?: number;
-  last?: number;
-  after?: string | null;
-  before?: string | null;
-  sort?: string;
-  filter?: string;
-  [key: string]: any;
-}
-
-/**
- * Combined pagination state to prevent race conditions
- */
-interface PaginationState {
-  page: number;
-  direction: "forward" | "backward";
-}
-
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useQuery } from '@apollo/client';
+import { ServerSideResult, Connection } from '../types/serverSide';
+ 
 /**
  * Hook for handling GraphQL data operations with Relay-style cursor-based pagination
- * Manages fetching data with pagination, sorting, and filtering using Apollo Client
- *
- * This hook is specifically designed to work with a DynamoDB backend that uses
- * cursor-based pagination following the Relay Connection specification
  */
-export function useRelayGraphQLData<T>({
+export function useGraphQLData<T>({
   pageSize,
   initialPage = 0,
   initialSortModel = [],
@@ -1987,439 +2279,204 @@ export function useRelayGraphQLData<T>({
 }: {
   pageSize: number;
   initialPage?: number;
-  initialSortModel?: { field: string; sort: "asc" | "desc" }[];
+  initialSortModel?: { field: string; sort: 'asc' | 'desc' }[];
   initialFilterModel?: Record<string, any>;
   query?: any;
   variables?: Record<string, any>;
   nodeToRow?: (node: any) => T;
   enableBackwardPagination?: boolean;
 }): ServerSideResult<T> {
-  // For debugging and logging purposes
-  const debugEnabled = true;
-  const logPrefix = "📊 [useRelayGraphQLData]";
-  
-  const debugLog = useCallback((...args: any[]) => {
-    if (debugEnabled) {
-      console.log(logPrefix, ...args);
-    }
-  }, []);
-
-  // Store last fetch request to prevent duplicate requests
-  const lastRequestRef = useRef<string>("");
-  
-  // Keep track of previous variables for change detection
-  const prevVariablesRef = useRef<GraphQLVariables | null>(null);
-  
-  // Store fetch timestamps for tracking request sequence
-  const fetchTimestampsRef = useRef<Map<string, number>>(new Map());
-  
-  // Combined pagination state to prevent race conditions
-  const [paginationState, setPaginationState] = useState<PaginationState>({
-    page: initialPage,
-    direction: "forward",
-  });
-  
-  // Destructure the pagination state for easier access
-  const { page, direction: paginationDirection } = paginationState;
-  
-  // Cursor storage with both page-indexed and explicit start/end markers
+  // Core state
+  const [page, setPage] = useState(initialPage);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [cursors, setCursors] = useState<Record<string, string>>({});
-  
-  // State for sort and filter models
   const [sortModel, setSortModel] = useState(initialSortModel);
   const [filterModel, setFilterModel] = useState(initialFilterModel);
-  
-  // Store whether initial data has been loaded
-  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  
-  // Store pending navigation to resolve after data loads
-  const pendingNavigationRef = useRef<number | null>(null);
-
-  // Debug logging on mount
-  useEffect(() => {
-    debugLog("Hook initialized with:", {
-      pageSize,
-      initialPage,
-      enableBackwardPagination,
-    });
-  }, [debugLog, pageSize, initialPage, enableBackwardPagination]);
-
-  // Memoize the sort configuration to prevent recreating on every render
+ 
+  // Race condition prevention
+  const requestIdRef = useRef(0);
+ 
+  // Create sort and filter parameters
   const sort = useMemo(() => {
     if (sortModel.length === 0) return undefined;
-    
-    debugLog("Creating sort configuration from model:", sortModel);
-    
-    // Create a properly formatted sort configuration
     return JSON.stringify({
       field: sortModel[0].field,
-      direction: sortModel[0].sort === "desc" ? "DESC" : "ASC",
+      direction: sortModel[0].sort === 'desc' ? 'DESC' : 'ASC',
     });
-  }, [sortModel, debugLog]);
-
-  // Memoize the filter configuration
+  }, [sortModel]);
+ 
   const filter = useMemo(() => {
     if (Object.keys(filterModel).length === 0) return undefined;
-    
-    debugLog("Creating filter configuration:", filterModel);
-    
-    // Create a properly formatted filter configuration
     return JSON.stringify(filterModel);
-  }, [filterModel, debugLog]);
-
-  // Memoize pagination variables with improved cursor management
-  const paginationVars = useMemo(() => {
-    // Ensure pageSize has a fallback value
-    const effectivePageSize = pageSize || 25;
-    
-    debugLog("Building pagination variables for:", {
-      page,
-      direction: paginationDirection,
-      cursors,
-    });
-    
-    // Construct variables based on direction and page
-    if (paginationDirection === "forward") {
-      if (page === 0) {
-        return { first: effectivePageSize, after: null };
-      }
-      
-      // For forward pagination beyond page 0, we need the cursor from previous page
-      // Try both traditional and explicit cursor formats
-      const cursor = cursors[page - 1] || cursors[`${page-1}-end`];
-      
-      if (!cursor && page > 0) {
-        debugLog(`⚠️ Warning: Missing cursor for page ${page-1}. Navigation might fail.`);
-      }
-      
-      return { first: effectivePageSize, after: cursor || null };
-    } else {
-      // For backward pagination, use the cursor from next page
-      const cursor = cursors[page + 1] || cursors[`${page+1}-start`];
-      
-      if (!cursor) {
-        debugLog(`⚠️ Warning: Missing cursor for page ${page+1}. Navigation might fail.`);
-      }
-      
-      return { last: effectivePageSize, before: cursor || null };
-    }
-  }, [paginationDirection, page, pageSize, cursors, debugLog]);
-
-  // Combine all variables into a single object
+  }, [filterModel]);
+ 
+  // Build pagination variables
   const variables = useMemo(() => {
-    // Check if paginationVars is valid
-    if (!paginationVars) {
-      debugLog("⚠️ Warning: Invalid pagination variables");
-      return {} as GraphQLVariables;
+    // Get appropriate cursor based on page and direction
+    let cursor = null;
+    if (direction === 'forward') {
+      cursor = page > 0 ? cursors[page - 1] : null;
+    } else if (enableBackwardPagination) {
+      cursor = cursors[page + 1] || null;
     }
-
-    const result = {
+ 
+    // Create pagination variables
+    const paginationVars =
+      direction === 'forward'
+        ? { first: pageSize, after: cursor }
+        : { last: pageSize, before: cursor };
+ 
+    // Return combined variables
+    return {
       ...paginationVars,
       ...customVariables,
       ...(sort ? { sort } : {}),
       ...(filter ? { filter } : {}),
-    } as GraphQLVariables;
-    
-    const varsJSON = JSON.stringify(result);
-    
-    // Log only when variables actually change
-    if (JSON.stringify(prevVariablesRef.current) !== varsJSON) {
-      debugLog("Variables changed:", {
-        current: result,
-        previous: prevVariablesRef.current,
-      });
-      
-      prevVariablesRef.current = { ...result };
-    }
-    
-    return result;
-  }, [paginationVars, customVariables, sort, filter, debugLog]);
-
-  // Atomic page change handler with direction management
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      debugLog(`Page change requested: ${page} → ${newPage}`);
-      
-      if (newPage === page) {
-        debugLog("Ignoring page change to same page");
-        return;
-      }
-      
-      // Determine direction based on the page change
-      const newDirection = newPage > page
-        ? "forward"
-        : (newPage < page && enableBackwardPagination ? "backward" : "forward");
-      
-      debugLog(`Setting direction to ${newDirection} for page change ${page} → ${newPage}`);
-      
-      // Store pending navigation to resolve after data loads
-      pendingNavigationRef.current = newPage;
-      
-      // Update both page and direction atomically
-      setPaginationState({
-        page: newPage,
-        direction: newDirection,
-      });
-    },
-    [page, enableBackwardPagination, debugLog]
-  );
-
-  // Execute query with improved cache handling
+    };
+  }, [
+    page,
+    direction,
+    cursors,
+    pageSize,
+    sort,
+    filter,
+    customVariables,
+    enableBackwardPagination,
+  ]);
+ 
+  // Track current request ID to handle race conditions
+  useEffect(() => {
+    requestIdRef.current = Date.now();
+  }, [variables]);
+ 
+  // Execute the query
   const { data, loading, error, refetch } = useQuery(query, {
-    variables, // Now properly typed
+    variables,
     notifyOnNetworkStatusChange: true,
-    fetchPolicy: "cache-and-network", // Check cache but still make network request
-    nextFetchPolicy: "cache-first", // For subsequent fetches within the component lifecycle
-    skip: !query || Object.keys(variables).length === 0, // Skip if variables is empty
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    skip: !query || Object.keys(variables).length === 0,
   });
-
-  // Record request timing for tracking
-  useEffect(() => {
-    if (!loading && Object.keys(variables).length > 0) {
-      const requestKey = JSON.stringify(variables);
-      
-      // Record the request timestamp if it's a new request
-      if (requestKey !== lastRequestRef.current) {
-        lastRequestRef.current = requestKey;
-        fetchTimestampsRef.current.set(requestKey, Date.now());
-        debugLog(`Request started: ${requestKey}`);
-      }
-    }
-  }, [loading, variables, debugLog]);
-
-  // Force refetch when variables change to ensure fresh data
-  useEffect(() => {
-    if (!query || Object.keys(variables).length === 0) return;
-    
-    const requestKey = JSON.stringify(variables);
-    
-    // Only refetch if this is a new request (avoid duplicate requests)
-    if (lastRequestRef.current !== requestKey) {
-      debugLog(`Refetching data with variables:`, variables);
-      
-      refetch(variables).then(() => {
-        debugLog(`✅ Refetch complete for page ${page}`);
-      }).catch(err => {
-        debugLog(`❌ Refetch error for page ${page}:`, err);
-      });
-    }
-  }, [query, refetch, variables, page, debugLog]);
-
-  // Process and transform data
+ 
+  // Extract and validate connection data
   const queryResult = data ? Object.values(data)[0] : null;
-
-  // Type guard to validate connection structure
   const isConnection = (obj: any): obj is Connection<any> => {
     return (
       obj &&
-      typeof obj === "object" &&
-      "edges" in obj &&
-      Array.isArray(obj.edges) &&
-      "pageInfo" in obj &&
-      "totalCount" in obj
+      typeof obj === 'object' &&
+      'edges' in obj &&
+      'pageInfo' in obj &&
+      'totalCount' in obj
     );
   };
-
-  // Validate connection format
   const connection = isConnection(queryResult) ? queryResult : null;
-
-  // Process rows only when connection changes
+ 
+  // Process rows from connection
   const { rows, totalCount } = useMemo(() => {
-    if (!connection) {
-      return { rows: [], totalCount: 0 };
-    }
-
-    debugLog(`Processing ${connection.edges.length} rows for page ${page}`);
-    
-    // Mark initial data as loaded
-    if (!initialDataLoaded && connection.edges.length > 0) {
-      setInitialDataLoaded(true);
-    }
-
+    if (!connection) return { rows: [], totalCount: 0 };
+ 
     const processedRows = connection.edges.map((edge) => {
       const row = nodeToRow(edge.node);
-
+ 
       // Ensure each row has an ID
-      if (typeof row === "object" && row !== null && !("id" in row)) {
-        const id =
-          edge.node.id ||
-          edge.node.uuid ||
-          edge.node.accounting_mtm_history_id ||
-          edge.node[`${Object.keys(edge.node)[0]}_id`] ||
-          edge.cursor;
-
+      if (typeof row === 'object' && row !== null && !('id' in row)) {
+        const id = edge.node.id || edge.node.uuid || edge.cursor;
         return { ...row, id };
       }
-
+ 
       return row;
     });
-
-    return {
-      rows: processedRows,
-      totalCount: connection.totalCount,
-    };
-  }, [connection, page, nodeToRow, initialDataLoaded, debugLog]);
-
-  // Update cursors when connection changes with improved cursor management
+ 
+    return { rows: processedRows, totalCount: connection.totalCount };
+  }, [connection, nodeToRow]);
+ 
+  // Update cursors when connection changes
   useEffect(() => {
-    if (!connection?.pageInfo) return;
-    
-    debugLog("Updating cursors from pageInfo:", {
-      page,
-      startCursor: connection.pageInfo.startCursor,
-      endCursor: connection.pageInfo.endCursor,
-    });
-    
-    setCursors(prev => {
-      const newCursors = { ...prev };
-      
-      // Store both explicit start/end cursors and traditional format
-      if (connection.pageInfo.startCursor) {
-        newCursors[`${page}-start`] = connection.pageInfo.startCursor;
-      }
-      
-      if (connection.pageInfo.endCursor) {
-        // Store as explicit end cursor
-        newCursors[`${page}-end`] = connection.pageInfo.endCursor;
-        
-        // Also store in traditional format for backward compatibility
-        newCursors[page.toString()] = connection.pageInfo.endCursor;
-      }
-      
-      return newCursors;
-    });
-  }, [connection, page, debugLog]);
-  
-  // Debug logging for cursor state changes
-  useEffect(() => {
-    debugLog("Cursor state updated:", cursors);
-  }, [cursors, debugLog]);
-  
-  // Clear pending navigation when data loads
-  useEffect(() => {
-    if (!loading && pendingNavigationRef.current !== null) {
-      debugLog(`Resolving pending navigation to page ${pendingNavigationRef.current}`);
-      pendingNavigationRef.current = null;
-    }
-  }, [loading, debugLog]);
-
-  // Memoize the pageInfo object
-  const pageInfo = useMemo(
-    () =>
-      connection?.pageInfo || {
-        hasNextPage: false,
-        hasPreviousPage: false,
-        startCursor: null,
-        endCursor: null,
-      },
-    [connection]
-  );
-
-  // Methods for pagination control
-  const pagination = useMemo(() => ({
-    setPage: handlePageChange,
-    
-    setSortModel: (newSortModel: typeof sortModel) => {
-      debugLog("Setting sort model:", newSortModel);
-      setSortModel(newSortModel);
-      
-      // Reset to first page when sorting changes
-      if (page !== 0) {
-        handlePageChange(0);
-      }
-    },
-    
-    setFilterModel: (newFilterModel: typeof filterModel) => {
-      debugLog("Setting filter model:", newFilterModel);
-      setFilterModel(newFilterModel);
-      
-      // Reset to first page when filtering changes
-      if (page !== 0) {
-        handlePageChange(0);
-      }
-    },
-    
-    setPaginationDirection: (newDirection: "forward" | "backward") => {
-      debugLog(`Setting pagination direction: ${paginationDirection} → ${newDirection}`);
-      
-      setPaginationState(prev => ({
+    if (connection?.pageInfo?.endCursor) {
+      setCursors((prev) => ({
         ...prev,
-        direction: newDirection,
+        [page]: connection.pageInfo.endCursor,
       }));
+    }
+  }, [connection, page]);
+ 
+  // Atomic page change handler that handles direction
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      if (newPage === page) return;
+ 
+      // Determine direction based on page change
+      const newDirection =
+        newPage > page
+          ? 'forward'
+          : newPage < page && enableBackwardPagination
+            ? 'backward'
+            : 'forward';
+ 
+      setDirection(newDirection);
+      setPage(newPage);
     },
-    
-    // Helper for debugging
-    resetCursors: () => {
-      debugLog("Resetting all cursors");
-      setCursors({});
-      handlePageChange(0);
-    },
-  }), [page, handlePageChange, paginationDirection, debugLog]);
-
-  // Create debug info
-  const debugInfo = useMemo(() => ({
-    page,
-    direction: paginationDirection,
-    cursors,
-    variables,
-    loading,
-    error: error ? error.message : null,
-    rowCount: rows.length,
-    totalCount,
-    hasNextPage: pageInfo.hasNextPage,
-    hasPreviousPage: pageInfo.hasPreviousPage,
-  }), [
-    page, 
-    paginationDirection, 
-    cursors, 
-    variables, 
-    loading, 
-    error, 
-    rows.length, 
-    totalCount, 
-    pageInfo.hasNextPage, 
-    pageInfo.hasPreviousPage
-  ]);
-
-  // Memoize the final result object to prevent unnecessary renders
-  return useMemo(() => ({
-    // Data
+    [page, enableBackwardPagination]
+  );
+ 
+  // Reset to page 0 when sort or filter changes
+  const handleSortChange = useCallback((newSortModel: any) => {
+    setSortModel(newSortModel);
+    setPage(0);
+    setDirection('forward');
+  }, []);
+ 
+  const handleFilterChange = useCallback((newFilterModel: any) => {
+    setFilterModel(newFilterModel);
+    setPage(0);
+    setDirection('forward');
+  }, []);
+ 
+  // Extract page info
+  const pageInfo = connection?.pageInfo || {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    startCursor: null,
+    endCursor: null,
+  };
+ 
+  // Return the final result
+  return {
     rows,
     totalRows: totalCount,
     loading,
     error: error as Error | null,
     pageInfo,
-    
-    // Methods
-    setPage: pagination.setPage,
-    setSortModel: pagination.setSortModel,
-    setFilterModel: pagination.setFilterModel,
-    setPaginationDirection: pagination.setPaginationDirection,
-    
-    // Debugging helper
-    debug: debugInfo,
-    
-    // Force refetch method
-    refetch: () => {
-      debugLog("Manually forcing refetch");
-      return refetch(variables);
+ 
+    // Pagination methods
+    setPage: handlePageChange,
+    setSortModel: handleSortChange,
+    setFilterModel: handleFilterChange,
+ 
+    // Utility methods
+    refetch: () => refetch(variables),
+    resetCursors: () => {
+      setCursors({});
+      handlePageChange(0);
     },
-    
-    // Reset cursors method
-    resetCursors: pagination.resetCursors,
-  }), [
-    rows,
-    totalCount,
-    loading,
-    error,
-    pageInfo,
-    pagination,
-    variables,
-    refetch,
-    debugInfo,
-    debugLog
-  ]);
+ 
+    // // Optional debug info
+    // debug: {
+    //   page,
+    //   direction,
+    //   cursors,
+    //   variables,
+    //   loading,
+    //   error: error ? error.message : null,
+    //   rowCount: rows.length,
+    //   totalCount,
+    //   hasNextPage: pageInfo.hasNextPage,
+    //   hasPreviousPage: pageInfo.hasPreviousPage,
+    // },
+  };
 }
+ 
+ 
 
 
 ==========================================================================
@@ -2926,6 +2983,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpIcon from '@mui/icons-material/Help';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
 
 // Pagination icons
 
@@ -2955,6 +3013,7 @@ interface UnifiedDataGridToolbarProps {
   canEditRows?: boolean;
   canAddRows?: boolean; // Removed default value = true
   canSelectRows?: boolean;
+  canDeleteRows?: boolean; // Added for row deletion capability
   // Custom action buttons
   customActionButtons?: React.ReactNode;
 }
@@ -2983,7 +3042,10 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     // Get selection model from context
     selectionModel,
     onSelectionModelChange,
-    clearSelection
+    clearSelection,
+    // Get delete context
+    canDeleteRows,
+    deleteRows
   } = useGridMode();
   
   // Debug: Log selection model changes
@@ -3009,6 +3071,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   const [filterDialogOpen, setFilterDialogOpen] = useState(false); // State for filter dialog
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
+  const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] = useState(false); // State for delete confirmation
 
   // Handle mode switching with confirmation when needed
   const handleModeSwitch = (newMode: GridMode) => {
@@ -3030,13 +3093,17 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
 
   // Handle add button click
   const handleAddClick = () => {
+    console.log('Add button clicked');
     if (selectionModel.length > 1) {
+      console.log('Multiple rows selected, showing confirmation dialog');
       setConfirmationDialogOpen(true);
       setTargetMode('add');
       return;
     }
     
+    console.log('Calling addRow function');
     addRow();
+    console.log('addRow function called');
   };
 
   // Handle save button click
@@ -3080,11 +3147,25 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
     setDebugDialogOpen(true);
   };
 
+  // Handle delete button click - opens confirmation dialog
+  const handleDeleteClick = () => {
+    if (selectionModel.length > 0 && canDeleteRows) {
+      setDeleteConfirmationDialogOpen(true);
+    }
+  };
+
+  // Handle confirming deletion
+  const handleConfirmDelete = () => {
+    deleteRows(selectionModel);
+    setDeleteConfirmationDialogOpen(false);
+  };
+
   // Determine button disabled states based on current mode
   const isInEditOrAddMode = mode === 'edit' || mode === 'add';
   const canSave = isInEditOrAddMode && !hasValidationErrors;
   const canCancel = isInEditOrAddMode;
   const canAdd = canAddRows && !isInEditOrAddMode;
+  const canDeleteSelected = canDeleteRows && selectionModel.length > 0 && !isInEditOrAddMode;
   const areActionButtonsDisabled = isInEditOrAddMode;
 
   return (
@@ -3262,6 +3343,22 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
                   onDelete={clearSelection}
                   size="small"
                 />
+                {/* Delete Button - Show only if deletion is allowed and rows are selected */}
+                {canDeleteRows && selectionModel.length > 0 && (
+                  <Tooltip title={canDeleteSelected ? `Delete ${selectionModel.length} selected row(s)` : "Cannot delete while editing"}>
+                    <span> {/* Span needed for disabled Tooltip */}
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={handleDeleteClick}
+                        disabled={!canDeleteSelected}
+                        sx={{ ml: 0.5, opacity: canDeleteSelected ? 1 : 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
               </Box>
             )}
             {/* Filter Options - Updated onClick */}
@@ -3437,6 +3534,25 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+     {/* Delete Confirmation Dialog */}
+     <Dialog
+       open={deleteConfirmationDialogOpen}
+       onClose={() => setDeleteConfirmationDialogOpen(false)}
+     >
+       <DialogTitle>Confirm Deletion</DialogTitle>
+       <DialogContent>
+         <DialogContentText>
+           Are you sure you want to delete {selectionModel.length} selected row(s)? This action cannot be undone.
+         </DialogContentText>
+       </DialogContent>
+       <DialogActions>
+         <Button onClick={() => setDeleteConfirmationDialogOpen(false)}>Cancel</Button>
+         <Button onClick={handleConfirmDelete} color="error">
+           Delete
+         </Button>
+       </DialogActions>
+     </Dialog>
     </Box>
   );
 };
@@ -3472,4 +3588,4 @@ ANALYSIS OF POTENTIAL CAUSES
 TOKEN COUNT ESTIMATE
 ==========================================================================
 
-Approximate number of tokens: 11004
+Approximate number of tokens: 11159

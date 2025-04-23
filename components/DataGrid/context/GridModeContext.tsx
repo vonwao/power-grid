@@ -208,8 +208,11 @@ export const GridModeProvider: React.FC<GridModeProviderProps> = ({
   }, [formCancelChanges]);
   
   const addRow = useCallback(() => {
+    console.log('GridModeContext: addRow called');
     formAddRow();
+    console.log('GridModeContext: formAddRow called');
     setMode('add');
+    console.log('GridModeContext: mode set to add');
   }, [formAddRow]);
 
   // Delete handler
