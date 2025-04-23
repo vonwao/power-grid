@@ -651,12 +651,8 @@ export function GridFormProvider({
   const addRow = useCallback(() => {
     console.log('GridFormContext: addRow called');
     try {
-      // Generate a new ID
-      const maxId = Math.max(...rows.map(row => {
-        const id = row.id.toString();
-        return id.startsWith('new-') ? 0 : Number(id);
-      }), 0);
-      const newId = `new-${maxId + 1}`;
+      // Generate a new ID with timestamp for better uniqueness
+      const newId = `new-${Date.now()}`;
       
       // Create a new row with default values
       const newRow: any = { id: newId };
@@ -681,53 +677,55 @@ export function GridFormProvider({
         }
       });
       
-      // Create a form instance for the new row using our factory function
+      // Create form instance and setup references
       const formMethods = createFormInstance(newRow, columns);
-      
       formInstancesRef.current.set(newId, formMethods);
-      
-      // Mark this as a new row
       addedRowsRef.current.add(newId);
       
-      // Add the row to the editing set
-      setEditingRows(prev => {
-        const next = new Set(prev);
-        next.add(newId);
-        return next;
-      });
-      
-      // Set the current cell to the first editable column
-      const firstEditableField = columns.find(col => col.editable)?.field || columns[0].field;
-      setCurrentCell({ rowId: newId, field: firstEditableField });
-      
-      // Add the row to the grid
-      console.log('GridFormContext: Adding new row to grid with ID:', newId);
-      console.log('GridFormContext: New row data:', newRow);
-      setRows(prev => {
-        const newRows = [newRow, ...prev];
-        console.log('GridFormContext: Updated rows:', newRows);
-        return newRows;
-      });
-      
-      // Mark all fields as dirty in pendingChanges
-      setPendingChanges(prev => {
-        const newChanges = new Map(prev);
-        const rowChanges: Record<string, any> = {};
-        
-        // Add all fields to changes
-        Object.keys(newRow).forEach(field => {
-          if (field !== 'id') {
-            rowChanges[field] = newRow[field];
-          }
+      // Batch state updates to reduce re-renders
+      const batchUpdates = () => {
+        // Update editing state
+        setEditingRows(prev => {
+          const next = new Set(prev);
+          next.add(newId);
+          return next;
         });
         
-        newChanges.set(newId, rowChanges);
-        return newChanges;
-      });
+        // Set current cell
+        const firstEditableField = columns.find(col => col.editable)?.field || columns[0].field;
+        setCurrentCell({ rowId: newId, field: firstEditableField });
+        
+        // Add the row to the grid
+        console.log('GridFormContext: Adding new row to grid with ID:', newId);
+        setRows(prev => {
+          const newRows = [newRow, ...prev];
+          console.log('GridFormContext: Updated rows:', newRows);
+          return newRows;
+        });
+        
+        // Track changes
+        setPendingChanges(prev => {
+          const newChanges = new Map(prev);
+          const rowChanges: Record<string, any> = {};
+          
+          // Add all fields to changes
+          Object.keys(newRow).forEach(field => {
+            if (field !== 'id') {
+              rowChanges[field] = newRow[field];
+            }
+          });
+          
+          newChanges.set(newId, rowChanges);
+          return newChanges;
+        });
+      };
+      
+      // Use setTimeout to batch updates
+      setTimeout(batchUpdates, 0);
     } catch (error) {
       console.error('Error adding new row:', error);
     }
-  }, [columns, rows]);
+  }, [columns]);
   
   // Check if there are any validation errors
   const hasValidationErrors = React.useMemo(() => {

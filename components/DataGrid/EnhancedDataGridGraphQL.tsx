@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -8,6 +8,8 @@ import {
   GridValueSetter,
   useGridApiRef,
   GridRenderCellParams,
+  GridFilterPanel,
+  GridFilterModel,
 } from '@mui/x-data-grid';
 import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
@@ -388,9 +390,12 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   const DataGridWithModeControl = () => {
     // Get the current mode from context
     const { mode, setMode } = useGridMode();
- 
+  
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+    
+    // Use a ref to track if the filter panel is open
+    const filterPanelOpenRef = useRef(false);
  
     // Handle cell click
     const handleCellClick = (params: any) => {
@@ -525,26 +530,33 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         // Filter model change handler
         onFilterModelChange={(model) => {
           if (useGraphQLFetching) {
-            debugLog('Filter model changed:', model);
-            const filterModel: Record<string, any> = {};
- 
-            // Process each filter item and capture all relevant information
-            model.items.forEach((item) => {
-              if (item.field && item.value !== undefined) {
-                // Include the operator and value in the filter model
-                filterModel[item.field] = {
-                  value: item.value,
-                  operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
-                };
-              }
-            });
- 
-            debugLog('Setting filter model:', filterModel);
-            setFilterModel(filterModel);
- 
-            // Reset to page 0 when filtering changes
-            if (currentPage !== 0) {
-              handlePageChange(0);
+            // Only process if the panel is open or if filters are being applied
+            if (filterPanelOpenRef.current || model.items.some(item => item.value)) {
+              debugLog('Filter model changed:', model);
+              const filterModel: Record<string, any> = {};
+   
+              // Process each filter item and capture all relevant information
+              model.items.forEach((item) => {
+                if (item.field && item.value !== undefined) {
+                  // Include the operator and value in the filter model
+                  filterModel[item.field] = {
+                    value: item.value,
+                    operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
+                  };
+                }
+              });
+   
+              debugLog('Setting filter model:', filterModel);
+              
+              // Delay filter application to prevent UI flicker
+              setTimeout(() => {
+                setFilterModel(filterModel);
+   
+                // Reset to page 0 when filtering changes
+                if (currentPage !== 0) {
+                  handlePageChange(0);
+                }
+              }, 0);
             }
           }
         }}
@@ -566,6 +578,20 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
               <Typography>No rows</Typography>
             </div>
           ),
+          filterPanel: (props) => {
+            // Mark when filter panel opens
+            useEffect(() => {
+              filterPanelOpenRef.current = true;
+              return () => {
+                // Slight delay to prevent flickering during transitions
+                setTimeout(() => {
+                  filterPanelOpenRef.current = false;
+                }, 100);
+              };
+            }, []);
+            
+            return <GridFilterPanel {...props} />;
+          }
         }}
         sx={{
           border: 'none',

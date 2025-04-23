@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { GridRowSelectionModel, GridCallbackDetails } from '@mui/x-data-grid';
 import { SelectionModelState, SelectionOptions } from '../types/selection';
 
 /**
- * Hook for managing row selection state
+ * Hook for managing row selection state with optimizations to prevent unnecessary re-renders
  */
 export function useSelectionModel({
   selectionModel: externalSelectionModel,
@@ -12,29 +12,37 @@ export function useSelectionModel({
   // Only create internal state for uncontrolled mode
   const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>([]);
   
-  // Determine if we're in controlled mode
-  const isControlled = externalSelectionModel !== undefined;
-  
   // Use external model if in controlled mode, otherwise use internal
-  const selectionModel = isControlled ? externalSelectionModel : internalSelectionModel;
+  const selectionModel = useMemo(() => {
+    return externalSelectionModel !== undefined ? externalSelectionModel : internalSelectionModel;
+  }, [externalSelectionModel, internalSelectionModel]);
   
-  // Handle selection model change
+  // Memoize the handler to prevent unnecessary re-renders
   const onSelectionModelChange = useCallback(
     (newSelectionModel: GridRowSelectionModel, details: GridCallbackDetails) => {
       // Convert readonly array to mutable array
       const mutableSelectionModel = [...newSelectionModel];
       
-      if (!isControlled) {
+      if (externalSelectionModel === undefined) {
         // Only update internal state if we're not in controlled mode
-        setInternalSelectionModel(mutableSelectionModel);
+        setInternalSelectionModel(prevSelection => {
+          // Only update if the selection has actually changed
+          if (JSON.stringify(prevSelection) !== JSON.stringify(mutableSelectionModel)) {
+            return mutableSelectionModel;
+          }
+          return prevSelection;
+        });
       }
       
-      // Always call external handler if provided
+      // Call external handler if provided, but prevent unnecessary calls
       if (externalOnSelectionModelChange) {
-        externalOnSelectionModelChange(mutableSelectionModel);
+        // Use setTimeout to batch updates and prevent UI flicker
+        setTimeout(() => {
+          externalOnSelectionModelChange(mutableSelectionModel);
+        }, 0);
       }
     },
-    [isControlled, externalOnSelectionModelChange]
+    [externalSelectionModel, externalOnSelectionModelChange]
   );
   
   return {
