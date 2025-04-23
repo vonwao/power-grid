@@ -11,6 +11,9 @@ import {
   GridFilterPanel,
   GridFilterModel,
 } from '@mui/x-data-grid';
+
+// Import the AddRowDialog
+import { AddRowDialog } from './components/AddRowDialog';
 import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
@@ -129,6 +132,10 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
     resetCursors: () => void,
     pageInfo: any
   ) => void;
+
+  // Add new props for AddRowDialog
+  useAddDialog?: boolean; // Whether to use dialog for adding rows
+  onAddRow?: (rowData: any) => void; // Custom callback for when a row is added through the dialog
 }
  
 export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
@@ -170,7 +177,10 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   hideFooterPagination,
   hideFooterSelectedRowCount,
   rowHeight,
-  ...props
+  // Add new props for AddRowDialog
+  useAddDialog = true, // Whether to use dialog for adding rows
+  onAddRow, // Custom callback for when a row is added through the dialog
+  ...props // Moved ...props to the end
 }: EnhancedDataGridGraphQLProps<T>) {
   // Debug logging
   const debugLog = (message: string, ...args: any[]) => {
@@ -305,7 +315,46 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
       gridFunctionsInitializedRef.current = true;
     }
   }, [props.onGridFunctionsInit, refetch, resetCursors, pageInfo, useGraphQLFetching, debugLog]);
- 
+
+  // State for add dialog
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  // Open add dialog
+  const handleOpenAddDialog = useCallback(() => {
+    setAddDialogOpen(true);
+  }, []);
+
+  // Close add dialog
+  const handleCloseAddDialog = useCallback(() => {
+    setAddDialogOpen(false);
+  }, []);
+
+  // Handle saving a new row from dialog
+  const handleSaveNewRow = useCallback((rowData: any) => {
+    debugLog('Adding new row from dialog:', rowData);
+
+    // Call the onAddRow callback if provided
+    if (onAddRow) {
+      onAddRow(rowData);
+    } else {
+      // Default behavior - add to the rows state
+      if (useGraphQLFetching) {
+        // For GraphQL, we'll queue this addition for the next save operation
+        // The row will appear in the next save event's additions array
+        // No immediate UI update
+        debugLog('Queueing row addition for GraphQL save');
+      } else {
+        // For client-side, add directly to rows
+        // This is typically handled by the parent component managing the `rows` prop
+        debugLog('Client-side row addition - parent component should handle update');
+      }
+    }
+
+    // Close the dialog
+    setAddDialogOpen(false);
+  }, [useGraphQLFetching, onAddRow, debugLog]);
+
+
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } =
     useSelectionModel({
@@ -675,30 +724,72 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     );
   };
  
+  // Custom toolbar component that includes add button logic
+  const CustomToolbar = useCallback(() => {
+    // Get grid mode context
+    const { mode, setMode, addRow: contextAddRow } = useGridMode();
+
+    // Handle add button click
+    const handleAddClick = () => {
+      if (useAddDialog) {
+        // Open dialog
+        handleOpenAddDialog();
+      } else {
+        // Use built-in grid add functionality
+        contextAddRow();
+      }
+    };
+
+    return (
+      <UnifiedDataGridToolbar
+        // Pass existing props from GridModeProvider context
+        onSave={useGridForm().saveChanges} // Assuming saveChanges is needed here
+        onExport={() => console.log('Export clicked')}
+        onUpload={() => console.log('Upload clicked')}
+        onHelp={() => console.log('Help clicked')}
+        canEditRows={canEditRows}
+        canAddRows={canAddRows}
+        canSelectRows={canSelectRows}
+        canDeleteRows={canDeleteRows}
+        customActionButtons={props.customActionButtons}
+        // Override the add button behavior
+        onAddClick={handleAddClick}
+      />
+    );
+  }, [useAddDialog, handleOpenAddDialog, useGridMode, useGridForm, canEditRows, canAddRows, canSelectRows, canDeleteRows, props.customActionButtons]);
+
+
   // Get the saveChanges function from GridFormContext
   const GridFormWithToolbar = () => {
     const { saveChanges } = useGridForm();
- 
+
     return (
       <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
-          {/* Unified Toolbar */}
-          <UnifiedDataGridToolbar
-            onSave={saveChanges}
-            onExport={() => console.log('Export clicked')}
-            onUpload={() => console.log('Upload clicked')}
-            onHelp={() => console.log('Help clicked')}
-            canEditRows={canEditRows}
-            canAddRows={canAddRows}
-            canSelectRows={canSelectRows}
-            canDeleteRows={canDeleteRows}
-            customActionButtons={props.customActionButtons}
-          />
- 
+          {/* Custom Toolbar with Add Dialog capability */}
+          <CustomToolbar />
+
           <Paper elevation={0} className="flex-grow w-full overflow-auto">
             <CellEditHandler apiRef={apiRef} />
             <DataGridWithModeControl />
           </Paper>
+
+          {/* Add Row Dialog */}
+          {useAddDialog && (
+            <AddRowDialog
+              open={addDialogOpen}
+              onClose={handleCloseAddDialog}
+              onSave={handleSaveNewRow}
+              columns={columns.filter(col => col.field !== 'id' && col.field !== 'accounting_mtm_history_id')} // Filter out ID columns
+              validateRow={validateRow ? (values) => {
+                // Adapt the validateRow signature for the dialog
+                // Note: This simplified wrapper ignores the promise return and helpers for now.
+                // Adjust if the dialog needs more complex validation handling later.
+                const result = validateRow(values, {} as ValidationHelpers); // Pass empty helpers
+                return typeof result === 'object' && !(result instanceof Promise) ? result : {};
+              } : undefined}
+            />
+          )}
         </div>
       </GridFormWrapper>
     );

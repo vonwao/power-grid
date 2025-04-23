@@ -50,6 +50,7 @@ interface UnifiedDataGridToolbarProps {
   onExport?: () => void;
   onUpload?: () => void;
   onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
+  onAddClick?: () => void; // Add this prop for custom add behavior
   // Grid capabilities
   canEditRows?: boolean;
   canAddRows?: boolean; // Removed default value = true
@@ -65,6 +66,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   onExport,
   onUpload,
   onHelp,
+  onAddClick, // Destructure the new prop
   canEditRows = true,
   canAddRows, // Removed default value = true
   canSelectRows = true,
@@ -135,16 +137,24 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   // Handle add button click
   const handleAddClick = () => {
     console.log('Add button clicked');
-    if (selectionModel.length > 1) {
-      console.log('Multiple rows selected, showing confirmation dialog');
-      setConfirmationDialogOpen(true);
-      setTargetMode('add');
-      return;
-    }
     
-    console.log('Calling addRow function');
-    addRow();
-    console.log('addRow function called');
+    // Use custom add handler if provided
+    if (onAddClick) {
+      console.log('Using custom onAddClick handler');
+      onAddClick();
+    } else {
+      // Default behavior - check selection and use context addRow
+      if (selectionModel.length > 1) {
+        console.log('Multiple rows selected, showing confirmation dialog');
+        setConfirmationDialogOpen(true);
+        setTargetMode('add');
+        return;
+      }
+      
+      console.log('Using context addRow function');
+      addRow();
+      console.log('Context addRow function called');
+    }
   };
 
   // Handle save button click
