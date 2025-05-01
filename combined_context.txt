@@ -373,7 +373,7 @@ export default function MTMHistoryPage() {
 FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/EnhancedDataGridGraphQL.tsx
 ==========================================================================
 
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { DocumentNode } from '@apollo/client';
 import {
   DataGrid,
@@ -383,7 +383,12 @@ import {
   GridValueSetter,
   useGridApiRef,
   GridRenderCellParams,
+  GridFilterPanel,
+  GridFilterModel,
 } from '@mui/x-data-grid';
+
+// Import the AddRowDialog
+import { AddRowDialog } from './components/AddRowDialog';
 import { Paper, Typography } from '@mui/material';
 import { ValidationOptions } from '../../types/form';
 import { CellRenderer } from './renderers/CellRenderer';
@@ -502,6 +507,10 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
     resetCursors: () => void,
     pageInfo: any
   ) => void;
+
+  // Add new props for AddRowDialog
+  useAddDialog?: boolean; // Whether to use dialog for adding rows
+  onAddRow?: (rowData: any) => void; // Custom callback for when a row is added through the dialog
 }
  
 export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
@@ -543,7 +552,10 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   hideFooterPagination,
   hideFooterSelectedRowCount,
   rowHeight,
-  ...props
+  // Add new props for AddRowDialog
+  useAddDialog = true, // Whether to use dialog for adding rows
+  onAddRow, // Custom callback for when a row is added through the dialog
+  ...props // Moved ...props to the end
 }: EnhancedDataGridGraphQLProps<T>) {
   // Debug logging
   const debugLog = (message: string, ...args: any[]) => {
@@ -678,7 +690,46 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
       gridFunctionsInitializedRef.current = true;
     }
   }, [props.onGridFunctionsInit, refetch, resetCursors, pageInfo, useGraphQLFetching, debugLog]);
- 
+
+  // State for add dialog
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  // Open add dialog
+  const handleOpenAddDialog = useCallback(() => {
+    setAddDialogOpen(true);
+  }, []);
+
+  // Close add dialog
+  const handleCloseAddDialog = useCallback(() => {
+    setAddDialogOpen(false);
+  }, []);
+
+  // Handle saving a new row from dialog
+  const handleSaveNewRow = useCallback((rowData: any) => {
+    debugLog('Adding new row from dialog:', rowData);
+
+    // Call the onAddRow callback if provided
+    if (onAddRow) {
+      onAddRow(rowData);
+    } else {
+      // Default behavior - add to the rows state
+      if (useGraphQLFetching) {
+        // For GraphQL, we'll queue this addition for the next save operation
+        // The row will appear in the next save event's additions array
+        // No immediate UI update
+        debugLog('Queueing row addition for GraphQL save');
+      } else {
+        // For client-side, add directly to rows
+        // This is typically handled by the parent component managing the `rows` prop
+        debugLog('Client-side row addition - parent component should handle update');
+      }
+    }
+
+    // Close the dialog
+    setAddDialogOpen(false);
+  }, [useGraphQLFetching, onAddRow, debugLog]);
+
+
   // Initialize selection model hook
   const { selectionModel, onSelectionModelChange: handleSelectionModelChange } =
     useSelectionModel({
@@ -763,9 +814,16 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   const DataGridWithModeControl = () => {
     // Get the current mode from context
     const { mode, setMode } = useGridMode();
- 
+  
     // Determine if row selection should be disabled
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+    
+    // Track filter model and panel state
+    const [localFilterModel, setLocalFilterModel] = useState<GridFilterModel>({ items: [] });
+    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+    
+    // Use a ref to track if the filter panel is open
+    const filterPanelOpenRef = useRef(false);
  
     // Handle cell click
     const handleCellClick = (params: any) => {
@@ -899,30 +957,45 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         }}
         // Filter model change handler
         onFilterModelChange={(model) => {
+          console.log('Filter model changing to:', model);
+          setLocalFilterModel(model);
+          
           if (useGraphQLFetching) {
-            debugLog('Filter model changed:', model);
-            const filterModel: Record<string, any> = {};
- 
-            // Process each filter item and capture all relevant information
-            model.items.forEach((item) => {
-              if (item.field && item.value !== undefined) {
-                // Include the operator and value in the filter model
-                filterModel[item.field] = {
-                  value: item.value,
-                  operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
-                };
-              }
-            });
- 
-            debugLog('Setting filter model:', filterModel);
-            setFilterModel(filterModel);
- 
-            // Reset to page 0 when filtering changes
-            if (currentPage !== 0) {
-              handlePageChange(0);
+            // Only process if we have valid filters with actual values
+            // This prevents closing the panel when typing
+            if (model.items.some(item => item.value && item.value.toString().length > 0)) {
+              debugLog('Filter model changed with valid values:', model);
+              const filterModel: Record<string, any> = {};
+   
+              // Process each filter item and capture all relevant information
+              model.items.forEach((item) => {
+                if (item.field && item.value !== undefined) {
+                  // Include the operator and value in the filter model
+                  filterModel[item.field] = {
+                    value: item.value,
+                    operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
+                  };
+                }
+              });
+   
+              debugLog('Setting filter model:', filterModel);
+              
+              // Use debounce to prevent rapid filter changes during typing
+              const timer = setTimeout(() => {
+                console.log('Applying filter after debounce:', filterModel);
+                setFilterModel(filterModel);
+   
+                // Reset to page 0 when filtering changes
+                if (currentPage !== 0) {
+                  handlePageChange(0);
+                }
+              }, 300); // 300ms debounce
+              
+              return () => clearTimeout(timer);
             }
           }
         }}
+        filterModel={localFilterModel}
         // Row selection
         checkboxSelection={checkboxSelection && canSelectRows}
         rowSelectionModel={selectionModel}
@@ -941,6 +1014,36 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
               <Typography>No rows</Typography>
             </div>
           ),
+          filterPanel: (props) => {
+            // Create a custom filter panel component that prevents auto-closing
+            const CustomFilterPanel = () => {
+              // Mark when filter panel opens
+              useEffect(() => {
+                console.log('Filter panel opened');
+                filterPanelOpenRef.current = true;
+                setIsFilterPanelOpen(true);
+                
+                // Cleanup function when component unmounts
+                return () => {
+                  console.log('Filter panel closed');
+                  setTimeout(() => {
+                    filterPanelOpenRef.current = false;
+                    setIsFilterPanelOpen(false);
+                  }, 100);
+                };
+              }, []);
+              
+              return (
+                <div className="custom-filter-panel">
+                  <GridFilterPanel
+                    {...props}
+                  />
+                </div>
+              );
+            };
+            
+            return <CustomFilterPanel />;
+          }
         }}
         sx={{
           border: 'none',
@@ -996,30 +1099,72 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     );
   };
  
+  // Custom toolbar component that includes add button logic
+  const CustomToolbar = useCallback(() => {
+    // Get grid mode context
+    const { mode, setMode, addRow: contextAddRow } = useGridMode();
+
+    // Handle add button click
+    const handleAddClick = () => {
+      if (useAddDialog) {
+        // Open dialog
+        handleOpenAddDialog();
+      } else {
+        // Use built-in grid add functionality
+        contextAddRow();
+      }
+    };
+
+    return (
+      <UnifiedDataGridToolbar
+        // Pass existing props from GridModeProvider context
+        onSave={useGridForm().saveChanges} // Assuming saveChanges is needed here
+        onExport={() => console.log('Export clicked')}
+        onUpload={() => console.log('Upload clicked')}
+        onHelp={() => console.log('Help clicked')}
+        canEditRows={canEditRows}
+        canAddRows={canAddRows}
+        canSelectRows={canSelectRows}
+        canDeleteRows={canDeleteRows}
+        customActionButtons={props.customActionButtons}
+        // Override the add button behavior
+        onAddClick={handleAddClick}
+      />
+    );
+  }, [useAddDialog, handleOpenAddDialog, useGridMode, useGridForm, canEditRows, canAddRows, canSelectRows, canDeleteRows, props.customActionButtons]);
+
+
   // Get the saveChanges function from GridFormContext
   const GridFormWithToolbar = () => {
     const { saveChanges } = useGridForm();
- 
+
     return (
       <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
-          {/* Unified Toolbar */}
-          <UnifiedDataGridToolbar
-            onSave={saveChanges}
-            onExport={() => console.log('Export clicked')}
-            onUpload={() => console.log('Upload clicked')}
-            onHelp={() => console.log('Help clicked')}
-            canEditRows={canEditRows}
-            canAddRows={canAddRows}
-            canSelectRows={canSelectRows}
-            canDeleteRows={canDeleteRows}
-            customActionButtons={props.customActionButtons}
-          />
- 
+          {/* Custom Toolbar with Add Dialog capability */}
+          <CustomToolbar />
+
           <Paper elevation={0} className="flex-grow w-full overflow-auto">
             <CellEditHandler apiRef={apiRef} />
             <DataGridWithModeControl />
           </Paper>
+
+          {/* Add Row Dialog */}
+          {useAddDialog && (
+            <AddRowDialog
+              open={addDialogOpen}
+              onClose={handleCloseAddDialog}
+              onSave={handleSaveNewRow}
+              columns={columns.filter(col => col.field !== 'id' && col.field !== 'accounting_mtm_history_id')} // Filter out ID columns
+              validateRow={validateRow ? (values) => {
+                // Adapt the validateRow signature for the dialog
+                // Note: This simplified wrapper ignores the promise return and helpers for now.
+                // Adjust if the dialog needs more complex validation handling later.
+                const result = validateRow(values, {} as ValidationHelpers); // Pass empty helpers
+                return typeof result === 'object' && !(result instanceof Promise) ? result : {};
+              } : undefined}
+            />
+          )}
         </div>
       </GridFormWrapper>
     );
@@ -2031,18 +2176,16 @@ export function GridFormProvider({
   const addRow = useCallback(() => {
     console.log('GridFormContext: addRow called');
     try {
-      // Generate a new ID
-      const maxId = Math.max(...rows.map(row => {
-        const id = row.id.toString();
-        return id.startsWith('new-') ? 0 : Number(id);
-      }), 0);
-      const newId = `new-${maxId + 1}`;
+      // Generate a new ID with timestamp for better uniqueness
+      const newId = `new-${Date.now()}`;
+      console.log('Generated new ID:', newId);
       
       // Create a new row with default values
       const newRow: any = { id: newId };
       
       // Add default values for each column
       columns.forEach(column => {
+        console.log(`Setting default for ${column.field}`);
         if (column.fieldConfig?.type === 'select' && column.fieldConfig.options && column.fieldConfig.options.length > 0) {
           // For select fields, use the first option as default
           newRow[column.field] = column.fieldConfig.options[0].value;
@@ -2061,35 +2204,38 @@ export function GridFormProvider({
         }
       });
       
-      // Create a form instance for the new row using our factory function
+      console.log('New row created:', newRow);
+      
+      // Create form instance and setup references
       const formMethods = createFormInstance(newRow, columns);
-      
       formInstancesRef.current.set(newId, formMethods);
+      console.log('Form instance created and stored');
       
-      // Mark this as a new row
       addedRowsRef.current.add(newId);
+      console.log('Row marked as added');
       
-      // Add the row to the editing set
-      setEditingRows(prev => {
-        const next = new Set(prev);
-        next.add(newId);
-        return next;
-      });
-      
-      // Set the current cell to the first editable column
-      const firstEditableField = columns.find(col => col.editable)?.field || columns[0].field;
-      setCurrentCell({ rowId: newId, field: firstEditableField });
-      
-      // Add the row to the grid
-      console.log('GridFormContext: Adding new row to grid with ID:', newId);
-      console.log('GridFormContext: New row data:', newRow);
+      // CRITICAL: Add the row to the grid FIRST before other state updates
+      console.log('Current rows before update:', rows);
       setRows(prev => {
         const newRows = [newRow, ...prev];
         console.log('GridFormContext: Updated rows:', newRows);
         return newRows;
       });
       
-      // Mark all fields as dirty in pendingChanges
+      // Update editing state
+      setEditingRows(prev => {
+        const next = new Set(prev);
+        next.add(newId);
+        console.log('Editing rows updated:', Array.from(next));
+        return next;
+      });
+      
+      // Set current cell
+      const firstEditableField = columns.find(col => col.editable !== false)?.field || columns[0].field;
+      setCurrentCell({ rowId: newId, field: firstEditableField });
+      console.log('Current cell set to:', { rowId: newId, field: firstEditableField });
+      
+      // Track changes
       setPendingChanges(prev => {
         const newChanges = new Map(prev);
         const rowChanges: Record<string, any> = {};
@@ -2102,8 +2248,11 @@ export function GridFormProvider({
         });
         
         newChanges.set(newId, rowChanges);
+        console.log('Pending changes updated:', Array.from(newChanges.entries()));
         return newChanges;
       });
+      
+      console.log('Add row process completed');
     } catch (error) {
       console.error('Error adding new row:', error);
     }
@@ -2210,12 +2359,12 @@ export const useGridForm = () => {
 FILE: /Users/ottwacht/code/grid_test/my-app/components/DataGrid/hooks/useSelectionModel.ts
 ==========================================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { GridRowSelectionModel, GridCallbackDetails } from '@mui/x-data-grid';
 import { SelectionModelState, SelectionOptions } from '../types/selection';
 
 /**
- * Hook for managing row selection state
+ * Hook for managing row selection state with optimizations to prevent unnecessary re-renders
  */
 export function useSelectionModel({
   selectionModel: externalSelectionModel,
@@ -2224,29 +2373,37 @@ export function useSelectionModel({
   // Only create internal state for uncontrolled mode
   const [internalSelectionModel, setInternalSelectionModel] = useState<any[]>([]);
   
-  // Determine if we're in controlled mode
-  const isControlled = externalSelectionModel !== undefined;
-  
   // Use external model if in controlled mode, otherwise use internal
-  const selectionModel = isControlled ? externalSelectionModel : internalSelectionModel;
+  const selectionModel = useMemo(() => {
+    return externalSelectionModel !== undefined ? externalSelectionModel : internalSelectionModel;
+  }, [externalSelectionModel, internalSelectionModel]);
   
-  // Handle selection model change
+  // Memoize the handler to prevent unnecessary re-renders
   const onSelectionModelChange = useCallback(
     (newSelectionModel: GridRowSelectionModel, details: GridCallbackDetails) => {
       // Convert readonly array to mutable array
       const mutableSelectionModel = [...newSelectionModel];
       
-      if (!isControlled) {
+      if (externalSelectionModel === undefined) {
         // Only update internal state if we're not in controlled mode
-        setInternalSelectionModel(mutableSelectionModel);
+        setInternalSelectionModel(prevSelection => {
+          // Only update if the selection has actually changed
+          if (JSON.stringify(prevSelection) !== JSON.stringify(mutableSelectionModel)) {
+            return mutableSelectionModel;
+          }
+          return prevSelection;
+        });
       }
       
-      // Always call external handler if provided
+      // Call external handler if provided, but prevent unnecessary calls
       if (externalOnSelectionModelChange) {
-        externalOnSelectionModelChange(mutableSelectionModel);
+        // Use setTimeout to batch updates and prevent UI flicker
+        setTimeout(() => {
+          externalOnSelectionModelChange(mutableSelectionModel);
+        }, 0);
       }
     },
-    [isControlled, externalOnSelectionModelChange]
+    [externalSelectionModel, externalOnSelectionModelChange]
   );
   
   return {
@@ -3009,6 +3166,7 @@ interface UnifiedDataGridToolbarProps {
   onExport?: () => void;
   onUpload?: () => void;
   onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
+  onAddClick?: () => void; // Add this prop for custom add behavior
   // Grid capabilities
   canEditRows?: boolean;
   canAddRows?: boolean; // Removed default value = true
@@ -3024,6 +3182,7 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   onExport,
   onUpload,
   onHelp,
+  onAddClick, // Destructure the new prop
   canEditRows = true,
   canAddRows, // Removed default value = true
   canSelectRows = true,
@@ -3094,16 +3253,24 @@ export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
   // Handle add button click
   const handleAddClick = () => {
     console.log('Add button clicked');
-    if (selectionModel.length > 1) {
-      console.log('Multiple rows selected, showing confirmation dialog');
-      setConfirmationDialogOpen(true);
-      setTargetMode('add');
-      return;
-    }
     
-    console.log('Calling addRow function');
-    addRow();
-    console.log('addRow function called');
+    // Use custom add handler if provided
+    if (onAddClick) {
+      console.log('Using custom onAddClick handler');
+      onAddClick();
+    } else {
+      // Default behavior - check selection and use context addRow
+      if (selectionModel.length > 1) {
+        console.log('Multiple rows selected, showing confirmation dialog');
+        setConfirmationDialogOpen(true);
+        setTargetMode('add');
+        return;
+      }
+      
+      console.log('Using context addRow function');
+      addRow();
+      console.log('Context addRow function called');
+    }
   };
 
   // Handle save button click
@@ -3588,4 +3755,4 @@ ANALYSIS OF POTENTIAL CAUSES
 TOKEN COUNT ESTIMATE
 ==========================================================================
 
-Approximate number of tokens: 11159
+Approximate number of tokens: 11868

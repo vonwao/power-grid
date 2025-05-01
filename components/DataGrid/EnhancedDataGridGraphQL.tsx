@@ -8,8 +8,11 @@ import {
   GridValueSetter,
   useGridApiRef,
   GridRenderCellParams,
+  GridRenderEditCellParams,
   GridFilterPanel,
   GridFilterModel,
+  GridPaginationModel,
+  GridSortModel,
 } from '@mui/x-data-grid';
 
 // Import the AddRowDialog
@@ -82,7 +85,15 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   forceClientSide?: boolean; // Escape hatch - not recommended for large datasets
   query?: DocumentNode; // New prop for GraphQL query
   variables?: Record<string, any>;
-  paginationStyle?: 'offset' | 'cursor'; // Pagination style: offset (default) or cursor (Relay)
+  paginationStyle?: 'offset' | 'cursor' | 'key'; // Pagination style: offset (default), cursor (Relay), or key-based
+ 
+  // Sorting and filtering options
+  sortModel?: GridSortModel;
+  onSortModelChange?: (model: GridSortModel) => void;
+  sortingMode?: 'client' | 'server';
+  filterModel?: GridFilterModel;
+  onFilterModelChange?: (model: GridFilterModel) => void;
+  filterMode?: 'client' | 'server';
  
   // Selection options
   checkboxSelection?: boolean;
@@ -122,6 +133,12 @@ export interface EnhancedDataGridGraphQLProps<T = any> {
   hideFooterSelectedRowCount?: boolean;
   rowHeight?: number; // Custom row height in pixels
  
+  // Pagination props (legacy + new MUI DataGrid pagination)
+  paginationModel?: GridPaginationModel;
+  onPaginationModelChange?: (model: GridPaginationModel) => void;
+  paginationMode?: 'client' | 'server';
+  rowCount?: number;
+ 
   // Testing and debugging props
   onPageChange?: (page: number) => void; // Callback for page changes
   onRowsChange?: (rows: T[]) => void; // Callback for rows changes
@@ -148,6 +165,14 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   forceClientSide = false,
   query,
   variables,
+  paginationStyle = 'cursor',
+  // Sorting and filtering options
+  sortModel: initialSortModel,
+  onSortModelChange,
+  sortingMode = 'server',
+  filterModel: initialFilterModel,
+  onFilterModelChange,
+  filterMode = 'server',
   // Selection options
   checkboxSelection = false,
   selectionModel: initialSelectionModel,
@@ -177,6 +202,11 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   hideFooterPagination,
   hideFooterSelectedRowCount,
   rowHeight,
+  // New pagination props
+  paginationModel: externalPaginationModel,
+  onPaginationModelChange: externalOnPaginationModelChange,
+  paginationMode = 'server',
+  rowCount,
   // Add new props for AddRowDialog
   useAddDialog = true, // Whether to use dialog for adding rows
   onAddRow, // Custom callback for when a row is added through the dialog
@@ -205,40 +235,54 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     () => useGraphQL && !forceClientSide,
     [useGraphQL, forceClientSide]
   );
+
+  // Handle pagination model state (combining legacy and new MUI DataGrid pagination)
+  const [internalPaginationModel, setInternalPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: pageSize,
+  });
+
+  // Use external pagination model if provided, otherwise use internal state
+  const paginationModelToUse = useMemo(() => {
+    return externalPaginationModel || internalPaginationModel;
+  }, [externalPaginationModel, internalPaginationModel]);
+
+  // Handle pagination model changes
+  const handlePaginationModelChange = useCallback(
+    (newModel: GridPaginationModel) => {
+      // Update internal state if not controlled externally
+      if (!externalPaginationModel) {
+        setInternalPaginationModel(newModel);
+      }
+      
+      // Call external handler if provided
+      if (externalOnPaginationModelChange) {
+        externalOnPaginationModelChange(newModel);
+      }
+      
+      // TODO: Integrate with legacy pagination handler (setPage)
+      if (useGraphQLFetching && setPage) {
+        setPage(newModel.page);
+      }
+    },
+    [externalPaginationModel, externalOnPaginationModelChange, useGraphQLFetching]
+  );
  
   // Track the current page for controlled pagination
   const [currentPage, setCurrentPage] = React.useState(0);
- 
-  const graphQLResult = useGraphQLData<T>({
-    pageSize,
-    initialPage: 0,
-    initialSortModel: [],
-    initialFilterModel: {},
-    query,
-    variables,
-    nodeToRow: (node) => ({
-      ...node,
-      id: node.accounting_mtm_history_id || node.id,
-    }),
-    // Add this to completely skip the hook's functionality when not using GraphQL
-    // todo: add
-    // skipExecution: !useGraphQLFetching
-  });
- 
-  // Use the appropriate hook based on pagination style
-  const {
-    rows: graphQLRows,
-    totalRows: graphQLTotalRows,
-    loading: graphQLLoading,
-    setPage,
-    setSortModel,
-    setFilterModel,
-    refetch,
-    pageInfo,
-    resetCursors,
-  } = useGraphQLFetching
-    ? graphQLResult
-    : ({
+
+  // Track sort and filter models for internal state
+  const [internalSortModel, setInternalSortModel] = useState<GridSortModel>(initialSortModel || []);
+  const [internalFilterModel, setInternalFilterModel] = useState<GridFilterModel>(initialFilterModel || { items: [] });
+
+  // Use external models if provided, otherwise use internal state
+  const sortModelToUse = useMemo(() => initialSortModel || internalSortModel, [initialSortModel, internalSortModel]);
+  const filterModelToUse = useMemo(() => initialFilterModel || internalFilterModel, [initialFilterModel, internalFilterModel]);
+
+  // Function to select the appropriate GraphQL hook based on pagination style
+  const selectGraphQLHook = useCallback(() => {
+    if (!useGraphQLFetching) {
+      return {
         rows: [] as T[],
         totalRows: 0,
         loading: false,
@@ -252,11 +296,66 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
           startCursor: null,
           endCursor: null,
         },
-        setPaginationDirection: () => {},
         refetch: () => Promise.resolve({ data: null }),
-        debug: {},
         resetCursors: () => {},
-      } as ServerSideResult<T>);
+      } as ServerSideResult<T>;
+    }
+
+    // TODO: Add implementation for key-based pagination when paginationStyle is 'key'
+    if (paginationStyle === 'key') {
+      // Use key-based pagination hook
+      return useGraphQLData<T>({
+        pageSize: paginationModelToUse.pageSize,
+        initialPage: paginationModelToUse.page,
+        query,
+        variables,
+        filterModel: filterModelToUse,
+        sortModel: sortModelToUse,
+        nodeToRow: (node) => ({
+          ...node,
+          id: node.accounting_mtm_history_id || node.id,
+        }),
+      });
+    } else {
+      // Use Relay-style cursor-based pagination hook
+      // return useRelayGraphQLData<T>({
+      //   pageSize: paginationModelToUse.pageSize,
+      //   initialPage: paginationModelToUse.page,
+      //   initialSortModel: sortModelToUse,
+      //   initialFilterModel: filterModelToUse,
+      //   query,
+      //   variables,
+      //   nodeToRow: (node) => ({
+      //     ...node,
+      //     id: node.accounting_mtm_history_id || node.id,
+      //   }),
+      // });
+    }
+  }, [
+    useGraphQLFetching,
+    paginationStyle,
+    paginationModelToUse.pageSize,
+    paginationModelToUse.page,
+    query,
+    variables,
+    filterModelToUse,
+    sortModelToUse
+  ]);
+
+  // Use the appropriate hook based on pagination style
+  const graphQLResult = selectGraphQLHook();
+ 
+  const {
+    rows: graphQLRows,
+    totalRows: graphQLTotalRows,
+    loading: graphQLLoading,
+    setPage,
+    setSortModel,
+    setFilterModel,
+    refetch,
+    pageInfo,
+    resetCursors,
+  } = graphQLResult;
  
   // Use GraphQL data or client data based on the useGraphQLFetching flag
   const displayRows = useMemo(() => {
@@ -269,8 +368,13 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   }, [useGraphQLFetching, graphQLRows, rows]);
  
   const totalRows = useMemo(
-    () => (useGraphQLFetching ? graphQLTotalRows : rows.length),
-    [useGraphQLFetching, graphQLTotalRows, rows.length]
+    () => {
+      if (useGraphQLFetching) {
+        return graphQLTotalRows || rowCount || 0;
+      }
+      return rowCount || rows.length;
+    },
+    [useGraphQLFetching, graphQLTotalRows, rowCount, rows.length]
   );
  
   // Combine external loading state with GraphQL loading state
@@ -285,7 +389,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
       debugLog('Rows changed, calling onRowsChange');
       props.onRowsChange(displayRows);
     }
-  }, [displayRows, props.onRowsChange, debugLog]);
+  }, [displayRows, props.onRowsChange]);
 
   // Call onGridFunctionsInit callback if provided
   // Use a ref to track if we've already initialized the grid functions
@@ -314,7 +418,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
       // Mark as initialized
       gridFunctionsInitializedRef.current = true;
     }
-  }, [props.onGridFunctionsInit, refetch, resetCursors, pageInfo, useGraphQLFetching, debugLog]);
+  }, [props.onGridFunctionsInit, refetch, resetCursors, pageInfo, useGraphQLFetching]);
 
   // State for add dialog
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -352,7 +456,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
 
     // Close the dialog
     setAddDialogOpen(false);
-  }, [useGraphQLFetching, onAddRow, debugLog]);
+  }, [useGraphQLFetching, onAddRow]);
 
 
   // Initialize selection model hook
@@ -413,7 +517,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   // Determine if we're in compact mode based on row height
   const isCompact = rowHeight !== undefined && rowHeight <= 30;
  
-  // Handler for page changes
+  // Handler for page changes (legacy support)
   const handlePageChange = useCallback(
     (newPage: number) => {
       debugLog(`Page change requested: ${currentPage} → ${newPage}`);
@@ -430,13 +534,78 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         if (props.onPageChange) {
           props.onPageChange(newPage);
         }
+
+        // Update the pagination model if using new pagination
+        handlePaginationModelChange({
+          page: newPage,
+          pageSize: paginationModelToUse.pageSize
+        });
       }
     },
-    [currentPage, useGraphQLFetching, setPage, props.onPageChange, debugLog]
+    [currentPage, useGraphQLFetching, setPage, props.onPageChange, handlePaginationModelChange, paginationModelToUse.pageSize]
   );
+
+  // Handle sorting model changes
+  const handleSortModelChange = useCallback((newModel: GridSortModel) => {
+    // Update internal state if not controlled externally
+    if (!initialSortModel) {
+      setInternalSortModel(newModel);
+    }
+    
+    // Call external handler if provided
+    if (onSortModelChange) {
+      onSortModelChange(newModel);
+    }
+    
+    // Update GraphQL hook if using server-side sorting
+    if (useGraphQLFetching && sortingMode === 'server') {
+      setSortModel(newModel);
+      
+      // Reset to page 0 when sorting changes
+      if (currentPage !== 0) {
+        handlePageChange(0);
+      }
+    }
+  }, [initialSortModel, onSortModelChange, useGraphQLFetching, sortingMode, setSortModel, currentPage, handlePageChange]);
+
+  // Handle filtering model changes
+  const handleFilterModelChange = useCallback((newModel: GridFilterModel) => {
+    // Update internal state if not controlled externally
+    if (!initialFilterModel) {
+      setInternalFilterModel(newModel);
+    }
+    
+    // Call external handler if provided
+    if (onFilterModelChange) {
+      onFilterModelChange(newModel);
+    }
+    
+    // Update GraphQL hook if using server-side filtering
+    if (useGraphQLFetching && filterMode === 'server') {
+      const filterModelObj: Record<string, any> = {};
+      
+      // Process each filter item and capture all relevant information
+      newModel.items.forEach((item) => {
+        if (item.field && item.value !== undefined) {
+          // Include the operator and value in the filter model
+          filterModelObj[item.field] = {
+            value: item.value,
+            operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
+          };
+        }
+      });
+      
+      setFilterModel(filterModelObj);
+      
+      // Reset to page 0 when filtering changes
+      if (currentPage !== 0) {
+        handlePageChange(0);
+      }
+    }
+  }, [initialFilterModel, onFilterModelChange, useGraphQLFetching, filterMode, setFilterModel, currentPage, handlePageChange]);
  
   // Create a wrapper component for DataGrid that uses the grid mode
-  const DataGridWithModeControl = () => {
+  const DataGridWithModeControl = React.memo(() => {
     // Get the current mode from context
     const { mode, setMode } = useGridMode();
   
@@ -444,7 +613,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     const isInEditOrAddMode = mode === 'edit' || mode === 'add';
     
     // Track filter model and panel state
-    const [localFilterModel, setLocalFilterModel] = useState<GridFilterModel>({ items: [] });
     const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
     
     // Use a ref to track if the filter panel is open
@@ -515,9 +683,6 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         apiRef={apiRef}
         rows={displayRows}
         columns={gridColumns}
-        onStateChange={(state) => {
-          console.log('DataGrid: state changed', state);
-        }}
         autoHeight={autoHeight}
         density={density}
         disableColumnFilter={
@@ -534,99 +699,26 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         hideFooter={hideFooter}
         hideFooterPagination={hideFooterPagination}
         hideFooterSelectedRowCount={hideFooterSelectedRowCount}
-        // Pagination and sorting
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize, page: currentPage },
-          },
-          sorting: {
-            sortModel: [], // Initialize with empty sort model
-          },
-        }}
+        // Pagination support - both legacy and new MUI DataGrid model
+        paginationModel={paginationModelToUse}
+        onPaginationModelChange={handlePaginationModelChange}
+        paginationMode={paginationMode}
+        rowCount={totalRows}
         pageSizeOptions={rowsPerPageOptions}
-        paginationMode={useGraphQLFetching ? 'server' : 'client'}
-        rowCount={useGraphQLFetching ? totalRows : undefined}
-        // Pagination handler
-        onPaginationModelChange={(model) => {
-          debugLog(`Pagination model changed: ${JSON.stringify(model)}`);
- 
-          // Update the page
-          handlePageChange(model.page);
-        }}
-        // Sorting and filtering
-        sortingMode={useGraphQLFetching ? 'server' : 'client'}
-        filterMode={useGraphQLFetching ? 'server' : 'client'}
-        // Sort model change handler
-        onSortModelChange={(model) => {
-          debugLog('Sort model changed:', model);
-          if (useGraphQLFetching) {
-            // Only process if there's a valid sort model
-            if (model && model.length > 0) {
-              const newSortModel = model.map((item) => ({
-                field: item.field,
-                sort: item.sort as 'asc' | 'desc',
-              }));
-              debugLog('Setting sort model:', newSortModel);
-              setSortModel(newSortModel);
- 
-              // Reset to page 0 when sorting changes
-              if (currentPage !== 0) {
-                handlePageChange(0);
-              }
-            } else {
-              // Reset sort model if empty
-              debugLog('Resetting sort model');
-              setSortModel([]);
-            }
-          }
-        }}
-        // Filter model change handler
-        onFilterModelChange={(model) => {
-          console.log('Filter model changing to:', model);
-          setLocalFilterModel(model);
-          
-          if (useGraphQLFetching) {
-            // Only process if we have valid filters with actual values
-            // This prevents closing the panel when typing
-            if (model.items.some(item => item.value && item.value.toString().length > 0)) {
-              debugLog('Filter model changed with valid values:', model);
-              const filterModel: Record<string, any> = {};
-   
-              // Process each filter item and capture all relevant information
-              model.items.forEach((item) => {
-                if (item.field && item.value !== undefined) {
-                  // Include the operator and value in the filter model
-                  filterModel[item.field] = {
-                    value: item.value,
-                    operator: item.operator || 'contains', // Default to 'contains' if no operator is specified
-                  };
-                }
-              });
-   
-              debugLog('Setting filter model:', filterModel);
-              
-              // Use debounce to prevent rapid filter changes during typing
-              const timer = setTimeout(() => {
-                console.log('Applying filter after debounce:', filterModel);
-                setFilterModel(filterModel);
-   
-                // Reset to page 0 when filtering changes
-                if (currentPage !== 0) {
-                  handlePageChange(0);
-                }
-              }, 300); // 300ms debounce
-              
-              return () => clearTimeout(timer);
-            }
-          }
-        }}
-        filterModel={localFilterModel}
         // Row selection
         checkboxSelection={checkboxSelection && canSelectRows}
         rowSelectionModel={selectionModel}
         onRowSelectionModelChange={handleSelectionModelChange}
         disableMultipleRowSelection={disableMultipleSelection}
         isRowSelectable={() => !isInEditOrAddMode}
+        // Sorting
+        sortingMode={sortingMode}
+        sortModel={sortModelToUse}
+        onSortModelChange={handleSortModelChange}
+        // Filtering
+        filterMode={filterMode}
+        filterModel={filterModelToUse}
+        onFilterModelChange={handleFilterModelChange}
         // Editing
         editMode="cell"
         rowHeight={rowHeight}
@@ -684,7 +776,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         {...props}
       />
     );
-  };
+  });
  
   // Get the GridFormContext functions and state
   const GridFormWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -743,7 +835,7 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
     return (
       <UnifiedDataGridToolbar
         // Pass existing props from GridModeProvider context
-        onSave={useGridForm().saveChanges} // Assuming saveChanges is needed here
+        onSave={useGridForm().saveChanges}
         onExport={() => console.log('Export clicked')}
         onUpload={() => console.log('Upload clicked')}
         onHelp={() => console.log('Help clicked')}
@@ -756,13 +848,11 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
         onAddClick={handleAddClick}
       />
     );
-  }, [useAddDialog, handleOpenAddDialog, useGridMode, useGridForm, canEditRows, canAddRows, canSelectRows, canDeleteRows, props.customActionButtons]);
+  }, [useAddDialog, handleOpenAddDialog, canEditRows, canAddRows, canSelectRows, canDeleteRows, props.customActionButtons]);
 
 
   // Get the saveChanges function from GridFormContext
   const GridFormWithToolbar = () => {
-    const { saveChanges } = useGridForm();
-
     return (
       <GridFormWrapper>
         <div className={`h-full w-full flex flex-col ${className || ''}`}>
@@ -842,5 +932,3 @@ const CellRendererWrapper = ({
     />
   );
 };
- 
- 
