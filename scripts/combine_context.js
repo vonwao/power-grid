@@ -1,119 +1,114 @@
 const fs = require('fs');
 const path = require('path');
+const glob = require('glob');
 
-// Define the files that are relevant to the "Too many re-renders" issue
-const relevantFiles = [
-  // Main files with the issue
-  'pages/mtm-history.tsx',
-  'components/DataGrid/EnhancedDataGridGraphQL.tsx',
-  
-  // Context providers that might be causing re-renders
-  'components/DataGrid/context/GridModeContext.tsx',
-  'components/DataGrid/context/GridFormContext.tsx',
-  
-  // Hooks that might be causing re-renders
-  'components/DataGrid/hooks/useSelectionModel.ts',
-  'components/DataGrid/hooks/useRelayGraphQLData.ts',
-  
-  // Components involved in the rendering cycle
-  'components/DataGrid/renderers/CellRenderer.tsx',
-  'components/DataGrid/renderers/EditCellRenderer.tsx',
-  'components/DataGrid/components/ValidationIndicator.tsx',
-  'components/DataGrid/components/CellEditHandler.tsx',
-  'components/DataGrid/components/UnifiedDataGridToolbar.tsx'
-];
-
-// Function to read a file and format its content
-function readAndFormatFile(filePath) {
+// Function to read filesets from _filesets.js
+function getFilesets() {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
-    const fileName = path.basename(filePath);
+    const filesetPath = path.join(process.cwd(), '_filesets.js');
+    if (!fs.existsSync(filesetPath)) {
+      // Create a minimal default _filesets.js file
+      const defaultFilesets = `module.exports = {
+  "default": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+};`;
+      fs.writeFileSync(filesetPath, defaultFilesets, 'utf8');
+    }
     
-    // Format the file content with a header
-    return `
-==========================================================================
-FILE: ${filePath}
-==========================================================================
-
-${content}
-
-`;
+    // Dynamically import the filesets
+    delete require.cache[require.resolve('./_filesets.js')];
+    return require('./_filesets.js');
   } catch (error) {
-    return `
-==========================================================================
-FILE: ${filePath}
-==========================================================================
-
-ERROR: Could not read file: ${error.message}
-
-`;
+    console.error(`Error loading filesets: ${error.message}`);
+    return { default: [] };
   }
+}
+
+// Function to expand file patterns
+function expandFilePattern(pattern) {
+  const fullPath = path.join(process.cwd(), pattern);
+  
+  if (pattern.includes('*') || pattern.includes('**')) {
+    const files = glob.sync(fullPath, { nodir: true });
+    return files.map(file => path.relative(process.cwd(), file));
+  }
+  
+  try {
+    const stats = fs.statSync(fullPath);
+    if (stats.isDirectory()) {
+      const files = fs.readdirSync(fullPath)
+        .filter(file => fs.statSync(path.join(fullPath, file)).isFile())
+        .map(file => path.join(pattern, file));
+      return files;
+    }
+  } catch (error) {
+    // Continue if file/directory doesn't exist
+  }
+  
+  return [pattern];
 }
 
 // Function to count tokens (rough estimate)
 function countTokens(text) {
-  // A very rough estimate: split by whitespace and count
   return text.split(/\s+/).length;
 }
 
-// Main function to combine files
-function combineFiles() {
-  let combinedContent = `
-Files included:
-${relevantFiles.map(file => `- ${file}`).join('\n')}
-
-==========================================================================
-
-`;
-
+// Main function
+function combineFiles(filesetName = 'default') {
+  const filesets = getFilesets();
+  
+  if (!filesetName) {
+    console.log('Available filesets:', Object.keys(filesets).join(', '));
+    console.log('\nUsage: node combine_context.js [fileset-name]');
+    return;
+  }
+  
+  if (!filesets[filesetName]) {
+    console.error(`Fileset "${filesetName}" not found. Available: ${Object.keys(filesets).join(', ')}`);
+    return;
+  }
+  
+  // Expand the fileset
+  let relevantFiles = [];
+  for (const item of filesets[filesetName]) {
+    relevantFiles = relevantFiles.concat(expandFilePattern(item));
+  }
+  relevantFiles = [...new Set(relevantFiles)]; // Remove duplicates
+  
+  let combinedContent = `FILESET: ${filesetName}\n\n`;
+  
   // Process each file
   for (const file of relevantFiles) {
     const filePath = path.join(process.cwd(), file);
-    const formattedContent = readAndFormatFile(filePath);
-    combinedContent += formattedContent;
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      combinedContent += `====== ${file} ======\n\n${content}\n\n\n`;
+    } catch (error) {
+      combinedContent += `====== ${file} ======\n\nERROR: ${error.message}\n\n\n`;
+    }
   }
-
-  // Add analysis section
-  combinedContent += `
-==========================================================================
-ANALYSIS OF POTENTIAL CAUSES
-==========================================================================
-
-1. Selection Model Management:
-   - The useSelectionModel hook in EnhancedDataGridGraphQL might be causing a loop
-   - The selectionModel prop is passed to the DataGrid component and also managed internally
-   - The onSelectionModelChange handler might be triggering re-renders
-
-2. Context Provider Nesting:
-   - Multiple nested context providers (GridFormProvider, GridModeProvider) might be causing cascading updates
-   - Each provider might be re-rendering when their values change
-
-3. State Updates During Render:
-   - There might be state updates happening during the render phase
-   - Check for setState calls that aren't in event handlers or useEffect
-
-4. Prop Changes Triggering Re-renders:
-   - The useGraphQL prop toggling might be causing component remounts
-   - The selectionModel prop changes might be causing re-renders
-
-5. Effect Dependencies:
-   - Some useEffect hooks might have missing or incorrect dependencies
-   - This could cause them to run too frequently and update state
-
-==========================================================================
-TOKEN COUNT ESTIMATE
-==========================================================================
-
-Approximate number of tokens: ${countTokens(combinedContent)}
-`;
-
-  // Write the combined content to a file
-  const outputPath = path.join(process.cwd(), 'combined_context.txt');
+  
+  // Calculate statistics
+  const tokenCount = countTokens(combinedContent);
+  const contextWindowSize = 200000;
+  const percentageUsed = ((tokenCount / contextWindowSize) * 100).toFixed(2);
+  
+  // Write output
+  const outputPath = path.join(process.cwd(), `output_${filesetName}.txt`);
   fs.writeFileSync(outputPath, combinedContent, 'utf8');
   
-  console.log(`Combined context written to ${outputPath}`);
-  console.log(`Approximate token count: ${countTokens(combinedContent)}`);
+  // Display summary
+  console.log(`\nOutput: ${outputPath}`);
+  console.log(`Token count: ${tokenCount.toLocaleString()}`);
+  console.log(`Context window: ${percentageUsed}% of 200K`);
+  console.log(`\nTo copy to clipboard:`);
+  console.log(`  macOS: pbcopy < "${outputPath}"`);
+  console.log(`  Linux: xclip -selection clipboard < "${outputPath}"`);
+  console.log(`  Windows: clip < "${outputPath}"`);
 }
 
-// Execute the main function
-combineFiles();
+// Execute
+const filesetName = process.argv[2];
+combineFiles(filesetName);
