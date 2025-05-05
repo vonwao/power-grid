@@ -279,83 +279,95 @@ export function EnhancedDataGridGraphQL<T extends { id: GridRowId }>({
   const sortModelToUse = useMemo(() => initialSortModel || internalSortModel, [initialSortModel, internalSortModel]);
   const filterModelToUse = useMemo(() => initialFilterModel || internalFilterModel, [initialFilterModel, internalFilterModel]);
 
-  // Function to select the appropriate GraphQL hook based on pagination style
-  const selectGraphQLHook = useCallback(() => {
-    if (!useGraphQLFetching) {
-      return {
-        rows: [] as T[],
-        totalRows: 0,
-        loading: false,
-        error: null as Error | null,
-        setPage: () => {},
-        setSortModel: () => {},
-        setFilterModel: () => {},
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null,
-        },
-        refetch: () => Promise.resolve({ data: null }),
-        resetCursors: () => {},
-      } as ServerSideResult<T>;
-    }
+// First, let's make sure the selectGraphQLHook function always returns a valid object
+const selectGraphQLHook = useCallback(() => {
+  if (!useGraphQLFetching) {
+    return {
+      rows: [] as T[],
+      totalRows: 0,
+      loading: false,
+      error: null as Error | null,
+      setPage: () => {},
+      setSortModel: () => {},
+      setFilterModel: () => {},
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+      refetch: () => Promise.resolve({ data: null }),
+      resetCursors: () => {},
+    } as ServerSideResult<T>;
+  }
 
-    // TODO: Add implementation for key-based pagination when paginationStyle is 'key'
-    if (paginationStyle === 'key') {
-      // Use key-based pagination hook
-      return useGraphQLData<T>({
-        pageSize: paginationModelToUse.pageSize,
-        initialPage: paginationModelToUse.page,
-        query,
-        variables,
-        filterModel: filterModelToUse,
-        sortModel: sortModelToUse,
-        nodeToRow: (node) => ({
-          ...node,
-          id: node.accounting_mtm_history_id || node.id,
-        }),
-      });
-    } else {
-      // Use Relay-style cursor-based pagination hook
-      // return useRelayGraphQLData<T>({
-      //   pageSize: paginationModelToUse.pageSize,
-      //   initialPage: paginationModelToUse.page,
-      //   initialSortModel: sortModelToUse,
-      //   initialFilterModel: filterModelToUse,
-      //   query,
-      //   variables,
-      //   nodeToRow: (node) => ({
-      //     ...node,
-      //     id: node.accounting_mtm_history_id || node.id,
-      //   }),
-      // });
-    }
-  }, [
-    useGraphQLFetching,
-    paginationStyle,
-    paginationModelToUse.pageSize,
-    paginationModelToUse.page,
-    query,
-    variables,
-    filterModelToUse,
-    sortModelToUse
-  ]);
+  // TODO: Add implementation for key-based pagination when paginationStyle is 'key'
+  if (paginationStyle === 'key') {
+    // Use key-based pagination hook
+    return useGraphQLData<T>({
+      pageSize: paginationModelToUse.pageSize,
+      initialPage: paginationModelToUse.page,
+      query,
+      variables,
+      filterModel: filterModelToUse,
+      sortModel: sortModelToUse,
+      nodeToRow: (node) => ({
+        ...node,
+        id: node.accounting_mtm_history_id || node.id,
+      }),
+    });
+  } else {
+    // For cursor-based pagination or other types, return the default empty state
+    // This is just a fallback until the actual implementation is added
+    return {
+      rows: [] as T[],
+      totalRows: 0,
+      loading: false,
+      error: null as Error | null,
+      setPage: () => {},
+      setSortModel: () => {},
+      setFilterModel: () => {},
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+      refetch: () => Promise.resolve({ data: null }),
+      resetCursors: () => {},
+    } as ServerSideResult<T>;
+  }
+}, [
+  useGraphQLFetching,
+  paginationStyle,
+  paginationModelToUse.pageSize,
+  paginationModelToUse.page,
+  query,
+  variables,
+  filterModelToUse,
+  sortModelToUse
+]);
 
-  // Use the appropriate hook based on pagination style
-  const graphQLResult = selectGraphQLHook();
- 
-  const {
-    rows: graphQLRows,
-    totalRows: graphQLTotalRows,
-    loading: graphQLLoading,
-    setPage,
-    setSortModel,
-    setFilterModel,
-    refetch,
-    pageInfo,
-    resetCursors,
-  } = graphQLResult;
+// Use the appropriate hook based on pagination style
+const graphQLResult = selectGraphQLHook();
+
+// Now when we destructure graphQLResult, it will always be a valid object with the expected properties
+const {
+  rows: graphQLRows = [],
+  totalRows: graphQLTotalRows = 0,
+  loading: graphQLLoading = false,
+  setPage = () => {},
+  setSortModel = () => {},
+  setFilterModel = () => {},
+  refetch = () => Promise.resolve({ data: null }),
+  pageInfo = {
+    hasNextPage: false,
+    hasPreviousPage: false,
+    startCursor: null,
+    endCursor: null,
+  },
+  resetCursors = () => {},
+} = graphQLResult || {}; // Add a fallback empty object in case graphQLResult is undefined
  
   // Use GraphQL data or client data based on the useGraphQLFetching flag
   const displayRows = useMemo(() => {

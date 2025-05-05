@@ -7,10 +7,17 @@ function getFilesets() {
   try {
     const filesetPath = path.join(process.cwd(), '_filesets.js');
     if (!fs.existsSync(filesetPath)) {
-      return {};
+      // Create a default _filesets.js if it doesn't exist
+      const defaultFilesets = `module.exports = {
+  "default": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+};`;
+      fs.writeFileSync(filesetPath, defaultFilesets, 'utf8');
+      return require('./_filesets.js');
     }
     
-    // Dynamically import the filesets
     delete require.cache[require.resolve('./_filesets.js')];
     return require('./_filesets.js');
   } catch (error) {
@@ -18,72 +25,60 @@ function getFilesets() {
   }
 }
 
-// Function to expand file patterns
-function expandFilePattern(pattern) {
-  // If pattern contains glob symbols, use glob
-  if (pattern.includes('*') || pattern.includes('?')) {
-    const files = glob.sync(pattern, { 
-      cwd: process.cwd(),
-      nodir: true,
-      matchBase: true 
-    });
-    return files;
-  }
-  
-  try {
-    const stats = fs.statSync(pattern);
-    if (stats.isDirectory()) {
-      // For directories, return all files non-recursively
-      const files = fs.readdirSync(pattern)
-        .filter(file => fs.statSync(path.join(pattern, file)).isFile())
-        .map(file => path.join(pattern, file));
-      return files;
-    }
-  } catch (error) {
-    // Continue if file/directory doesn't exist
-  }
-  
-  return [pattern];
-}
-
-// Function to count tokens (rough estimate)
+// Function to count tokens
 function countTokens(text) {
   return text.split(/\s+/).length;
 }
 
 // Main function
-function combineFiles(target) {
+function combineFiles() {
   const filesets = getFilesets();
+  const args = process.argv.slice(2);
   
-  if (!target) {
-    console.log('\nUsage: node combine_context.js <fileset|directory|pattern>');
+  if (args.length === 0) {
+    console.log('\nUsage: node combine_context.js <fileset|directory>');
+    console.log('       node combine_context.js "directory/**" (use quotes)');
     if (Object.keys(filesets).length > 0) {
-      console.log('Available filesets:', Object.keys(filesets).join(', '));
-    } else {
-      console.log('No filesets found in _filesets.js');
+      console.log('\nAvailable filesets:', Object.keys(filesets).join(', '));
     }
-    console.log('\nExamples:');
-    console.log('  node combine_context.js pages');
-    console.log('  node combine_context.js "pages/**"');
-    console.log('  node combine_context.js "**/*.ts"');
+    console.log('\nTo get ALL files in a directory recursively, use: pages');
+    console.log('To use a pattern, enclose in quotes: "pages/**"');
     return;
   }
   
+  let target = args[0];
   let relevantFiles = [];
-  let sourceType = 'DIRECTORY';
+  let outputName = target;
   
   // Check if target is a fileset
   if (filesets[target]) {
-    sourceType = 'FILESET';
-    // Expand the fileset
     for (const item of filesets[target]) {
-      relevantFiles = relevantFiles.concat(expandFilePattern(item));
+      const files = glob.sync(item, { nodir: true });
+      relevantFiles = relevantFiles.concat(files);
     }
   } else {
     // Treat as directory or pattern
-    relevantFiles = expandFilePattern(target);
-    if (target.includes('*')) {
-      sourceType = 'PATTERN';
+    if (args.length > 1) {
+      // Shell expanded the pattern, collect all arguments as files
+      relevantFiles = args;
+      target = 'expanded_pattern';
+      outputName = 'combined_files';
+    } else {
+      // Single argument - check if directory
+      try {
+        const stats = fs.statSync(target);
+        if (stats.isDirectory()) {
+          // Search directory recursively
+          relevantFiles = glob.sync(`${target}/**`, { nodir: true });
+          outputName = target;
+        } else {
+          relevantFiles = [target];
+        }
+      } catch (e) {
+        // Not a file/directory, try as glob pattern
+        relevantFiles = glob.sync(target, { nodir: true });
+        outputName = target.replace(/[^a-zA-Z0-9]/g, '_');
+      }
     }
   }
   
@@ -92,13 +87,12 @@ function combineFiles(target) {
   // Log file list
   console.log(`\nfiles: ${relevantFiles.map(f => path.basename(f)).join(', ')} (total: ${relevantFiles.length})`);
   
-  let combinedContent = `${sourceType}: ${target}\n\n`;
+  let combinedContent = `PROCESSING: ${target}\n\n`;
   
   // Process each file
   for (const file of relevantFiles) {
-    const filePath = path.resolve(file);
     try {
-      const content = fs.readFileSync(filePath, 'utf8');
+      const content = fs.readFileSync(file, 'utf8');
       combinedContent += `====== ${file} ======\n\n${content}\n\n\n`;
     } catch (error) {
       combinedContent += `====== ${file} ======\n\nERROR: ${error.message}\n\n\n`;
@@ -110,9 +104,9 @@ function combineFiles(target) {
   const contextWindowSize = 200000;
   const percentageUsed = ((tokenCount / contextWindowSize) * 100).toFixed(2);
   
-  // Clean filename for output
-  const cleanName = target.replace(/[^a-zA-Z0-9]/g, '_');
-  const outputPath = path.join(process.cwd(), `output_${cleanName}.txt`);
+  // Create output filename - replace any problematic characters
+  const cleanOutputName = outputName.replace(/[^a-zA-Z0-9]/g, '_');
+  const outputPath = path.join(process.cwd(), `output_${cleanOutputName}.txt`);
   fs.writeFileSync(outputPath, combinedContent, 'utf8');
   
   // Display summary
@@ -126,5 +120,4 @@ function combineFiles(target) {
 }
 
 // Execute
-const target = process.argv[2];
-combineFiles(target);
+combineFiles();

@@ -1,0 +1,1276 @@
+DIRECTORY: pages
+
+====== pages/_app.tsx ======
+
+import React from 'react';
+import type { AppProps } from 'next/app';
+import { ApolloProvider } from '@apollo/client';
+import { initializeApollo } from '../graphql/apollo-client';
+import '../styles/globals.css';
+
+// This default export is required in a new `pages/_app.js` file.
+export default function MyApp({ Component, pageProps }: AppProps) {
+  const apolloClient = initializeApollo(pageProps.initialApolloState);
+
+  return (
+    <ApolloProvider client={apolloClient}>
+      <Component {...pageProps} />
+    </ApolloProvider>
+  );
+}
+
+
+
+====== pages/csv-import.tsx ======
+
+import React from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { Box, Button } from '@mui/material';
+import CSVImportDataGridDemo from '../components/CSVImportDataGridDemo';
+
+export default function CSVImportPage() {
+  return (
+    <>
+      <Head>
+        <title>CSV Import - MUI X Grid Demo</title>
+        <meta name="description" content="CSV Import feature for MUI X Data Grid" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      
+      <Box className="fixed top-4 left-4 z-10">
+        <Link href="/" passHref>
+          <Button variant="outlined" color="primary">
+            Back to Main Demo
+          </Button>
+        </Link>
+      </Box>
+      
+      <CSVImportDataGridDemo />
+    </>
+  );
+}
+
+
+====== pages/graphql-grid.tsx ======
+
+import React from 'react';
+import GraphQLDataGridDemo from '../components/GraphQLDataGridDemo';
+
+export default function GraphQLGridPage() {
+  return (
+    <div className="container mx-auto p-4 h-screen flex flex-col">
+      <h1 className="text-2xl font-bold mb-4">GraphQL Data Grid</h1>
+      <p className="mb-4">
+        This example demonstrates using Apollo Client and GraphQL to fetch data for the grid.
+        The data is fetched from a GraphQL API endpoint with pagination, sorting, and filtering.
+      </p>
+      <div className="flex-grow">
+        <GraphQLDataGridDemo />
+      </div>
+    </div>
+  );
+}
+
+
+====== pages/index.tsx ======
+
+import React from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { Box, Button, Card, CardContent, Typography, Grid } from '@mui/material';
+
+export default function Home() {
+  return (
+    <>
+      <Head>
+        <title>MUI X Grid Demo</title>
+        <meta name="description" content="Demo application showcasing MUI X Data Grid v7 with inline editing and Tailwind CSS" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      
+      <Box className="container mx-auto p-4">
+        <Typography variant="h3" component="h1" gutterBottom>
+          Data Grid Demos
+        </Typography>
+        
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  REST API Grid
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Traditional REST API implementation for data fetching with pagination, sorting, and filtering.
+                </Typography>
+                <Link href="/" passHref>
+                  <Button variant="contained" component="a">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  GraphQL Grid
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Modern GraphQL implementation using Apollo Client for data fetching with pagination, sorting, and filtering.
+                </Typography>
+                <Link href="/graphql-grid" passHref>
+                  <Button variant="contained" component="a" color="primary">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  MTM History with Relay Pagination
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  GraphQL implementation using Relay-style cursor-based pagination for efficient data fetching.
+                </Typography>
+                <Link href="/mtm-history" passHref>
+                  <Button variant="contained" component="a" color="secondary">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Unified Toolbar
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Enhanced grid with a unified toolbar for better user experience.
+                </Typography>
+                <Link href="/unified-toolbar" passHref>
+                  <Button variant="contained" component="a">View Demo</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+    </>
+  );
+}
+
+
+
+====== pages/mtm-adjustments.tsx ======
+
+import React, { useState } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { Paper } from '@mui/material';
+import { gql } from '@apollo/client';
+import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { ValidationHelpers } from '../components/DataGrid/context/GridFormContext';
+
+// Define types directly in this file
+interface MTMAdjustment {
+  id: number;
+  deal_key: number;
+  reporting_month: string;
+  contract_month: string;
+  contract_number: string;
+  bucket_strategy: string;
+  bs_netting_label: string;
+  group_id: number;
+  rolloff_classification: string;
+  fas_161_label: string;
+  strategy: string;
+  fas_157_curve_rank: number;
+  portfolio: string;
+  modified_by: string;
+  modified_on: string;
+}
+
+interface MTMAdjustmentFilterInput {
+  deal_key?: number | { eq?: number; lt?: number; gt?: number };
+  reporting_month?: string | { contains?: string };
+  contract_month?: string | { contains?: string };
+  contract_number?: string | { contains?: string };
+  bucket_strategy?: string | { contains?: string };
+  bs_netting_label?: string | { contains?: string };
+  group_id?: number | { eq?: number; lt?: number; gt?: number };
+  rolloff_classification?: string | { contains?: string };
+  fas_161_label?: string | { contains?: string };
+  strategy?: string | { contains?: string };
+  fas_157_curve_rank?: number | { eq?: number; lt?: number; gt?: number };
+  portfolio?: string | { contains?: string };
+  modified_by?: string | { contains?: string };
+  modified_on?: string | { lt?: string; gt?: string };
+}
+
+interface SortInput {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+// GraphQL query for fetching MTMAdjustments with pagination, sorting, and filtering
+const GET_MTM_ADJUSTMENTS = gql`
+  query GetMTMAdjustments(
+    $page: Int
+    $pageSize: Int
+    $sort: SortInput
+    $filter: MTMAdjustmentFilterInput
+  ) {
+    mtmAdjustments(
+      page: $page
+      pageSize: $pageSize
+      sort: $sort
+      filter: $filter
+    ) {
+      rows {
+        id
+        deal_key
+        reporting_month
+        contract_month
+        contract_number
+        bucket_strategy
+        bs_netting_label
+        group_id
+        rolloff_classification
+        fas_161_label
+        strategy
+        fas_157_curve_rank
+        portfolio
+        modified_by
+        modified_on
+      }
+      totalRows
+    }
+  }
+`;
+
+// Define columns for MTM Adjustments
+const mtmAdjustmentColumns = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 90,
+    fieldConfig: { type: 'number' as const },
+  },
+  {
+    field: 'deal_key',
+    headerName: 'Deal Key',
+    width: 120,
+    fieldConfig: { type: 'number' as const },
+  },
+  {
+    field: 'reporting_month',
+    headerName: 'Reporting Month',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'contract_month',
+    headerName: 'Contract Month',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'contract_number',
+    headerName: 'Contract Number',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'bucket_strategy',
+    headerName: 'Bucket Strategy',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'bs_netting_label',
+    headerName: 'BS Netting Label',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'group_id',
+    headerName: 'Group ID',
+    width: 120,
+    fieldConfig: { type: 'number' as const },
+  },
+  {
+    field: 'rolloff_classification',
+    headerName: 'Rolloff Classification',
+    width: 180,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'fas_161_label',
+    headerName: 'FAS 161 Label',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'strategy',
+    headerName: 'Strategy',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'fas_157_curve_rank',
+    headerName: 'FAS 157 Curve Rank',
+    width: 180,
+    fieldConfig: { type: 'number' as const },
+  },
+  {
+    field: 'portfolio',
+    headerName: 'Portfolio',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'modified_by',
+    headerName: 'Modified By',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'modified_on',
+    headerName: 'Modified On',
+    width: 180,
+    fieldConfig: { type: 'string' as const },
+  },
+];
+
+// Sample data for client-side fallback
+const sampleMTMAdjustments: MTMAdjustment[] = [
+  {
+    id: 1,
+    deal_key: 12345,
+    reporting_month: '2023-01',
+    contract_month: '2023-02',
+    contract_number: 'CN-001',
+    bucket_strategy: 'Strategy A',
+    bs_netting_label: 'Label 1',
+    group_id: 100,
+    rolloff_classification: 'Class A',
+    fas_161_label: 'Label X',
+    strategy: 'Hedge',
+    fas_157_curve_rank: 2,
+    portfolio: 'Portfolio A',
+    modified_by: 'John Doe',
+    modified_on: '2023-01-15',
+  },
+  {
+    id: 2,
+    deal_key: 67890,
+    reporting_month: '2023-01',
+    contract_month: '2023-03',
+    contract_number: 'CN-002',
+    bucket_strategy: 'Strategy B',
+    bs_netting_label: 'Label 2',
+    group_id: 200,
+    rolloff_classification: 'Class B',
+    fas_161_label: 'Label Y',
+    strategy: 'Speculative',
+    fas_157_curve_rank: 1,
+    portfolio: 'Portfolio B',
+    modified_by: 'Jane Smith',
+    modified_on: '2023-01-20',
+  },
+];
+
+export default function MTMAdjustmentsPage() {
+  // State for grid
+  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true);
+  
+  // Row-level validation for MTM Adjustment data
+  const validateMTMAdjustmentRow = (values: any, helpers: ValidationHelpers) => {
+    const errors: Record<string, string> = {};
+    // Add validation logic as needed
+    return errors;
+  };
+
+  // Handle save function
+  const handleSave = (changes: { edits: any[], additions: any[] }) => {
+    console.log('Saving changes:', changes);
+    // Submit changes to API
+  };
+  
+  // Handler for selection changes
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectionModel(newSelection);
+  };
+
+  // Custom variables for the GraphQL query
+  const variables = {
+    // Any additional variables needed for the query
+  };
+
+  return (
+    <div className="h-full w-full flex flex-col p-4">
+      <h1 className="text-2xl font-bold mb-4">MTM Adjustments</h1>
+      
+      <div className="mb-4">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={useGraphQLFetching}
+            onChange={(e) => setUseGraphQLFetching(e.target.checked)}
+            className="mr-2"
+          />
+          Use GraphQL Fetching
+        </label>
+      </div>
+      
+      {/* Data Grid */}
+      <Paper elevation={0} className="flex-grow w-full overflow-auto">
+        <EnhancedDataGridGraphQL
+          columns={mtmAdjustmentColumns}
+          rows={sampleMTMAdjustments} // Used as fallback when not using GraphQL
+          onSave={handleSave}
+          validateRow={validateMTMAdjustmentRow}
+          
+          // GraphQL options
+          useGraphQL={useGraphQLFetching}
+          query={GET_MTM_ADJUSTMENTS} // Pass the GraphQL query
+          variables={variables} // Pass variables for the query
+          
+          // Selection options
+          checkboxSelection={true}
+          selectionModel={selectionModel}
+          onSelectionModelChange={handleSelectionChange}
+          
+          // Grid capabilities
+          canEditRows={true}
+          canAddRows={true}
+          canSelectRows={true}
+          
+          // UI options
+          density="standard"
+          disableSelectionOnClick={true}
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
+      </Paper>
+    </div>
+  );
+}
+
+
+====== pages/mtm-history.tsx ======
+
+import React, { useState, useRef, useCallback } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { Paper } from '@mui/material';
+import { gql } from '@apollo/client';
+import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { EnhancedColumnConfig } from '../components/DataGrid/EnhancedDataGridGraphQL';
+
+// GraphQL query using Relay-style pagination
+const GET_MTM_HISTORY = gql`
+  query MtmHistory(
+    $first: Int
+    $after: String
+    $filter: String
+    $sort: String
+  ) {
+    mtmHistory(first: $first, after: $after, filter: $filter, sort: $sort) {
+      edges {
+        cursor
+        node {
+          accounting_mtm_history_id
+          adj_description 
+          commodity
+          deal_volume
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+`;
+
+// Placeholder GraphQL Mutations (Replace with actual mutations)
+const UPDATE_MTM_HISTORY_ITEM = gql`
+  mutation UpdateMtmHistoryItem($input: UpdateMtmHistoryItemInput!) {
+    updateMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after update
+    }
+  }
+`;
+
+const CREATE_MTM_HISTORY_ITEM = gql`
+  mutation CreateMtmHistoryItem($input: CreateMtmHistoryItemInput!) {
+    createMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after creation
+    }
+  }
+`;
+
+const DELETE_MTM_HISTORY_ITEMS = gql`
+  mutation DeleteMtmHistoryItems($ids: [ID!]!) {
+    deleteMtmHistoryItems(ids: $ids) {
+      success
+      deletedCount
+    }
+  }
+`;
+
+
+// Define columns
+const mtmHistoryColumns: EnhancedColumnConfig[] = [
+  {
+    field: 'accounting_mtm_history_id',
+    headerName: 'ID',
+    width: 120,
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'ID is required'
+      }
+    },
+  },
+  {
+    field: 'adj_description',
+    headerName: 'Description',
+    width: 200,
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Description is required'
+      }
+    },
+  },
+  {
+    field: 'commodity',
+    headerName: 'Commodity',
+    width: 150,
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Commodity is required'
+      }
+    },
+  },
+  {
+    field: 'deal_volume',
+    headerName: 'Deal Volume',
+    width: 150,
+    fieldConfig: {
+      type: 'number' as const,
+      validation: {
+        required: 'Deal Volume is required',
+        min: {
+          value: 0,
+          message: 'Deal Volume must be a positive number'
+        }
+      }
+    },
+  },
+];
+
+// Sample data for client-side fallback
+const sampleMTMHistory = [
+  {
+    id: 'MTM-1',
+    accounting_mtm_history_id: 'MTM-1',
+    adj_description: 'Sample Adjustment 1',
+    commodity: 'Oil',
+    deal_volume: 100.5,
+  },
+  {
+    id: 'MTM-2',
+    accounting_mtm_history_id: 'MTM-2',
+    adj_description: 'Sample Adjustment 2',
+    commodity: 'Gas',
+    deal_volume: 200.75,
+  },
+];
+
+export default function MTMHistoryPage() {
+  // State for grid
+  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false); // Set to false by default for testing
+  // Use a ref to store the refetch function to avoid re-renders
+  const refetchDataRef = useRef<() => Promise<any>>(() => Promise.resolve({ data: null }));
+  // State for client-side rows
+  const [clientRows, setClientRows] = useState(sampleMTMHistory);
+  
+  // Helper function to call the refetch function
+  const refetchData = useCallback(() => {
+    return refetchDataRef.current();
+  }, []);
+  
+  // Handler for selection changes
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectionModel(newSelection);
+  };
+  
+  // Handler for grid functions initialization
+  const handleGridFunctionsInit = (
+    refetch: () => Promise<any>,
+    resetCursors: () => void,
+    pageInfo: any
+  ) => {
+    console.log('Grid functions initialized');
+    refetchDataRef.current = refetch;
+  };
+  
+  // Function to handle adding a row directly
+  const handleAddRow = () => {
+    console.log('MTMHistoryPage: handleAddRow called');
+    if (!useGraphQLFetching) {
+      // Generate a new ID for the client-side row
+      const newId = `new-${Date.now()}`;
+      
+      // Create a new row with default values
+      const newRow = {
+        id: newId,
+        accounting_mtm_history_id: newId,
+        adj_description: '',
+        commodity: '',
+        deal_volume: 0
+      };
+      
+      // Add the row to the client-side rows
+      setClientRows(prev => [newRow, ...prev]);
+      console.log('MTMHistoryPage: Added new row with ID:', newId);
+    }
+  };
+  
+  // Row-level validation function
+  const validateMtmHistoryRow = (values: any, helpers: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Check if deal_volume is a positive number
+    if (values.deal_volume !== undefined && values.deal_volume !== null) {
+      if (isNaN(values.deal_volume) || values.deal_volume < 0) {
+        errors.deal_volume = 'Deal Volume must be a positive number';
+      }
+    }
+    
+    // Additional custom validations can be added here
+    
+    return errors;
+  };
+  
+  // Handler for saving changes (edits and additions)
+  const handleSave = async (changes: { edits: any[]; additions: any[] }) => {
+    console.log('Saving changes:', changes);
+
+    // Placeholder logic - replace with actual mutation calls
+    try {
+      // Process edits
+      for (const edit of changes.edits) {
+        console.log('Updating item:', edit.id, edit);
+        // Example: await updateItemMutation({ variables: { input: { id: edit.id, ...edit } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          setClientRows(prev =>
+            prev.map(row => row.id === edit.id ? { ...row, ...edit.changes } : row)
+          );
+        }
+      }
+
+      // Process additions
+      for (const addition of changes.additions) {
+        console.log('Creating item:', addition);
+        // Example: await createItemMutation({ variables: { input: { ...addition } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          // Generate a new ID for the client-side row
+          const newId = `MTM-${Date.now()}`;
+          const newRow = {
+            ...addition,
+            id: newId,
+            accounting_mtm_history_id: newId
+          };
+          
+          setClientRows(prev => [newRow, ...prev]);
+        }
+      }
+
+      // Refetch data after saving
+      if (useGraphQLFetching) {
+        refetchData();
+      }
+
+      alert('Changes saved (simulated). Check console.');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Error saving changes. Check console.');
+    }
+  };
+
+  // Handler for deleting selected rows
+  const handleDelete = async (ids: GridRowId[]) => {
+    console.log('Deleting rows with IDs:', ids);
+
+    // Placeholder logic - replace with actual mutation call
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
+      return; // Early exit if user cancels
+    }
+
+    try {
+      // Example: await deleteItemsMutation({ variables: { ids } });
+      console.log(`Simulating deletion of ${ids.length} items.`);
+
+      // Update client-side rows
+      if (!useGraphQLFetching) {
+        setClientRows(prev => prev.filter(row => !ids.includes(row.id)));
+      } else {
+        // Refetch data after deleting
+        refetchData();
+      }
+
+      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
+    } catch (error) {
+      console.error('Error deleting rows:', error);
+      alert('Error deleting rows. Check console.');
+    }
+  };
+
+  return (
+    <div className="h-full w-full flex flex-col p-4">
+      <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
+      
+      <div className="mb-4 flex items-center justify-between">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={useGraphQLFetching}
+            onChange={(e) => setUseGraphQLFetching(e.target.checked)}
+            className="mr-2"
+          />
+          Use GraphQL Fetching
+        </label>
+        
+        {/* Custom Add Button */}
+        {!useGraphQLFetching && (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleAddRow}
+          >
+            Add Row Directly
+          </button>
+        )}
+      </div>
+      
+      {/* Data Grid */}
+      <Paper elevation={0} className="flex-grow w-full overflow-auto">
+        <EnhancedDataGridGraphQL
+          columns={mtmHistoryColumns}
+          rows={clientRows} // Use state variable instead of static array
+          
+          // GraphQL options
+          useGraphQL={useGraphQLFetching}
+          query={GET_MTM_HISTORY}
+          // No need to pass variables, let the hook handle it
+          paginationStyle="cursor" // Use cursor-based pagination
+          
+          // Grid functions initialization
+          onGridFunctionsInit={handleGridFunctionsInit}
+          
+          // Validation
+          validateRow={validateMtmHistoryRow}
+          
+          // Selection options
+          checkboxSelection={true}
+          selectionModel={selectionModel}
+          onSelectionModelChange={handleSelectionChange}
+          
+          // Grid capabilities
+          canEditRows={true}
+          canAddRows={true}
+          canSelectRows={true}
+          canDeleteRows={true} // Enable deletion
+          
+          // UI options
+          density="standard"
+          disableSelectionOnClick={true}
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          
+          // Save handler
+          onSave={handleSave}
+          // Delete handler
+          onDelete={handleDelete}
+         />
+      </Paper>
+    </div>
+  );
+}
+
+
+====== pages/pagination-test.tsx ======
+
+import React, { useState, useEffect } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { Paper, Button, Typography, Box, Alert } from '@mui/material';
+import { gql } from '@apollo/client';
+import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { EnhancedColumnConfig } from '../components/DataGrid/EnhancedDataGridGraphQL';
+// Import the verification function directly to avoid CommonJS/ESM issues
+
+// GraphQL query using Relay-style pagination (same as mtm-history.tsx)
+const GET_MTM_HISTORY = gql`
+  query MtmHistory(
+    $first: Int
+    $after: String
+    $filter: String
+    $sort: String
+  ) {
+    mtmHistory(first: $first, after: $after, filter: $filter, sort: $sort) {
+      edges {
+        cursor
+        node {
+          accounting_mtm_history_id
+          adj_description 
+          commodity
+          deal_volume
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+`;
+
+// Define columns (same as mtm-history.tsx)
+const mtmHistoryColumns: EnhancedColumnConfig[] = [
+  {
+    field: 'accounting_mtm_history_id',
+    headerName: 'ID',
+    width: 120,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'adj_description',
+    headerName: 'Description',
+    width: 200,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'commodity',
+    headerName: 'Commodity',
+    width: 150,
+    fieldConfig: { type: 'string' as const },
+  },
+  {
+    field: 'deal_volume',
+    headerName: 'Deal Volume',
+    width: 150,
+    fieldConfig: { type: 'number' as const },
+  },
+];
+
+// Sample data for client-side fallback
+const sampleMTMHistory = [
+  {
+    id: 'MTM-1',
+    accounting_mtm_history_id: 'MTM-1',
+    adj_description: 'Sample Adjustment 1',
+    commodity: 'Oil',
+    deal_volume: 100.5,
+  },
+  {
+    id: 'MTM-2',
+    accounting_mtm_history_id: 'MTM-2',
+    adj_description: 'Sample Adjustment 2',
+    commodity: 'Gas',
+    deal_volume: 200.75,
+  },
+];
+
+// Interface for verification results
+interface VerificationResult {
+  success: boolean;
+  errors: string[];
+  expectedItems: any[];
+}
+
+export default function PaginationTestPage() {
+  // State for grid
+  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [currentRows, setCurrentRows] = useState<any[]>([]);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  
+  // Handler for selection changes
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectionModel(newSelection);
+  };
+
+  // Handler for page changes
+  const handlePageChange = (page: number) => {
+    console.log('Page changed to:', page);
+    setCurrentPage(page);
+  };
+
+  // Handler for rows changes
+  const handleRowsChange = (rows: any[]) => {
+    console.log('Rows changed:', rows.length);
+    setCurrentRows(rows);
+  };
+
+  // Function to verify the current page against expected data
+  const verifyCurrentPage = () => {
+    // Load the verification function dynamically
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      // Load the pagination test data
+      const testDataPath = path.join(process.cwd(), 'data/pagination-test-data.json');
+      const testData = JSON.parse(fs.readFileSync(testDataPath, 'utf8'));
+      
+      // Get the expected data for this page
+      const expectedPageData = testData.pages[currentPage];
+      
+      if (!expectedPageData) {
+        setVerificationResult({
+          success: false,
+          errors: [`No expected data found for page ${currentPage}`],
+          expectedItems: [],
+        });
+        return;
+      }
+      
+      // Compare the items
+      const errors = [];
+      
+      // Check item count
+      if (currentRows.length !== expectedPageData.items.length) {
+        errors.push(`Item count mismatch: expected ${expectedPageData.items.length}, got ${currentRows.length}`);
+      }
+      
+      // Check each item
+      for (let i = 0; i < Math.min(currentRows.length, expectedPageData.items.length); i++) {
+        const actualItem = currentRows[i];
+        const expectedItem = expectedPageData.items[i];
+        
+        if (actualItem.accounting_mtm_history_id !== expectedItem.accounting_mtm_history_id) {
+          errors.push(`Item ${i} ID mismatch: expected ${expectedItem.accounting_mtm_history_id}, got ${actualItem.accounting_mtm_history_id}`);
+        }
+        
+        if (actualItem.commodity !== expectedItem.commodity) {
+          errors.push(`Item ${i} commodity mismatch: expected ${expectedItem.commodity}, got ${actualItem.commodity}`);
+        }
+        
+        if (actualItem.deal_volume !== expectedItem.deal_volume) {
+          errors.push(`Item ${i} deal_volume mismatch: expected ${expectedItem.deal_volume}, got ${actualItem.deal_volume}`);
+        }
+      }
+      
+      setVerificationResult({
+        success: errors.length === 0,
+        errors,
+        expectedItems: expectedPageData.items,
+      });
+    } catch (error) {
+      setVerificationResult({
+        success: false,
+        errors: [`Error verifying pagination results: ${error}`],
+        expectedItems: [],
+      });
+    }
+  };
+
+  // Reset verification result when page changes
+  useEffect(() => {
+    setVerificationResult(null);
+  }, [currentPage]);
+
+  return (
+    <div className="h-full w-full flex flex-col p-4">
+      <h1 className="text-2xl font-bold mb-4">Pagination Test with Relay Cursor Pagination</h1>
+      
+      <div className="mb-4">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={useGraphQLFetching}
+            onChange={(e) => setUseGraphQLFetching(e.target.checked)}
+            className="mr-2"
+          />
+          Use GraphQL Fetching
+        </label>
+      </div>
+
+      <Box className="mb-4">
+        <Typography variant="h6" gutterBottom>
+          Current Page: {currentPage}
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={verifyCurrentPage}
+          className="mb-2"
+        >
+          Verify Current Page
+        </Button>
+
+        {verificationResult && (
+          <Alert 
+            severity={verificationResult.success ? "success" : "error"}
+            className="mt-2"
+          >
+            {verificationResult.success 
+              ? "Verification successful! Current page matches expected data." 
+              : `Verification failed with ${verificationResult.errors.length} errors`}
+            
+            {verificationResult.errors.length > 0 && (
+              <ul className="mt-2">
+                {verificationResult.errors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            )}
+          </Alert>
+        )}
+      </Box>
+      
+      {/* Data Grid */}
+      <Paper elevation={0} className="flex-grow w-full overflow-auto">
+        <EnhancedDataGridGraphQL
+          columns={mtmHistoryColumns}
+          rows={sampleMTMHistory} // Used as fallback when not using GraphQL
+          
+          // GraphQL options
+          useGraphQL={useGraphQLFetching}
+          query={GET_MTM_HISTORY}
+          paginationStyle="cursor" // Use cursor-based pagination
+          
+          // Selection options
+          checkboxSelection={true}
+          selectionModel={selectionModel}
+          onSelectionModelChange={handleSelectionChange}
+          
+          // Grid capabilities
+          canEditRows={false}
+          canAddRows={false}
+          canSelectRows={true}
+          
+          // UI options
+          density="standard"
+          disableSelectionOnClick={true}
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+
+          // Custom props for testing
+          onPageChange={handlePageChange}
+          onRowsChange={handleRowsChange}
+        />
+      </Paper>
+    </div>
+  );
+}
+
+
+====== pages/trading-graphql.tsx ======
+
+import React, { useCallback, useState, useRef } from 'react';
+import {
+  GridRowId,
+  useGridApiRef,
+} from '@mui/x-data-grid';
+import { Paper } from '@mui/material';
+import { gql } from '@apollo/client';
+import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { TradingActionButtons } from '../components/TradingActionButtons';
+
+// GraphQL query for fetching MTMAdjustments with pagination, sorting, and filtering
+const GET_MTM_ADJUSTMENTS = gql`
+  query GetMTMAdjustments(
+    $page: Int
+    $pageSize: Int
+    $sort: SortInput
+    $filter: MTMAdjustmentFilterInput
+  ) {
+    mtmAdjustments(
+      page: $page
+      pageSize: $pageSize
+      sort: $sort
+      filter: $filter
+    ) {
+      rows {
+        id
+        deal_key
+        reporting_month
+        contract_month
+        contract_number
+        bucket_strategy
+        bs_netting_label
+        group_id
+        rolloff_classification
+        fas_161_label
+        strategy
+        fas_157_curve_rank
+        portfolio
+        modified_by
+        modified_on
+      }
+      totalRows
+    }
+  }
+`;
+import { GridMode } from '../components/DataGrid/context/GridModeContext';
+import { ValidationHelpers } from '../components/DataGrid/context/GridFormContext';
+import { tradingColumns } from '../components/data/tradingColumns';
+import { tradingData } from '../components/data/tradingData';
+
+export default function TradingGraphQLPage() {
+  const apiRef = useGridApiRef();
+  
+  // State for grid
+  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
+  const [isInEditMode, setIsInEditMode] = useState(false);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false);
+  
+  // Create a ref to track the last known edit mode
+  const lastKnownEditModeRef = useRef(false);
+
+  // Row-level validation for trade data
+  const validateTradeRow = (values: any, helpers: ValidationHelpers) => {
+    const errors: Record<string, string> = {};
+    // Add validation logic as needed
+    return errors;
+  };
+
+  // Handle save function (e.g., send updates to backend)
+  const handleSave = (changes: { edits: any[], additions: any[] }) => {
+    console.log('Saving changes:', changes);
+    // Submit changes to API
+  };
+
+  // Handle mode changes via callback
+  const handleModeChange = useCallback((newMode: GridMode) => {
+    const isEditOrAddMode = newMode === 'edit' || newMode === 'add';
+    setIsInEditMode(isEditOrAddMode);
+  }, []);
+  
+  // Handler for selection changes
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectionModel(newSelection);
+  };
+  
+  // Handlers for action buttons
+  const handleFilter = () => {
+    console.log('Filter clicked');
+    // Implement filter functionality
+  };
+  
+  const handleExport = async () => {
+    console.log('Export clicked');
+    
+    // Get the selected rows based on selectionModel
+    const selectedRows = selectionModel.length > 0
+      ? tradingData.filter(row => selectionModel.includes(row.id as GridRowId))
+      : tradingData; // If no rows selected, export all rows
+    
+    // Log the selected rows to the console
+    console.log('Rows to export:', selectedRows);
+    
+    // Simulate async operation
+    return new Promise(resolve => setTimeout(resolve, 1000));
+  };
+  
+  const handleUpload = () => {
+    console.log('Upload clicked');
+    // Implement upload functionality
+  };
+  
+  const handleHelp = () => {
+    console.log('Help clicked');
+    // Implement help functionality
+  };
+
+
+  // Create custom action buttons component to pass to the grid
+  const customActionButtons = (
+    <TradingActionButtons
+      isInEditMode={isInEditMode}
+      selectionModel={selectionModel}
+      onFilter={handleFilter}
+      onExport={handleExport}
+      onUpload={handleUpload}
+      onHelp={handleHelp}
+    />
+  );
+
+  return (
+    <div className="h-full w-full flex flex-col">
+      
+      {/* Data Grid */}
+      <Paper elevation={0} className="flex-grow w-full overflow-auto">
+        <EnhancedDataGridGraphQL
+          columns={tradingColumns}
+          rows={tradingData}
+          onSave={handleSave}
+          validateRow={validateTradeRow}
+          
+          // GraphQL options
+          useGraphQL={useGraphQLFetching}
+          query={GET_MTM_ADJUSTMENTS}
+          variables={{
+            // Add any additional variables needed for the query
+          }}
+          
+          // Selection options
+          checkboxSelection={true}
+          selectionModel={selectionModel}
+          onSelectionModelChange={handleSelectionChange}
+          
+          // Grid capabilities
+          canEditRows={true}
+          canAddRows={false}
+          canSelectRows={true}
+          
+          // UI options
+          density="standard"
+          disableSelectionOnClick={true}
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          
+          // Custom components
+          customActionButtons={customActionButtons}
+        />
+      </Paper>
+    </div>
+  );
+}
+
+
+====== pages/unified-toolbar.tsx ======
+
+import React from 'react';
+import EnhancedDataGridDemo from '../components/EnhancedDataGridDemo';
+
+export default function UnifiedToolbarPage() {
+  return (
+    <div className="container mx-auto">
+      <EnhancedDataGridDemo />
+    </div>
+  );
+}
+
+
