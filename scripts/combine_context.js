@@ -20,18 +20,22 @@ function getFilesets() {
 
 // Function to expand file patterns
 function expandFilePattern(pattern) {
-  const fullPath = path.join(process.cwd(), pattern);
-  
-  if (pattern.includes('**')) {
-    const files = glob.sync(fullPath, { nodir: true });
-    return files.map(file => path.relative(process.cwd(), file));
+  // If pattern contains glob symbols, use glob
+  if (pattern.includes('*') || pattern.includes('?')) {
+    const files = glob.sync(pattern, { 
+      cwd: process.cwd(),
+      nodir: true,
+      matchBase: true 
+    });
+    return files;
   }
   
   try {
-    const stats = fs.statSync(fullPath);
+    const stats = fs.statSync(pattern);
     if (stats.isDirectory()) {
-      const files = fs.readdirSync(fullPath)
-        .filter(file => fs.statSync(path.join(fullPath, file)).isFile())
+      // For directories, return all files non-recursively
+      const files = fs.readdirSync(pattern)
+        .filter(file => fs.statSync(path.join(pattern, file)).isFile())
         .map(file => path.join(pattern, file));
       return files;
     }
@@ -52,28 +56,35 @@ function combineFiles(target) {
   const filesets = getFilesets();
   
   if (!target) {
-    console.log('\nUsage: node combine_context.js <fileset|directory>');
+    console.log('\nUsage: node combine_context.js <fileset|directory|pattern>');
     if (Object.keys(filesets).length > 0) {
       console.log('Available filesets:', Object.keys(filesets).join(', '));
     } else {
       console.log('No filesets found in _filesets.js');
     }
+    console.log('\nExamples:');
+    console.log('  node combine_context.js pages');
+    console.log('  node combine_context.js "pages/**"');
+    console.log('  node combine_context.js "**/*.ts"');
     return;
   }
   
   let relevantFiles = [];
-  let isDirectory = false;
+  let sourceType = 'DIRECTORY';
   
   // Check if target is a fileset
   if (filesets[target]) {
+    sourceType = 'FILESET';
     // Expand the fileset
     for (const item of filesets[target]) {
       relevantFiles = relevantFiles.concat(expandFilePattern(item));
     }
   } else {
-    // Treat as directory
+    // Treat as directory or pattern
     relevantFiles = expandFilePattern(target);
-    isDirectory = true;
+    if (target.includes('*')) {
+      sourceType = 'PATTERN';
+    }
   }
   
   relevantFiles = [...new Set(relevantFiles)]; // Remove duplicates
@@ -81,11 +92,11 @@ function combineFiles(target) {
   // Log file list
   console.log(`\nfiles: ${relevantFiles.map(f => path.basename(f)).join(', ')} (total: ${relevantFiles.length})`);
   
-  let combinedContent = `${isDirectory ? 'DIRECTORY' : 'FILESET'}: ${target}\n\n`;
+  let combinedContent = `${sourceType}: ${target}\n\n`;
   
   // Process each file
   for (const file of relevantFiles) {
-    const filePath = path.join(process.cwd(), file);
+    const filePath = path.resolve(file);
     try {
       const content = fs.readFileSync(filePath, 'utf8');
       combinedContent += `====== ${file} ======\n\n${content}\n\n\n`;
@@ -99,8 +110,9 @@ function combineFiles(target) {
   const contextWindowSize = 200000;
   const percentageUsed = ((tokenCount / contextWindowSize) * 100).toFixed(2);
   
-  // Write output
-  const outputPath = path.join(process.cwd(), `output_${target.replace(/\//g, '_')}.txt`);
+  // Clean filename for output
+  const cleanName = target.replace(/[^a-zA-Z0-9]/g, '_');
+  const outputPath = path.join(process.cwd(), `output_${cleanName}.txt`);
   fs.writeFileSync(outputPath, combinedContent, 'utf8');
   
   // Display summary
