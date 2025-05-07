@@ -1,5 +1,5 @@
 module.exports = {
-    "too-many-rerenders": [
+    "x": [
       // Main files with the issue
       'pages/mtm-history.tsx',
       'components/DataGrid/EnhancedDataGridGraphQL.tsx',
