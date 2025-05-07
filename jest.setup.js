@@ -1,5 +1,5 @@
 // Import Jest DOM extensions
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Mock the MUI X Data Grid
 jest.mock('@mui/x-data-grid', () => {
