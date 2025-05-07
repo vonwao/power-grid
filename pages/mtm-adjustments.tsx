@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
-import { Paper } from '@mui/material';
+import { Paper, Button } from '@mui/material';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import { gql } from '@apollo/client';
-import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { EnhancedDataGrid } from '../components/DataGrid';
 import { ValidationHelpers } from '../components/DataGrid/context/GridFormContext';
 
 // Define types directly in this file
@@ -214,6 +215,24 @@ const sampleMTMAdjustments: MTMAdjustment[] = [
   },
 ];
 
+// Custom toolbar actions
+const CustomActions = () => {
+  const handleAnalyticsClick = () => {
+    console.log('Show analytics for current data');
+    // Analytics logic
+  };
+  
+  return (
+    <Button
+      startIcon={<BarChartIcon />}
+      onClick={handleAnalyticsClick}
+      size="small"
+    >
+      Analytics
+    </Button>
+  );
+};
+
 export default function MTMAdjustmentsPage() {
   // State for grid
   const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
@@ -260,7 +279,7 @@ export default function MTMAdjustmentsPage() {
       
       {/* Data Grid */}
       <Paper elevation={0} className="flex-grow w-full overflow-auto">
-        <EnhancedDataGridGraphQL
+        <EnhancedDataGrid
           columns={mtmAdjustmentColumns}
           rows={sampleMTMAdjustments} // Used as fallback when not using GraphQL
           onSave={handleSave}
@@ -270,6 +289,10 @@ export default function MTMAdjustmentsPage() {
           useGraphQL={useGraphQLFetching}
           query={GET_MTM_ADJUSTMENTS} // Pass the GraphQL query
           variables={variables} // Pass variables for the query
+          
+          // New features
+          onlyLoadWithFilters={true}
+          customToolbarActions={<CustomActions />}
           
           // Selection options
           checkboxSelection={true}
