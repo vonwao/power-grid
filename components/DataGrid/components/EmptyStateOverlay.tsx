@@ -1,14 +1,8 @@
 import React from 'react';
-import { Typography, Button, Box } from '@mui/material';
+import { Typography, Button } from '@mui/material';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
-/**
- * EmptyStateOverlay component
- * 
- * Displays a message when no data is available due to conditional loading
- * with a button to open the filter panel
- */
-interface EmptyStateOverlayProps {
+export interface EmptyStateOverlayProps {
   onFilterClick?: () => void;
 }
 
@@ -16,16 +10,7 @@ export const EmptyStateOverlay: React.FC<EmptyStateOverlayProps> = ({
   onFilterClick 
 }) => {
   return (
-    <Box 
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 4
-      }}
-    >
+    <div className="flex flex-col items-center justify-center h-full p-8">
       <FilterAltIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
       <Typography variant="h6">No Results to Display</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
@@ -41,6 +26,6 @@ export const EmptyStateOverlay: React.FC<EmptyStateOverlayProps> = ({
           Open Filters
         </Button>
       )}
-    </Box>
+    </div>
   );
 };
