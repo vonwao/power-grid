@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import {
   DataGrid,
   GridRowId,
@@ -196,37 +196,25 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
   // Other props
   ...props
 }: EnhancedDataGridProps<T>) {
-  // Debug logging
-  const debugLog = (message: string, ...args: any[]) => {
-    console.log(`📊 [EnhancedDataGrid] ${message}`, ...args);
-  };
+  // Debug logging - only in development mode
+  const debugLog = useCallback((message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📊 [EnhancedDataGrid] ${message}`, ...args);
+    }
+  }, []);
   
-  debugLog('Rendering with props:', {
-    useGraphQL,
-    forceClientSide,
-    onlyLoadWithFilters,
-    selectionModel: initialSelectionModel?.length,
-  });
+  // Log rendering only in development mode
+  if (process.env.NODE_ENV !== 'production') {
+    debugLog('Rendering with props:', {
+      useGraphQL,
+      forceClientSide,
+      onlyLoadWithFilters,
+      selectionModel: initialSelectionModel?.length,
+    });
+  }
   
-  // Use the master hook for state management and logic
-  const {
-    columns: processedColumns,
-    rows: displayRows,
-    totalRows,
-    loading,
-    error,
-    filtersApplied,
-    handleFilterModelChange,
-    handleSortModelChange,
-    handlePaginationModelChange,
-    selectionState,
-    paginationState,
-    isEmpty,
-    isLoadingWithoutFilters,
-    refetch,
-    resetCursors,
-    pageInfo
-  } = useEnhancedDataGrid({
+  // Memoize hook options to prevent unnecessary re-renders
+  const hookOptions = useMemo(() => ({
     columns,
     rows,
     useGraphQL,
@@ -249,21 +237,68 @@ export function EnhancedDataGrid<T extends { id: GridRowId }>({
     selectionModel: initialSelectionModel,
     onSelectionModelChange,
     loading: externalLoading
-  });
+  }), [
+    columns,
+    rows,
+    useGraphQL,
+    forceClientSide,
+    query,
+    variables,
+    paginationStyle,
+    onlyLoadWithFilters,
+    pageSize,
+    paginationMode,
+    externalPaginationModel,
+    externalOnPaginationModelChange,
+    initialSortModel,
+    onSortModelChange,
+    sortingMode,
+    initialFilterModel,
+    onFilterModelChange,
+    filterMode,
+    initialSelectionModel,
+    onSelectionModelChange,
+    externalLoading
+  ]);
+
+  // Use the master hook for state management and logic
+  const {
+    columns: processedColumns,
+    rows: displayRows,
+    totalRows,
+    loading,
+    error,
+    filtersApplied,
+    handleFilterModelChange,
+    handleSortModelChange,
+    handlePaginationModelChange,
+    selectionState,
+    paginationState,
+    isEmpty,
+    isLoadingWithoutFilters,
+    refetch,
+    resetCursors,
+    pageInfo
+  } = useEnhancedDataGrid(hookOptions);
   
-  // Call onGridFunctionsInit callback if provided
-  React.useEffect(() => {
+  // Memoize the grid functions init callback
+  const memoizedGridFunctionsInit = useCallback(() => {
     if (onGridFunctionsInit) {
       debugLog('Initializing grid functions');
       onGridFunctionsInit(refetch, resetCursors, pageInfo);
     }
-  }, [onGridFunctionsInit, refetch, resetCursors, pageInfo]);
+  }, [onGridFunctionsInit, refetch, resetCursors, pageInfo, debugLog]);
+
+  // Call onGridFunctionsInit callback if provided
+  React.useEffect(() => {
+    memoizedGridFunctionsInit();
+  }, [memoizedGridFunctionsInit]);
   
   // Call the onRowsChange callback when rows change
   React.useEffect(() => {
     if (props.onRowsChange) {
       debugLog('Rows changed, calling onRowsChange');
-      props.onRowsChange(displayRows);
+      props.onRowsChange(displayRows as T[]);
     }
   }, [displayRows, props.onRowsChange]);
   

@@ -1,358 +1,7 @@
-PROCESSING: Enhanced Data Grid Project
-
-====== pages/mtm-history.tsx ======
-
-import React, { useState, useRef, useCallback } from 'react';
-import { GridRowId } from '@mui/x-data-grid';
-import { Paper } from '@mui/material';
-import { gql } from '@apollo/client';
-import { EnhancedDataGridGraphQL } from '../components/DataGrid';
-import { EnhancedColumnConfig } from '../components/DataGrid/EnhancedDataGridGraphQL';
-
-// GraphQL query using Relay-style pagination
-const GET_MTM_HISTORY = gql`
-  query MtmHistory(
-    $first: Int
-    $after: String
-    $filter: String
-    $sort: String
-  ) {
-    mtmHistory(first: $first, after: $after, filter: $filter, sort: $sort) {
-      edges {
-        cursor
-        node {
-          accounting_mtm_history_id
-          adj_description 
-          commodity
-          deal_volume
-        }
-      }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
-      totalCount
-    }
-  }
-`;
-
-// Placeholder GraphQL Mutations (Replace with actual mutations)
-const UPDATE_MTM_HISTORY_ITEM = gql`
-  mutation UpdateMtmHistoryItem($input: UpdateMtmHistoryItemInput!) {
-    updateMtmHistoryItem(input: $input) {
-      accounting_mtm_history_id # Or fields needed after update
-    }
-  }
-`;
-
-const CREATE_MTM_HISTORY_ITEM = gql`
-  mutation CreateMtmHistoryItem($input: CreateMtmHistoryItemInput!) {
-    createMtmHistoryItem(input: $input) {
-      accounting_mtm_history_id # Or fields needed after creation
-    }
-  }
-`;
-
-const DELETE_MTM_HISTORY_ITEMS = gql`
-  mutation DeleteMtmHistoryItems($ids: [ID!]!) {
-    deleteMtmHistoryItems(ids: $ids) {
-      success
-      deletedCount
-    }
-  }
-`;
-
-
-// Define columns
-const mtmHistoryColumns: EnhancedColumnConfig[] = [
-  {
-    field: 'accounting_mtm_history_id',
-    headerName: 'ID',
-    width: 120,
-    fieldConfig: {
-      type: 'string' as const,
-      validation: {
-        required: 'ID is required'
-      }
-    },
-  },
-  {
-    field: 'adj_description',
-    headerName: 'Description',
-    width: 200,
-    fieldConfig: {
-      type: 'string' as const,
-      validation: {
-        required: 'Description is required'
-      }
-    },
-  },
-  {
-    field: 'commodity',
-    headerName: 'Commodity',
-    width: 150,
-    fieldConfig: {
-      type: 'string' as const,
-      validation: {
-        required: 'Commodity is required'
-      }
-    },
-  },
-  {
-    field: 'deal_volume',
-    headerName: 'Deal Volume',
-    width: 150,
-    fieldConfig: {
-      type: 'number' as const,
-      validation: {
-        required: 'Deal Volume is required',
-        min: {
-          value: 0,
-          message: 'Deal Volume must be a positive number'
-        }
-      }
-    },
-  },
-];
-
-// Sample data for client-side fallback
-const sampleMTMHistory = [
-  {
-    id: 'MTM-1',
-    accounting_mtm_history_id: 'MTM-1',
-    adj_description: 'Sample Adjustment 1',
-    commodity: 'Oil',
-    deal_volume: 100.5,
-  },
-  {
-    id: 'MTM-2',
-    accounting_mtm_history_id: 'MTM-2',
-    adj_description: 'Sample Adjustment 2',
-    commodity: 'Gas',
-    deal_volume: 200.75,
-  },
-];
-
-export default function MTMHistoryPage() {
-  // State for grid
-  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
-  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false); // Set to false by default for testing
-  // Use a ref to store the refetch function to avoid re-renders
-  const refetchDataRef = useRef<() => Promise<any>>(() => Promise.resolve({ data: null }));
-  // State for client-side rows
-  const [clientRows, setClientRows] = useState(sampleMTMHistory);
-  
-  // Helper function to call the refetch function
-  const refetchData = useCallback(() => {
-    return refetchDataRef.current();
-  }, []);
-  
-  // Handler for selection changes
-  const handleSelectionChange = (newSelection: GridRowId[]) => {
-    setSelectionModel(newSelection);
-  };
-  
-  // Handler for grid functions initialization
-  const handleGridFunctionsInit = (
-    refetch: () => Promise<any>,
-    resetCursors: () => void,
-    pageInfo: any
-  ) => {
-    console.log('Grid functions initialized');
-    refetchDataRef.current = refetch;
-  };
-  
-  // Function to handle adding a row directly
-  const handleAddRow = () => {
-    console.log('MTMHistoryPage: handleAddRow called');
-    if (!useGraphQLFetching) {
-      // Generate a new ID for the client-side row
-      const newId = `new-${Date.now()}`;
-      
-      // Create a new row with default values
-      const newRow = {
-        id: newId,
-        accounting_mtm_history_id: newId,
-        adj_description: '',
-        commodity: '',
-        deal_volume: 0
-      };
-      
-      // Add the row to the client-side rows
-      setClientRows(prev => [newRow, ...prev]);
-      console.log('MTMHistoryPage: Added new row with ID:', newId);
-    }
-  };
-  
-  // Row-level validation function
-  const validateMtmHistoryRow = (values: any, helpers: any) => {
-    const errors: Record<string, string> = {};
-    
-    // Check if deal_volume is a positive number
-    if (values.deal_volume !== undefined && values.deal_volume !== null) {
-      if (isNaN(values.deal_volume) || values.deal_volume < 0) {
-        errors.deal_volume = 'Deal Volume must be a positive number';
-      }
-    }
-    
-    // Additional custom validations can be added here
-    
-    return errors;
-  };
-  
-  // Handler for saving changes (edits and additions)
-  const handleSave = async (changes: { edits: any[]; additions: any[] }) => {
-    console.log('Saving changes:', changes);
-
-    // Placeholder logic - replace with actual mutation calls
-    try {
-      // Process edits
-      for (const edit of changes.edits) {
-        console.log('Updating item:', edit.id, edit);
-        // Example: await updateItemMutation({ variables: { input: { id: edit.id, ...edit } } });
-        
-        // Update client-side rows
-        if (!useGraphQLFetching) {
-          setClientRows(prev =>
-            prev.map(row => row.id === edit.id ? { ...row, ...edit.changes } : row)
-          );
-        }
-      }
-
-      // Process additions
-      for (const addition of changes.additions) {
-        console.log('Creating item:', addition);
-        // Example: await createItemMutation({ variables: { input: { ...addition } } });
-        
-        // Update client-side rows
-        if (!useGraphQLFetching) {
-          // Generate a new ID for the client-side row
-          const newId = `MTM-${Date.now()}`;
-          const newRow = {
-            ...addition,
-            id: newId,
-            accounting_mtm_history_id: newId
-          };
-          
-          setClientRows(prev => [newRow, ...prev]);
-        }
-      }
-
-      // Refetch data after saving
-      if (useGraphQLFetching) {
-        refetchData();
-      }
-
-      alert('Changes saved (simulated). Check console.');
-    } catch (error) {
-      console.error('Error saving changes:', error);
-      alert('Error saving changes. Check console.');
-    }
-  };
-
-  // Handler for deleting selected rows
-  const handleDelete = async (ids: GridRowId[]) => {
-    console.log('Deleting rows with IDs:', ids);
-
-    // Placeholder logic - replace with actual mutation call
-    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
-      return; // Early exit if user cancels
-    }
-
-    try {
-      // Example: await deleteItemsMutation({ variables: { ids } });
-      console.log(`Simulating deletion of ${ids.length} items.`);
-
-      // Update client-side rows
-      if (!useGraphQLFetching) {
-        setClientRows(prev => prev.filter(row => !ids.includes(row.id)));
-      } else {
-        // Refetch data after deleting
-        refetchData();
-      }
-
-      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
-    } catch (error) {
-      console.error('Error deleting rows:', error);
-      alert('Error deleting rows. Check console.');
-    }
-  };
-
-  return (
-    <div className="h-full w-full flex flex-col p-4">
-      <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
-      
-      <div className="mb-4 flex items-center justify-between">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={useGraphQLFetching}
-            onChange={(e) => setUseGraphQLFetching(e.target.checked)}
-            className="mr-2"
-          />
-          Use GraphQL Fetching
-        </label>
-        
-        {/* Custom Add Button */}
-        {!useGraphQLFetching && (
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={handleAddRow}
-          >
-            Add Row Directly
-          </button>
-        )}
-      </div>
-      
-      {/* Data Grid */}
-      <Paper elevation={0} className="flex-grow w-full overflow-auto">
-        <EnhancedDataGridGraphQL
-          columns={mtmHistoryColumns}
-          rows={clientRows} // Use state variable instead of static array
-          
-          // GraphQL options
-          useGraphQL={useGraphQLFetching}
-          query={GET_MTM_HISTORY}
-          // No need to pass variables, let the hook handle it
-          paginationStyle="cursor" // Use cursor-based pagination
-          
-          // Grid functions initialization
-          onGridFunctionsInit={handleGridFunctionsInit}
-          
-          // Validation
-          validateRow={validateMtmHistoryRow}
-          
-          // Selection options
-          checkboxSelection={true}
-          selectionModel={selectionModel}
-          onSelectionModelChange={handleSelectionChange}
-          
-          // Grid capabilities
-          canEditRows={true}
-          canAddRows={true}
-          canSelectRows={true}
-          canDeleteRows={true} // Enable deletion
-          
-          // UI options
-          density="standard"
-          disableSelectionOnClick={true}
-          pageSize={25}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          
-          // Save handler
-          onSave={handleSave}
-          // Delete handler
-          onDelete={handleDelete}
-         />
-      </Paper>
-    </div>
-  );
-}
-
+PROCESSING: data grid code (Generated: 5/8/2025, 12:25)
 
 ====== components/DataGrid/EnhancedDataGridGraphQL.tsx ======
+Last Modified: 5/1/2025, 16:05 | Size: 30.1 KB | Lines: 946
 
 import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { DocumentNode } from '@apollo/client';
@@ -1302,303 +951,623 @@ const CellRendererWrapper = ({
 };
 
 
-====== components/DataGrid/context/GridModeContext.tsx ======
+====== components/DataGrid/components/UnifiedDataGridToolbar.tsx ======
+Last Modified: 4/23/2025, 12:54 | Size: 19.6 KB | Lines: 610
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { GridRowId } from '@mui/x-data-grid';
-import { useSelectionModel } from '../hooks/useSelectionModel';
-import { usePagination } from '../hooks/usePagination';
+import React, { useState } from 'react';
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Chip,
+  Paper,
+  SelectChangeEvent,
+} from '@mui/material';
+import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
+// Import the filter dialog and its types
+import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog';
 
-/**
- * Grid Mode System
- *
- * This context manages the modal state of the grid, ensuring that only one mode
- * can be active at a time. The available modes are:
- *
- * - none: Default state, grid is in view-only mode
- * - edit: Grid is in editing mode, allowing cell modifications
- * - add: Grid is in add mode, allowing new row creation
- * - select: Grid is in selection mode, allowing row selection
- *
- * The context also manages the interactions between these modes and handles
- * conflicts (e.g., can't select rows while editing).
- * 
- * It also provides row deletion functionality when enabled.
- */
+// Action icons
+import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpIcon from '@mui/icons-material/Help';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
 
-// Define the grid mode type
-export type GridMode = 'none' | 'edit' | 'add' | 'select';
+// Pagination icons
 
-// Define the context type
-interface GridModeContextType {
-  // Mode state
-  mode: GridMode;
-  setMode: (newMode: GridMode) => void;
-  
-  // Selection state
-  selectedRowCount: number;
-  clearSelection: () => void;
-  selectionModel: any[];
-  /**
-   * Selection model change handler
-   * This signature is intentionally flexible to accommodate both:
-   * - The MUI X DataGrid's onSelectionModelChange prop (which passes two arguments)
-   * - Our internal handlers (which may use one or two arguments)
-   */
-  onSelectionModelChange: (selectionModel: any[], details?: any) => void;
-  
-  // Edit state
-  editingRowCount: number;
-  isAddingRow: boolean;
-  hasValidationErrors: boolean;
-  
-  // Actions
-  saveChanges: () => void;
-  cancelChanges: () => void;
-  addRow: () => void;
-  deleteRows: (ids: GridRowId[]) => void; // Function to handle deletion
-  
-  // Capabilities
-  canEditRows: boolean;
-  canAddRows: boolean;
-  canSelectRows: boolean;
-  canDeleteRows: boolean;
+// Action buttons
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import UploadIcon from '@mui/icons-material/Upload';
 
-  // Pagination
-  page: number;
-  pageSize: number;
-  totalRows: number;
-  setPage: (page: number) => void;
-  setPageSize: (pageSize: number) => void;
-}
+// Context and hooks
+import { useGridMode, GridMode } from '../context/GridModeContext';
+import { useGridForm } from '../context/GridFormContext';
 
-// Create the context
-const GridModeContext = createContext<GridModeContextType | undefined>(undefined);
+// Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
+// interface FilterValues { // Or import from GlobalFilterDialog as done above
+//   birthdayMonthYear: Dayjs | null; 
+//   department: string;
+//   name: string;
+// }
 
-// Provider props
-interface GridModeProviderProps {
-  children: React.ReactNode;
-  totalRows: number;
-  initialMode?: GridMode;
-  // Form state and actions
-  saveChanges: () => void;
-  cancelChanges: () => void;
-  addRow: () => void;
-  hasValidationErrors: boolean;
-  isRowEditing?: (rowId: GridRowId) => boolean;
-  isRowDirty?: (rowId: GridRowId) => boolean;
+interface UnifiedDataGridToolbarProps {
+  onSave?: () => void;
+  onFilter?: (filters: FilterValues) => void; // Use the imported/defined FilterValues type
+  onExport?: () => void;
+  onUpload?: () => void;
+  onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
+  onAddClick?: () => void; // Add this prop for custom add behavior
   // Grid capabilities
   canEditRows?: boolean;
-  canAddRows?: boolean;
+  canAddRows?: boolean; // Removed default value = true
   canSelectRows?: boolean;
-  canDeleteRows?: boolean;
-  
-  // Action handlers from parent
-  onDelete?: (ids: GridRowId[]) => void;
-  
-  // Selection model
-  selectionModel?: any[];
-  onSelectionModelChange?: (selectionModel: any[]) => void;
+  canDeleteRows?: boolean; // Added for row deletion capability
+  // Custom action buttons
+  customActionButtons?: React.ReactNode;
 }
 
-// Provider component
-export const GridModeProvider: React.FC<GridModeProviderProps> = ({
-  children,
-  totalRows,
-  initialMode = 'none',
-  // Form state and actions
-  saveChanges: formSaveChanges,
-  cancelChanges: formCancelChanges,
-  addRow: formAddRow,
-  hasValidationErrors,
-  isRowEditing = () => false,
-  isRowDirty = () => false,
-  // Grid capabilities
+export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
+  onSave,
+  onFilter,
+  onExport,
+  onUpload,
+  onHelp,
+  onAddClick, // Destructure the new prop
   canEditRows = true,
-  canAddRows = true,
+  canAddRows, // Removed default value = true
   canSelectRows = true,
-  canDeleteRows = false, // Default to false
-  // Selection model
-  selectionModel: externalSelectionModel,
-  onSelectionModelChange: externalOnSelectionModelChange,
-  // Delete handler
-  onDelete: formOnDelete
+  customActionButtons
 }) => {
-  // State for the current mode
-  const [mode, setMode] = useState<GridMode>(initialMode);
-  
-  // Determine if we're in controlled selection mode
-  const isSelectionControlled = externalSelectionModel !== undefined;
-  
-  // Only use the internal selection hook when in uncontrolled mode
+  // Get grid mode context
   const {
-    selectionModel: internalSelectionModel,
-    onSelectionModelChange: internalOnSelectionModelChange
-  } = useSelectionModel({
-    // Don't pass the external selection model to avoid double-management
-    onSelectionModelChange: !isSelectionControlled && externalOnSelectionModelChange ? 
-      (newModel) => externalOnSelectionModelChange(newModel) : 
-      undefined
-  });
-  
-  // Use the appropriate selection model based on controlled/uncontrolled state
-  const selectionModel = isSelectionControlled ? externalSelectionModel : internalSelectionModel;
-  
-  // Create a wrapper function that adapts between the different types
-  const adaptedOnSelectionModelChange = useCallback((newModel: any[], details?: any) => {
-    if (isSelectionControlled) {
-      // In controlled mode, only call the external handler
-      if (externalOnSelectionModelChange) {
-        externalOnSelectionModelChange(newModel);
-      }
-    } else {
-      // In uncontrolled mode, update internal state
-      internalOnSelectionModelChange(newModel, details || {} as any);
-    }
-  }, [isSelectionControlled, externalOnSelectionModelChange, internalOnSelectionModelChange]);
-  
-  // Get pagination
-  const {
-    page,
-    pageSize,
-    setPage,
-    setPageSize
-  } = usePagination();
-  
-  // Tracking edited rows logic...
-  const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
-  
-  // Effect for updating editing rows set
-  useEffect(() => {
-    const newEditingRows = new Set<GridRowId>();
-    
-    if (isRowDirty) {
-      selectionModel.forEach((rowId: GridRowId) => {
-        if (isRowEditing(rowId) && isRowDirty(rowId)) {
-          newEditingRows.add(rowId);
-        }
-      });
-    } else {
-      selectionModel.forEach((rowId: GridRowId) => {
-        if (isRowEditing(rowId)) {
-          newEditingRows.add(rowId);
-        }
-      });
-    }
-    
-    setEditingRows(newEditingRows);
-  }, [selectionModel, isRowEditing, isRowDirty]);
-  
-  // Derived state
-  const selectedRowCount = selectionModel.length;
-  
-  const editingRowCount = isRowDirty ?
-    Array.from(editingRows).filter(rowId => isRowDirty(rowId)).length :
-    editingRows.size;
-  
-  const isAddingRow = mode === 'add';
-  
-  // Action Handlers
-  const clearSelection = useCallback(() => {
-    adaptedOnSelectionModelChange([]);
-  }, [adaptedOnSelectionModelChange]);
-  
-  const saveChanges = useCallback(() => {
-    formSaveChanges();
-    setMode('none');
-  }, [formSaveChanges]);
-  
-  const cancelChanges = useCallback(() => {
-    formCancelChanges();
-    setMode('none');
-  }, [formCancelChanges]);
-  
-  const addRow = useCallback(() => {
-    console.log('GridModeContext: addRow called');
-    formAddRow();
-    console.log('GridModeContext: formAddRow called');
-    setMode('add');
-    console.log('GridModeContext: mode set to add');
-  }, [formAddRow]);
-
-  // Delete handler
-  const deleteRows = useCallback((ids: GridRowId[]) => {
-    if (formOnDelete) {
-      formOnDelete(ids);
-      // Optionally clear selection or change mode after deletion
-      clearSelection();
-      // setMode('none'); // Or keep selection mode? Decide based on desired UX
-    } else {
-      console.warn('onDelete handler not provided to GridModeProvider');
-    }
-  }, [formOnDelete, clearSelection]);
-  
-  // Context value
-  const contextValue: GridModeContextType = {
     mode,
     setMode,
-    selectedRowCount,
-    clearSelection,
-    selectionModel,
-    onSelectionModelChange: adaptedOnSelectionModelChange,
     editingRowCount,
     isAddingRow,
     hasValidationErrors,
     saveChanges,
     cancelChanges,
     addRow,
-    deleteRows, // Add delete handler
-    // Capabilities
-    canEditRows,
-    canAddRows,
-    canSelectRows,
-    canDeleteRows, // Add delete capability flag
-    // Pagination
-    page,
-    pageSize,
-    totalRows,
-    setPage,
-    setPageSize
+    // Get selection model from context
+    selectionModel,
+    onSelectionModelChange,
+    clearSelection,
+    // Get delete context
+    canDeleteRows,
+    deleteRows
+  } = useGridMode();
+  
+  // Debug: Log selection model changes
+  console.log('UnifiedDataGridToolbar - selectionModel from context:', selectionModel);
+  
+  // Add a visual indicator for debugging
+  if (!selectionModel || selectionModel.length === 0) {
+    console.log('No selection model or empty selection model');
+  }
+
+  // Get grid form context
+  const {
+    getPendingChanges,
+    getEditedRowCount,
+    getAllValidationErrors,
+    getOriginalRowData
+  } = useGridForm();
+
+  // State for dialogs
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [targetMode, setTargetMode] = useState<GridMode>('none');
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false); // State for filter dialog
+  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
+  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
+  const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] = useState(false); // State for delete confirmation
+
+  // Handle mode switching with confirmation when needed
+  const handleModeSwitch = (newMode: GridMode) => {
+    // If in selection mode with multiple rows selected, show confirmation
+    if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
+      setConfirmationDialogOpen(true);
+      setTargetMode(newMode);
+      return;
+    }
+    
+    // Otherwise, switch mode directly
+    setMode(newMode);
   };
   
+  // Get the actual count of edited rows
+  const actualEditedRowCount = getEditedRowCount();
+
+  // No pagination handlers needed - using built-in DataGrid pagination
+
+  // Handle add button click
+  const handleAddClick = () => {
+    console.log('Add button clicked');
+    
+    // Use custom add handler if provided
+    if (onAddClick) {
+      console.log('Using custom onAddClick handler');
+      onAddClick();
+    } else {
+      // Default behavior - check selection and use context addRow
+      if (selectionModel.length > 1) {
+        console.log('Multiple rows selected, showing confirmation dialog');
+        setConfirmationDialogOpen(true);
+        setTargetMode('add');
+        return;
+      }
+      
+      console.log('Using context addRow function');
+      addRow();
+      console.log('Context addRow function called');
+    }
+  };
+
+  // Handle save button click
+  const handleSaveClick = () => {
+    saveChanges();
+  };
+
+  // Handle cancel button click
+  const handleCancelClick = () => {
+    cancelChanges();
+  };
+
+  // Handle help button click
+  const handleHelpClick = () => {
+    setHelpDialogOpen(true);
+  };
+
+  // Handle filter button click - opens the dialog
+  const handleFilterClick = () => {
+    setFilterDialogOpen(true);
+  };
+
+  // Handle applying filters from the dialog - update parameter type
+  const handleApplyFilters = (filters: FilterValues) => {
+    // Log the Dayjs object directly, or format it if needed
+    console.log('Applying filters:', {
+      ...filters,
+      // Example: Format the date for logging or sending elsewhere
+      birthday: filters.birthdayMonthYear ? filters.birthdayMonthYear.format('YYYY-MM') : null, 
+    });
+    if (onFilter) {
+      // Pass the filters object (containing the Dayjs object) to the parent
+      // For now, let's assume the parent expects the filters object
+      onFilter(filters); 
+    }
+    setFilterDialogOpen(false); // Close dialog after applying
+  };
+  
+  // Handle debug button click
+  const handleDebugClick = () => {
+    setDebugDialogOpen(true);
+  };
+
+  // Handle delete button click - opens confirmation dialog
+  const handleDeleteClick = () => {
+    if (selectionModel.length > 0 && canDeleteRows) {
+      setDeleteConfirmationDialogOpen(true);
+    }
+  };
+
+  // Handle confirming deletion
+  const handleConfirmDelete = () => {
+    deleteRows(selectionModel);
+    setDeleteConfirmationDialogOpen(false);
+  };
+
+  // Determine button disabled states based on current mode
+  const isInEditOrAddMode = mode === 'edit' || mode === 'add';
+  const canSave = isInEditOrAddMode && !hasValidationErrors;
+  const canCancel = isInEditOrAddMode;
+  const canAdd = canAddRows && !isInEditOrAddMode;
+  const canDeleteSelected = canDeleteRows && selectionModel.length > 0 && !isInEditOrAddMode;
+  const areActionButtonsDisabled = isInEditOrAddMode;
+
   return (
-    <GridModeContext.Provider value={contextValue}>
-      {children}
-    </GridModeContext.Provider>
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 1,
+      borderBottom: '1px solid #e0e0e0'
+    }}>
+      {/* Left Section: Add/Save/Cancel buttons + Status */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center',
+        gap: 1
+      }}>
+        {/* Add button - only show if canAddRows is true */}
+        {canAddRows && (
+          <Tooltip title={canAdd ? "Add new record" : "Cannot add while editing"}>
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddClick}
+                disabled={!canAdd}
+                sx={{ 
+                  minWidth: 0, 
+                  px: 1,
+                  opacity: canAdd ? 1 : 0.5
+                }}
+              >
+                Add
+              </Button>
+            </span>
+          </Tooltip>
+        )}
+
+        {/* Status section */}
+        {mode !== 'none' && (
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              padding: '4px 8px',
+              borderRadius: 1,
+              backgroundColor: mode === 'edit' ? 'rgba(25, 118, 210, 0.08)' : 
+                              mode === 'add' ? 'rgba(46, 125, 50, 0.08)' : 
+                              'rgba(237, 108, 2, 0.08)'
+            }}
+          >
+            {/* Status content based on mode */}
+            {mode === 'edit' && (
+              <>
+            <Typography variant="body2">
+              Editing {actualEditedRowCount} record{actualEditedRowCount !== 1 ? 's' : ''}
+            </Typography>
+                {hasValidationErrors && (
+                  <Chip
+                    label="Validation errors"
+                    size="small"
+                    color="warning"
+                    sx={{ height: 24, cursor: 'pointer' }}
+                    onClick={() => setValidationDialogOpen(true)}
+                  />
+                )}
+              </>
+            )}
+            
+            {mode === 'add' && (
+              <>
+                <Typography variant="body2">
+                  Adding new record
+                </Typography>
+                {hasValidationErrors && (
+                  <Chip
+                    label="Validation errors"
+                    size="small"
+                    color="warning"
+                    sx={{ height: 24, cursor: 'pointer' }}
+                    onClick={() => setValidationDialogOpen(true)}
+                  />
+                )}
+              </>
+            )}
+
+          </Paper>
+        )}
+
+        {/* Save button */}
+        <Tooltip title={canSave ? "Save changes" : hasValidationErrors ? "Fix validation errors before saving" : "Nothing to save"}>
+          <span>
+            <Button
+              variant="contained"
+              size="small"
+              color="success"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveClick}
+              disabled={!canSave}
+              sx={{ 
+                minWidth: 0, 
+                px: 1,
+                opacity: canSave ? 1 : 0.5
+              }}
+            >
+              Save
+            </Button>
+          </span>
+        </Tooltip>
+        
+        {/* Debug button - only show when in edit mode */}
+        {mode === 'edit' && (
+          <Tooltip title="Debug Edits (Temporary)">
+            <Button
+              variant="outlined"
+              size="small"
+              color="info"
+              startIcon={<BugReportIcon />}
+              onClick={handleDebugClick}
+              sx={{ 
+                minWidth: 0, 
+                px: 1,
+                ml: 1
+              }}
+            >
+              Debug
+            </Button>
+          </Tooltip>
+        )}
+
+        {/* Cancel button */}
+        {canCancel && (
+          <Tooltip title="Cancel changes">
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              startIcon={<CloseIcon />}
+              onClick={handleCancelClick}
+              sx={{ minWidth: 0, px: 1 }}
+            >
+              Cancel
+            </Button>
+          </Tooltip>
+        )}
+
+      </Box>
+
+      {/* Middle Section - Pagination removed in favor of built-in DataGrid pagination */}
+      <Box sx={{ flex: 1 }} />
+
+      {/* Right Section: Selection Status + Action Buttons */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: 1
+      }}>
+        {/* Custom Action Buttons - if provided, render them instead of default buttons */}
+        {customActionButtons ? (
+          customActionButtons
+        ) : (
+          <>
+            {/* Selection Status */}
+            {selectionModel && selectionModel.length > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
+                  Selected:
+                </Typography>
+                <Chip
+                  label={`${selectionModel.length} rows`}
+                  onDelete={clearSelection}
+                  size="small"
+                />
+                {/* Delete Button - Show only if deletion is allowed and rows are selected */}
+                {canDeleteRows && selectionModel.length > 0 && (
+                  <Tooltip title={canDeleteSelected ? `Delete ${selectionModel.length} selected row(s)` : "Cannot delete while editing"}>
+                    <span> {/* Span needed for disabled Tooltip */}
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={handleDeleteClick}
+                        disabled={!canDeleteSelected}
+                        sx={{ ml: 0.5, opacity: canDeleteSelected ? 1 : 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </Box>
+            )}
+            {/* Filter Options - Updated onClick */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
+              <span>
+                <IconButton onClick={handleFilterClick} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <FilterAltIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Upload Options */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot upload while editing" : "Upload"}>
+              <span>
+                <IconButton onClick={onUpload} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <UploadIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Export Options */}
+            <Tooltip title={areActionButtonsDisabled ? "Cannot export while editing" : "Export"}>
+              <span>
+                <IconButton onClick={onExport} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
+                  <FileDownloadIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            {/* Help button */}
+            <Tooltip title="Help">
+              <IconButton size="small" onClick={handleHelpClick}>
+                <HelpIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      </Box>
+
+      {/* Confirmation Dialog */}
+      <Dialog 
+        open={confirmationDialogOpen} 
+        onClose={() => setConfirmationDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Mode Switch</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You have {selectionModel.length} rows selected. Switching to {targetMode} mode will clear your selection. Do you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmationDialogOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={() => {
+              setMode(targetMode);
+              clearSelection();
+              setConfirmationDialogOpen(false);
+              if (targetMode === 'add') {
+                addRow();
+              }
+            }} 
+            color="primary"
+          >
+            Continue
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Use the imported DataGridHelpDialog */}
+      <DataGridHelpDialog 
+        open={helpDialogOpen} 
+        onClose={() => setHelpDialogOpen(false)}
+      />
+
+      {/* Global Filter Dialog */}
+      <GlobalFilterDialog
+        open={filterDialogOpen}
+        onClose={() => setFilterDialogOpen(false)}
+        onApply={handleApplyFilters}
+        // Pass department options if available/needed from parent or context
+        // departmentOptions={...} 
+      />
+
+      {/* Validation Errors Dialog */}
+      <Dialog
+        open={validationDialogOpen}
+        onClose={() => setValidationDialogOpen(false)}
+        maxWidth="md"
+      >
+        <DialogTitle>Validation Errors</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            The following validation errors need to be fixed before saving:
+          </DialogContentText>
+          <Box component="ul" sx={{ mt: 2 }}>
+            {getAllValidationErrors().map((error, index) => (
+              <Typography component="li" key={index}>
+                Row {error.rowId}: {error.field} - {error.message}
+              </Typography>
+            ))}
+            {getAllValidationErrors().length === 0 && (
+              <Typography component="li">
+                {mode === 'edit' && actualEditedRowCount > 0 ? (
+                  "There are validation errors in the current editing session. Please check highlighted fields for specific issues."
+                ) : mode === 'add' && isAddingRow ? (
+                  "There are validation errors in the new row. Please check highlighted fields for specific issues."
+                ) : (
+                  "No specific validation details available"
+                )}
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setValidationDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Debug Dialog */}
+      <Dialog
+        open={debugDialogOpen}
+        onClose={() => setDebugDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Debug Edits</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Current edited fields ({actualEditedRowCount} rows with changes):
+          </DialogContentText>
+          <Box 
+            component="pre" 
+            sx={{ 
+              mt: 2, 
+              p: 2, 
+              bgcolor: '#f5f5f5', 
+              borderRadius: 1,
+              overflow: 'auto',
+              maxHeight: '400px'
+            }}
+          >
+            {JSON.stringify(
+              getPendingChanges().map(item => {
+                const { rowId, changes } = item;
+                
+                // Get the original values for comparison
+                const originalData = getOriginalRowData(rowId);
+                const originalValues: Record<string, any> = {};
+                
+                if (originalData) {
+                  // Extract only the fields that have changed
+                  Object.keys(changes).forEach(field => {
+                    originalValues[field] = originalData[field];
+                  });
+                }
+                
+                return {
+                  rowId,
+                  changes,
+                  originalValues
+                };
+              }), 
+              null, 
+              2
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDebugDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+     {/* Delete Confirmation Dialog */}
+     <Dialog
+       open={deleteConfirmationDialogOpen}
+       onClose={() => setDeleteConfirmationDialogOpen(false)}
+     >
+       <DialogTitle>Confirm Deletion</DialogTitle>
+       <DialogContent>
+         <DialogContentText>
+           Are you sure you want to delete {selectionModel.length} selected row(s)? This action cannot be undone.
+         </DialogContentText>
+       </DialogContent>
+       <DialogActions>
+         <Button onClick={() => setDeleteConfirmationDialogOpen(false)}>Cancel</Button>
+         <Button onClick={handleConfirmDelete} color="error">
+           Delete
+         </Button>
+       </DialogActions>
+     </Dialog>
+    </Box>
   );
 };
-
-/**
- * Custom Hook: useGridMode
- *
- * This hook provides access to the GridModeContext.
- * Components can use this hook to:
- * - Read the current grid mode
- * - Change the grid mode
- * - Access selection state
- * - Perform actions like save, cancel, add, delete
- *
- * It throws an error if used outside of a GridModeProvider.
- */
-export const useGridMode = () => {
-  const context = useContext(GridModeContext);
-  if (!context) {
-    throw new Error('useGridMode must be used within a GridModeProvider');
-  }
-  return context;
-};
-
-/**
- * Alias for backward compatibility
- *
- * This allows components that were using the old useToolbarMode hook
- * to continue working without changes.
- */
-export const useToolbarMode = useGridMode;
 
 
 
 ====== components/DataGrid/context/GridFormContext.tsx ======
+Last Modified: 4/23/2025, 05:10 | Size: 27.3 KB | Lines: 830
 
 import React, { createContext, useCallback, useContext, useState, useRef, useEffect } from 'react';
 import {
@@ -2433,6 +2402,7 @@ export const useGridForm = () => {
 
 
 ====== components/DataGrid/hooks/useSelectionModel.ts ======
+Last Modified: 4/23/2025, 04:52 | Size: 2.0 KB | Lines: 52
 
 import { useState, useCallback, useMemo } from 'react';
 import { GridRowSelectionModel, GridCallbackDetails } from '@mui/x-data-grid';
@@ -2488,7 +2458,658 @@ export function useSelectionModel({
 }
 
 
+====== pages/mtm-history.tsx ======
+Last Modified: 4/17/2025, 16:01 | Size: 9.8 KB | Lines: 348
+
+import React, { useState, useRef, useCallback } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { Paper } from '@mui/material';
+import { gql } from '@apollo/client';
+import { EnhancedDataGridGraphQL } from '../components/DataGrid';
+import { EnhancedColumnConfig } from '../components/DataGrid/EnhancedDataGridGraphQL';
+
+// GraphQL query using Relay-style pagination
+const GET_MTM_HISTORY = gql`
+  query MtmHistory(
+    $first: Int
+    $after: String
+    $filter: String
+    $sort: String
+  ) {
+    mtmHistory(first: $first, after: $after, filter: $filter, sort: $sort) {
+      edges {
+        cursor
+        node {
+          accounting_mtm_history_id
+          adj_description 
+          commodity
+          deal_volume
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+`;
+
+// Placeholder GraphQL Mutations (Replace with actual mutations)
+const UPDATE_MTM_HISTORY_ITEM = gql`
+  mutation UpdateMtmHistoryItem($input: UpdateMtmHistoryItemInput!) {
+    updateMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after update
+    }
+  }
+`;
+
+const CREATE_MTM_HISTORY_ITEM = gql`
+  mutation CreateMtmHistoryItem($input: CreateMtmHistoryItemInput!) {
+    createMtmHistoryItem(input: $input) {
+      accounting_mtm_history_id # Or fields needed after creation
+    }
+  }
+`;
+
+const DELETE_MTM_HISTORY_ITEMS = gql`
+  mutation DeleteMtmHistoryItems($ids: [ID!]!) {
+    deleteMtmHistoryItems(ids: $ids) {
+      success
+      deletedCount
+    }
+  }
+`;
+
+
+// Define columns
+const mtmHistoryColumns: EnhancedColumnConfig[] = [
+  {
+    field: 'accounting_mtm_history_id',
+    headerName: 'ID',
+    width: 120,
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'ID is required'
+      }
+    },
+  },
+  {
+    field: 'adj_description',
+    headerName: 'Description',
+    width: 200,
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Description is required'
+      }
+    },
+  },
+  {
+    field: 'commodity',
+    headerName: 'Commodity',
+    width: 150,
+    fieldConfig: {
+      type: 'string' as const,
+      validation: {
+        required: 'Commodity is required'
+      }
+    },
+  },
+  {
+    field: 'deal_volume',
+    headerName: 'Deal Volume',
+    width: 150,
+    fieldConfig: {
+      type: 'number' as const,
+      validation: {
+        required: 'Deal Volume is required',
+        min: {
+          value: 0,
+          message: 'Deal Volume must be a positive number'
+        }
+      }
+    },
+  },
+];
+
+// Sample data for client-side fallback
+const sampleMTMHistory = [
+  {
+    id: 'MTM-1',
+    accounting_mtm_history_id: 'MTM-1',
+    adj_description: 'Sample Adjustment 1',
+    commodity: 'Oil',
+    deal_volume: 100.5,
+  },
+  {
+    id: 'MTM-2',
+    accounting_mtm_history_id: 'MTM-2',
+    adj_description: 'Sample Adjustment 2',
+    commodity: 'Gas',
+    deal_volume: 200.75,
+  },
+];
+
+export default function MTMHistoryPage() {
+  // State for grid
+  const [selectionModel, setSelectionModel] = useState<GridRowId[]>([]);
+  const [useGraphQLFetching, setUseGraphQLFetching] = useState(false); // Set to false by default for testing
+  // Use a ref to store the refetch function to avoid re-renders
+  const refetchDataRef = useRef<() => Promise<any>>(() => Promise.resolve({ data: null }));
+  // State for client-side rows
+  const [clientRows, setClientRows] = useState(sampleMTMHistory);
+  
+  // Helper function to call the refetch function
+  const refetchData = useCallback(() => {
+    return refetchDataRef.current();
+  }, []);
+  
+  // Handler for selection changes
+  const handleSelectionChange = (newSelection: GridRowId[]) => {
+    setSelectionModel(newSelection);
+  };
+  
+  // Handler for grid functions initialization
+  const handleGridFunctionsInit = (
+    refetch: () => Promise<any>,
+    resetCursors: () => void,
+    pageInfo: any
+  ) => {
+    console.log('Grid functions initialized');
+    refetchDataRef.current = refetch;
+  };
+  
+  // Function to handle adding a row directly
+  const handleAddRow = () => {
+    console.log('MTMHistoryPage: handleAddRow called');
+    if (!useGraphQLFetching) {
+      // Generate a new ID for the client-side row
+      const newId = `new-${Date.now()}`;
+      
+      // Create a new row with default values
+      const newRow = {
+        id: newId,
+        accounting_mtm_history_id: newId,
+        adj_description: '',
+        commodity: '',
+        deal_volume: 0
+      };
+      
+      // Add the row to the client-side rows
+      setClientRows(prev => [newRow, ...prev]);
+      console.log('MTMHistoryPage: Added new row with ID:', newId);
+    }
+  };
+  
+  // Row-level validation function
+  const validateMtmHistoryRow = (values: any, helpers: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Check if deal_volume is a positive number
+    if (values.deal_volume !== undefined && values.deal_volume !== null) {
+      if (isNaN(values.deal_volume) || values.deal_volume < 0) {
+        errors.deal_volume = 'Deal Volume must be a positive number';
+      }
+    }
+    
+    // Additional custom validations can be added here
+    
+    return errors;
+  };
+  
+  // Handler for saving changes (edits and additions)
+  const handleSave = async (changes: { edits: any[]; additions: any[] }) => {
+    console.log('Saving changes:', changes);
+
+    // Placeholder logic - replace with actual mutation calls
+    try {
+      // Process edits
+      for (const edit of changes.edits) {
+        console.log('Updating item:', edit.id, edit);
+        // Example: await updateItemMutation({ variables: { input: { id: edit.id, ...edit } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          setClientRows(prev =>
+            prev.map(row => row.id === edit.id ? { ...row, ...edit.changes } : row)
+          );
+        }
+      }
+
+      // Process additions
+      for (const addition of changes.additions) {
+        console.log('Creating item:', addition);
+        // Example: await createItemMutation({ variables: { input: { ...addition } } });
+        
+        // Update client-side rows
+        if (!useGraphQLFetching) {
+          // Generate a new ID for the client-side row
+          const newId = `MTM-${Date.now()}`;
+          const newRow = {
+            ...addition,
+            id: newId,
+            accounting_mtm_history_id: newId
+          };
+          
+          setClientRows(prev => [newRow, ...prev]);
+        }
+      }
+
+      // Refetch data after saving
+      if (useGraphQLFetching) {
+        refetchData();
+      }
+
+      alert('Changes saved (simulated). Check console.');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Error saving changes. Check console.');
+    }
+  };
+
+  // Handler for deleting selected rows
+  const handleDelete = async (ids: GridRowId[]) => {
+    console.log('Deleting rows with IDs:', ids);
+
+    // Placeholder logic - replace with actual mutation call
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} selected row(s)? This action uses the handler passed to the grid, not the toolbar's built-in confirmation.`)) {
+      return; // Early exit if user cancels
+    }
+
+    try {
+      // Example: await deleteItemsMutation({ variables: { ids } });
+      console.log(`Simulating deletion of ${ids.length} items.`);
+
+      // Update client-side rows
+      if (!useGraphQLFetching) {
+        setClientRows(prev => prev.filter(row => !ids.includes(row.id)));
+      } else {
+        // Refetch data after deleting
+        refetchData();
+      }
+
+      alert(`${ids.length} row(s) deleted (simulated). Check console.`);
+    } catch (error) {
+      console.error('Error deleting rows:', error);
+      alert('Error deleting rows. Check console.');
+    }
+  };
+
+  return (
+    <div className="h-full w-full flex flex-col p-4">
+      <h1 className="text-2xl font-bold mb-4">MTM History with Relay Pagination</h1>
+      
+      <div className="mb-4 flex items-center justify-between">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={useGraphQLFetching}
+            onChange={(e) => setUseGraphQLFetching(e.target.checked)}
+            className="mr-2"
+          />
+          Use GraphQL Fetching
+        </label>
+        
+        {/* Custom Add Button */}
+        {!useGraphQLFetching && (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleAddRow}
+          >
+            Add Row Directly
+          </button>
+        )}
+      </div>
+      
+      {/* Data Grid */}
+      <Paper elevation={0} className="flex-grow w-full overflow-auto">
+        <EnhancedDataGridGraphQL
+          columns={mtmHistoryColumns}
+          rows={clientRows} // Use state variable instead of static array
+          
+          // GraphQL options
+          useGraphQL={useGraphQLFetching}
+          query={GET_MTM_HISTORY}
+          // No need to pass variables, let the hook handle it
+          paginationStyle="cursor" // Use cursor-based pagination
+          
+          // Grid functions initialization
+          onGridFunctionsInit={handleGridFunctionsInit}
+          
+          // Validation
+          validateRow={validateMtmHistoryRow}
+          
+          // Selection options
+          checkboxSelection={true}
+          selectionModel={selectionModel}
+          onSelectionModelChange={handleSelectionChange}
+          
+          // Grid capabilities
+          canEditRows={true}
+          canAddRows={true}
+          canSelectRows={true}
+          canDeleteRows={true} // Enable deletion
+          
+          // UI options
+          density="standard"
+          disableSelectionOnClick={true}
+          pageSize={25}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          
+          // Save handler
+          onSave={handleSave}
+          // Delete handler
+          onDelete={handleDelete}
+         />
+      </Paper>
+    </div>
+  );
+}
+
+
+====== components/DataGrid/context/GridModeContext.tsx ======
+Last Modified: 4/17/2025, 15:55 | Size: 8.3 KB | Lines: 292
+
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { GridRowId } from '@mui/x-data-grid';
+import { useSelectionModel } from '../hooks/useSelectionModel';
+import { usePagination } from '../hooks/usePagination';
+
+/**
+ * Grid Mode System
+ *
+ * This context manages the modal state of the grid, ensuring that only one mode
+ * can be active at a time. The available modes are:
+ *
+ * - none: Default state, grid is in view-only mode
+ * - edit: Grid is in editing mode, allowing cell modifications
+ * - add: Grid is in add mode, allowing new row creation
+ * - select: Grid is in selection mode, allowing row selection
+ *
+ * The context also manages the interactions between these modes and handles
+ * conflicts (e.g., can't select rows while editing).
+ * 
+ * It also provides row deletion functionality when enabled.
+ */
+
+// Define the grid mode type
+export type GridMode = 'none' | 'edit' | 'add' | 'select';
+
+// Define the context type
+interface GridModeContextType {
+  // Mode state
+  mode: GridMode;
+  setMode: (newMode: GridMode) => void;
+  
+  // Selection state
+  selectedRowCount: number;
+  clearSelection: () => void;
+  selectionModel: any[];
+  /**
+   * Selection model change handler
+   * This signature is intentionally flexible to accommodate both:
+   * - The MUI X DataGrid's onSelectionModelChange prop (which passes two arguments)
+   * - Our internal handlers (which may use one or two arguments)
+   */
+  onSelectionModelChange: (selectionModel: any[], details?: any) => void;
+  
+  // Edit state
+  editingRowCount: number;
+  isAddingRow: boolean;
+  hasValidationErrors: boolean;
+  
+  // Actions
+  saveChanges: () => void;
+  cancelChanges: () => void;
+  addRow: () => void;
+  deleteRows: (ids: GridRowId[]) => void; // Function to handle deletion
+  
+  // Capabilities
+  canEditRows: boolean;
+  canAddRows: boolean;
+  canSelectRows: boolean;
+  canDeleteRows: boolean;
+
+  // Pagination
+  page: number;
+  pageSize: number;
+  totalRows: number;
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
+}
+
+// Create the context
+const GridModeContext = createContext<GridModeContextType | undefined>(undefined);
+
+// Provider props
+interface GridModeProviderProps {
+  children: React.ReactNode;
+  totalRows: number;
+  initialMode?: GridMode;
+  // Form state and actions
+  saveChanges: () => void;
+  cancelChanges: () => void;
+  addRow: () => void;
+  hasValidationErrors: boolean;
+  isRowEditing?: (rowId: GridRowId) => boolean;
+  isRowDirty?: (rowId: GridRowId) => boolean;
+  // Grid capabilities
+  canEditRows?: boolean;
+  canAddRows?: boolean;
+  canSelectRows?: boolean;
+  canDeleteRows?: boolean;
+  
+  // Action handlers from parent
+  onDelete?: (ids: GridRowId[]) => void;
+  
+  // Selection model
+  selectionModel?: any[];
+  onSelectionModelChange?: (selectionModel: any[]) => void;
+}
+
+// Provider component
+export const GridModeProvider: React.FC<GridModeProviderProps> = ({
+  children,
+  totalRows,
+  initialMode = 'none',
+  // Form state and actions
+  saveChanges: formSaveChanges,
+  cancelChanges: formCancelChanges,
+  addRow: formAddRow,
+  hasValidationErrors,
+  isRowEditing = () => false,
+  isRowDirty = () => false,
+  // Grid capabilities
+  canEditRows = true,
+  canAddRows = true,
+  canSelectRows = true,
+  canDeleteRows = false, // Default to false
+  // Selection model
+  selectionModel: externalSelectionModel,
+  onSelectionModelChange: externalOnSelectionModelChange,
+  // Delete handler
+  onDelete: formOnDelete
+}) => {
+  // State for the current mode
+  const [mode, setMode] = useState<GridMode>(initialMode);
+  
+  // Determine if we're in controlled selection mode
+  const isSelectionControlled = externalSelectionModel !== undefined;
+  
+  // Only use the internal selection hook when in uncontrolled mode
+  const {
+    selectionModel: internalSelectionModel,
+    onSelectionModelChange: internalOnSelectionModelChange
+  } = useSelectionModel({
+    // Don't pass the external selection model to avoid double-management
+    onSelectionModelChange: !isSelectionControlled && externalOnSelectionModelChange ? 
+      (newModel) => externalOnSelectionModelChange(newModel) : 
+      undefined
+  });
+  
+  // Use the appropriate selection model based on controlled/uncontrolled state
+  const selectionModel = isSelectionControlled ? externalSelectionModel : internalSelectionModel;
+  
+  // Create a wrapper function that adapts between the different types
+  const adaptedOnSelectionModelChange = useCallback((newModel: any[], details?: any) => {
+    if (isSelectionControlled) {
+      // In controlled mode, only call the external handler
+      if (externalOnSelectionModelChange) {
+        externalOnSelectionModelChange(newModel);
+      }
+    } else {
+      // In uncontrolled mode, update internal state
+      internalOnSelectionModelChange(newModel, details || {} as any);
+    }
+  }, [isSelectionControlled, externalOnSelectionModelChange, internalOnSelectionModelChange]);
+  
+  // Get pagination
+  const {
+    page,
+    pageSize,
+    setPage,
+    setPageSize
+  } = usePagination();
+  
+  // Tracking edited rows logic...
+  const [editingRows, setEditingRows] = useState<Set<GridRowId>>(new Set());
+  
+  // Effect for updating editing rows set
+  useEffect(() => {
+    const newEditingRows = new Set<GridRowId>();
+    
+    if (isRowDirty) {
+      selectionModel.forEach((rowId: GridRowId) => {
+        if (isRowEditing(rowId) && isRowDirty(rowId)) {
+          newEditingRows.add(rowId);
+        }
+      });
+    } else {
+      selectionModel.forEach((rowId: GridRowId) => {
+        if (isRowEditing(rowId)) {
+          newEditingRows.add(rowId);
+        }
+      });
+    }
+    
+    setEditingRows(newEditingRows);
+  }, [selectionModel, isRowEditing, isRowDirty]);
+  
+  // Derived state
+  const selectedRowCount = selectionModel.length;
+  
+  const editingRowCount = isRowDirty ?
+    Array.from(editingRows).filter(rowId => isRowDirty(rowId)).length :
+    editingRows.size;
+  
+  const isAddingRow = mode === 'add';
+  
+  // Action Handlers
+  const clearSelection = useCallback(() => {
+    adaptedOnSelectionModelChange([]);
+  }, [adaptedOnSelectionModelChange]);
+  
+  const saveChanges = useCallback(() => {
+    formSaveChanges();
+    setMode('none');
+  }, [formSaveChanges]);
+  
+  const cancelChanges = useCallback(() => {
+    formCancelChanges();
+    setMode('none');
+  }, [formCancelChanges]);
+  
+  const addRow = useCallback(() => {
+    console.log('GridModeContext: addRow called');
+    formAddRow();
+    console.log('GridModeContext: formAddRow called');
+    setMode('add');
+    console.log('GridModeContext: mode set to add');
+  }, [formAddRow]);
+
+  // Delete handler
+  const deleteRows = useCallback((ids: GridRowId[]) => {
+    if (formOnDelete) {
+      formOnDelete(ids);
+      // Optionally clear selection or change mode after deletion
+      clearSelection();
+      // setMode('none'); // Or keep selection mode? Decide based on desired UX
+    } else {
+      console.warn('onDelete handler not provided to GridModeProvider');
+    }
+  }, [formOnDelete, clearSelection]);
+  
+  // Context value
+  const contextValue: GridModeContextType = {
+    mode,
+    setMode,
+    selectedRowCount,
+    clearSelection,
+    selectionModel,
+    onSelectionModelChange: adaptedOnSelectionModelChange,
+    editingRowCount,
+    isAddingRow,
+    hasValidationErrors,
+    saveChanges,
+    cancelChanges,
+    addRow,
+    deleteRows, // Add delete handler
+    // Capabilities
+    canEditRows,
+    canAddRows,
+    canSelectRows,
+    canDeleteRows, // Add delete capability flag
+    // Pagination
+    page,
+    pageSize,
+    totalRows,
+    setPage,
+    setPageSize
+  };
+  
+  return (
+    <GridModeContext.Provider value={contextValue}>
+      {children}
+    </GridModeContext.Provider>
+  );
+};
+
+/**
+ * Custom Hook: useGridMode
+ *
+ * This hook provides access to the GridModeContext.
+ * Components can use this hook to:
+ * - Read the current grid mode
+ * - Change the grid mode
+ * - Access selection state
+ * - Perform actions like save, cancel, add, delete
+ *
+ * It throws an error if used outside of a GridModeProvider.
+ */
+export const useGridMode = () => {
+  const context = useContext(GridModeContext);
+  if (!context) {
+    throw new Error('useGridMode must be used within a GridModeProvider');
+  }
+  return context;
+};
+
+/**
+ * Alias for backward compatibility
+ *
+ * This allows components that were using the old useToolbarMode hook
+ * to continue working without changes.
+ */
+export const useToolbarMode = useGridMode;
+
+
+
 ====== components/DataGrid/hooks/useRelayGraphQLData.ts ======
+Last Modified: 4/17/2025, 13:38 | Size: 5.8 KB | Lines: 217
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery } from '@apollo/client';
@@ -2710,6 +3331,7 @@ export function useGraphQLData<T>({
 
 
 ====== components/DataGrid/renderers/CellRenderer.tsx ======
+Last Modified: 4/13/2025, 23:59 | Size: 1.3 KB | Lines: 43
 
 import React from 'react';
 import { Tooltip } from '@mui/material';
@@ -2757,6 +3379,7 @@ export const CellRenderer: React.FC<CellRendererProps> = ({
 
 
 ====== components/DataGrid/renderers/EditCellRenderer.tsx ======
+Last Modified: 4/13/2025, 23:59 | Size: 10.1 KB | Lines: 312
 
 import React, { useCallback, useRef } from 'react';
 import { GridRenderEditCellParams } from '@mui/x-data-grid';
@@ -3072,7 +3695,53 @@ export const EditCellRenderer: React.FC<EditCellRendererProps> = ({
 
 
 
+====== components/DataGrid/components/CellEditHandler.tsx ======
+Last Modified: 4/11/2025, 17:03 | Size: 1.1 KB | Lines: 40
+
+import React, { useEffect } from 'react';
+import { GridApi, GridRowId } from '@mui/x-data-grid';
+import { useGridForm } from '../context/GridFormContext';
+
+interface CellEditHandlerProps {
+  apiRef: React.RefObject<GridApi>;
+}
+
+export const CellEditHandler: React.FC<CellEditHandlerProps> = ({ apiRef }) => {
+  const { startEditingCell, stopEditingCell } = useGridForm();
+  
+  useEffect(() => {
+    // Subscribe to cell edit start event
+    const startSubscription = apiRef.current.subscribeEvent(
+      'cellEditStart',
+      (params: { id: GridRowId; field: string }) => {
+        const { id, field } = params;
+        startEditingCell(id, field);
+      }
+    );
+    
+    // Subscribe to cell edit stop event
+    const stopSubscription = apiRef.current.subscribeEvent(
+      'cellEditStop',
+      () => {
+        stopEditingCell();
+      }
+    );
+    
+    // Cleanup subscriptions on unmount
+    return () => {
+      startSubscription();
+      stopSubscription();
+    };
+  }, [apiRef, startEditingCell, stopEditingCell]);
+  
+  // This component doesn't render anything
+  return null;
+};
+
+
+
 ====== components/DataGrid/components/ValidationIndicator.tsx ======
+Last Modified: 4/11/2025, 16:47 | Size: 1.8 KB | Lines: 55
 
 import React from 'react';
 import { Tooltip } from '@mui/material';
@@ -3126,664 +3795,6 @@ export const ValidationIndicator: React.FC<ValidationIndicatorProps> = ({
     <Tooltip title={error ? error.message || 'Invalid' : 'Valid'}>
       <div style={style}>{children}</div>
     </Tooltip>
-  );
-};
-
-
-
-====== components/DataGrid/components/CellEditHandler.tsx ======
-
-import React, { useEffect } from 'react';
-import { GridApi, GridRowId } from '@mui/x-data-grid';
-import { useGridForm } from '../context/GridFormContext';
-
-interface CellEditHandlerProps {
-  apiRef: React.RefObject<GridApi>;
-}
-
-export const CellEditHandler: React.FC<CellEditHandlerProps> = ({ apiRef }) => {
-  const { startEditingCell, stopEditingCell } = useGridForm();
-  
-  useEffect(() => {
-    // Subscribe to cell edit start event
-    const startSubscription = apiRef.current.subscribeEvent(
-      'cellEditStart',
-      (params: { id: GridRowId; field: string }) => {
-        const { id, field } = params;
-        startEditingCell(id, field);
-      }
-    );
-    
-    // Subscribe to cell edit stop event
-    const stopSubscription = apiRef.current.subscribeEvent(
-      'cellEditStop',
-      () => {
-        stopEditingCell();
-      }
-    );
-    
-    // Cleanup subscriptions on unmount
-    return () => {
-      startSubscription();
-      stopSubscription();
-    };
-  }, [apiRef, startEditingCell, stopEditingCell]);
-  
-  // This component doesn't render anything
-  return null;
-};
-
-
-
-====== components/DataGrid/components/UnifiedDataGridToolbar.tsx ======
-
-import React, { useState } from 'react';
-import {
-  Box,
-  IconButton,
-  Tooltip,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-  Chip,
-  Paper,
-  SelectChangeEvent,
-} from '@mui/material';
-import { DataGridHelpDialog } from './DataGridHelpDialog'; // Import the help dialog
-// Import the filter dialog and its types
-import { GlobalFilterDialog, FilterValues } from './GlobalFilterDialog';
-
-// Action icons
-import AddIcon from '@mui/icons-material/Add';
-import SaveIcon from '@mui/icons-material/Save';
-import CloseIcon from '@mui/icons-material/Close';
-import HelpIcon from '@mui/icons-material/Help';
-import BugReportIcon from '@mui/icons-material/BugReport';
-import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
-
-// Pagination icons
-
-// Action buttons
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import UploadIcon from '@mui/icons-material/Upload';
-
-// Context and hooks
-import { useGridMode, GridMode } from '../context/GridModeContext';
-import { useGridForm } from '../context/GridFormContext';
-
-// Define the structure for the filters passed to onFilter, matching GlobalFilterDialog
-// interface FilterValues { // Or import from GlobalFilterDialog as done above
-//   birthdayMonthYear: Dayjs | null; 
-//   department: string;
-//   name: string;
-// }
-
-interface UnifiedDataGridToolbarProps {
-  onSave?: () => void;
-  onFilter?: (filters: FilterValues) => void; // Use the imported/defined FilterValues type
-  onExport?: () => void;
-  onUpload?: () => void;
-  onHelp?: () => void; // Keep existing onHelp prop if needed elsewhere
-  onAddClick?: () => void; // Add this prop for custom add behavior
-  // Grid capabilities
-  canEditRows?: boolean;
-  canAddRows?: boolean; // Removed default value = true
-  canSelectRows?: boolean;
-  canDeleteRows?: boolean; // Added for row deletion capability
-  // Custom action buttons
-  customActionButtons?: React.ReactNode;
-}
-
-export const UnifiedDataGridToolbar: React.FC<UnifiedDataGridToolbarProps> = ({
-  onSave,
-  onFilter,
-  onExport,
-  onUpload,
-  onHelp,
-  onAddClick, // Destructure the new prop
-  canEditRows = true,
-  canAddRows, // Removed default value = true
-  canSelectRows = true,
-  customActionButtons
-}) => {
-  // Get grid mode context
-  const {
-    mode,
-    setMode,
-    editingRowCount,
-    isAddingRow,
-    hasValidationErrors,
-    saveChanges,
-    cancelChanges,
-    addRow,
-    // Get selection model from context
-    selectionModel,
-    onSelectionModelChange,
-    clearSelection,
-    // Get delete context
-    canDeleteRows,
-    deleteRows
-  } = useGridMode();
-  
-  // Debug: Log selection model changes
-  console.log('UnifiedDataGridToolbar - selectionModel from context:', selectionModel);
-  
-  // Add a visual indicator for debugging
-  if (!selectionModel || selectionModel.length === 0) {
-    console.log('No selection model or empty selection model');
-  }
-
-  // Get grid form context
-  const {
-    getPendingChanges,
-    getEditedRowCount,
-    getAllValidationErrors,
-    getOriginalRowData
-  } = useGridForm();
-
-  // State for dialogs
-  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
-  const [targetMode, setTargetMode] = useState<GridMode>('none');
-  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false); // State for filter dialog
-  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
-  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
-  const [deleteConfirmationDialogOpen, setDeleteConfirmationDialogOpen] = useState(false); // State for delete confirmation
-
-  // Handle mode switching with confirmation when needed
-  const handleModeSwitch = (newMode: GridMode) => {
-    // If in selection mode with multiple rows selected, show confirmation
-    if (mode === 'select' && selectionModel.length > 1 && newMode !== 'select') {
-      setConfirmationDialogOpen(true);
-      setTargetMode(newMode);
-      return;
-    }
-    
-    // Otherwise, switch mode directly
-    setMode(newMode);
-  };
-  
-  // Get the actual count of edited rows
-  const actualEditedRowCount = getEditedRowCount();
-
-  // No pagination handlers needed - using built-in DataGrid pagination
-
-  // Handle add button click
-  const handleAddClick = () => {
-    console.log('Add button clicked');
-    
-    // Use custom add handler if provided
-    if (onAddClick) {
-      console.log('Using custom onAddClick handler');
-      onAddClick();
-    } else {
-      // Default behavior - check selection and use context addRow
-      if (selectionModel.length > 1) {
-        console.log('Multiple rows selected, showing confirmation dialog');
-        setConfirmationDialogOpen(true);
-        setTargetMode('add');
-        return;
-      }
-      
-      console.log('Using context addRow function');
-      addRow();
-      console.log('Context addRow function called');
-    }
-  };
-
-  // Handle save button click
-  const handleSaveClick = () => {
-    saveChanges();
-  };
-
-  // Handle cancel button click
-  const handleCancelClick = () => {
-    cancelChanges();
-  };
-
-  // Handle help button click
-  const handleHelpClick = () => {
-    setHelpDialogOpen(true);
-  };
-
-  // Handle filter button click - opens the dialog
-  const handleFilterClick = () => {
-    setFilterDialogOpen(true);
-  };
-
-  // Handle applying filters from the dialog - update parameter type
-  const handleApplyFilters = (filters: FilterValues) => {
-    // Log the Dayjs object directly, or format it if needed
-    console.log('Applying filters:', {
-      ...filters,
-      // Example: Format the date for logging or sending elsewhere
-      birthday: filters.birthdayMonthYear ? filters.birthdayMonthYear.format('YYYY-MM') : null, 
-    });
-    if (onFilter) {
-      // Pass the filters object (containing the Dayjs object) to the parent
-      // For now, let's assume the parent expects the filters object
-      onFilter(filters); 
-    }
-    setFilterDialogOpen(false); // Close dialog after applying
-  };
-  
-  // Handle debug button click
-  const handleDebugClick = () => {
-    setDebugDialogOpen(true);
-  };
-
-  // Handle delete button click - opens confirmation dialog
-  const handleDeleteClick = () => {
-    if (selectionModel.length > 0 && canDeleteRows) {
-      setDeleteConfirmationDialogOpen(true);
-    }
-  };
-
-  // Handle confirming deletion
-  const handleConfirmDelete = () => {
-    deleteRows(selectionModel);
-    setDeleteConfirmationDialogOpen(false);
-  };
-
-  // Determine button disabled states based on current mode
-  const isInEditOrAddMode = mode === 'edit' || mode === 'add';
-  const canSave = isInEditOrAddMode && !hasValidationErrors;
-  const canCancel = isInEditOrAddMode;
-  const canAdd = canAddRows && !isInEditOrAddMode;
-  const canDeleteSelected = canDeleteRows && selectionModel.length > 0 && !isInEditOrAddMode;
-  const areActionButtonsDisabled = isInEditOrAddMode;
-
-  return (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 1,
-      borderBottom: '1px solid #e0e0e0'
-    }}>
-      {/* Left Section: Add/Save/Cancel buttons + Status */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center',
-        gap: 1
-      }}>
-        {/* Add button - only show if canAddRows is true */}
-        {canAddRows && (
-          <Tooltip title={canAdd ? "Add new record" : "Cannot add while editing"}>
-            <span>
-              <Button
-                variant="contained"
-                size="small"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleAddClick}
-                disabled={!canAdd}
-                sx={{ 
-                  minWidth: 0, 
-                  px: 1,
-                  opacity: canAdd ? 1 : 0.5
-                }}
-              >
-                Add
-              </Button>
-            </span>
-          </Tooltip>
-        )}
-
-        {/* Status section */}
-        {mode !== 'none' && (
-          <Paper
-            elevation={0}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              padding: '4px 8px',
-              borderRadius: 1,
-              backgroundColor: mode === 'edit' ? 'rgba(25, 118, 210, 0.08)' : 
-                              mode === 'add' ? 'rgba(46, 125, 50, 0.08)' : 
-                              'rgba(237, 108, 2, 0.08)'
-            }}
-          >
-            {/* Status content based on mode */}
-            {mode === 'edit' && (
-              <>
-            <Typography variant="body2">
-              Editing {actualEditedRowCount} record{actualEditedRowCount !== 1 ? 's' : ''}
-            </Typography>
-                {hasValidationErrors && (
-                  <Chip
-                    label="Validation errors"
-                    size="small"
-                    color="warning"
-                    sx={{ height: 24, cursor: 'pointer' }}
-                    onClick={() => setValidationDialogOpen(true)}
-                  />
-                )}
-              </>
-            )}
-            
-            {mode === 'add' && (
-              <>
-                <Typography variant="body2">
-                  Adding new record
-                </Typography>
-                {hasValidationErrors && (
-                  <Chip
-                    label="Validation errors"
-                    size="small"
-                    color="warning"
-                    sx={{ height: 24, cursor: 'pointer' }}
-                    onClick={() => setValidationDialogOpen(true)}
-                  />
-                )}
-              </>
-            )}
-
-          </Paper>
-        )}
-
-        {/* Save button */}
-        <Tooltip title={canSave ? "Save changes" : hasValidationErrors ? "Fix validation errors before saving" : "Nothing to save"}>
-          <span>
-            <Button
-              variant="contained"
-              size="small"
-              color="success"
-              startIcon={<SaveIcon />}
-              onClick={handleSaveClick}
-              disabled={!canSave}
-              sx={{ 
-                minWidth: 0, 
-                px: 1,
-                opacity: canSave ? 1 : 0.5
-              }}
-            >
-              Save
-            </Button>
-          </span>
-        </Tooltip>
-        
-        {/* Debug button - only show when in edit mode */}
-        {mode === 'edit' && (
-          <Tooltip title="Debug Edits (Temporary)">
-            <Button
-              variant="outlined"
-              size="small"
-              color="info"
-              startIcon={<BugReportIcon />}
-              onClick={handleDebugClick}
-              sx={{ 
-                minWidth: 0, 
-                px: 1,
-                ml: 1
-              }}
-            >
-              Debug
-            </Button>
-          </Tooltip>
-        )}
-
-        {/* Cancel button */}
-        {canCancel && (
-          <Tooltip title="Cancel changes">
-            <Button
-              variant="outlined"
-              size="small"
-              color="error"
-              startIcon={<CloseIcon />}
-              onClick={handleCancelClick}
-              sx={{ minWidth: 0, px: 1 }}
-            >
-              Cancel
-            </Button>
-          </Tooltip>
-        )}
-
-      </Box>
-
-      {/* Middle Section - Pagination removed in favor of built-in DataGrid pagination */}
-      <Box sx={{ flex: 1 }} />
-
-      {/* Right Section: Selection Status + Action Buttons */}
-      <Box sx={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        gap: 1
-      }}>
-        {/* Custom Action Buttons - if provided, render them instead of default buttons */}
-        {customActionButtons ? (
-          customActionButtons
-        ) : (
-          <>
-            {/* Selection Status */}
-            {selectionModel && selectionModel.length > 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-                <Typography variant="body2" component="span" sx={{ mr: 1 }}>
-                  Selected:
-                </Typography>
-                <Chip
-                  label={`${selectionModel.length} rows`}
-                  onDelete={clearSelection}
-                  size="small"
-                />
-                {/* Delete Button - Show only if deletion is allowed and rows are selected */}
-                {canDeleteRows && selectionModel.length > 0 && (
-                  <Tooltip title={canDeleteSelected ? `Delete ${selectionModel.length} selected row(s)` : "Cannot delete while editing"}>
-                    <span> {/* Span needed for disabled Tooltip */}
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={handleDeleteClick}
-                        disabled={!canDeleteSelected}
-                        sx={{ ml: 0.5, opacity: canDeleteSelected ? 1 : 0.5 }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                )}
-              </Box>
-            )}
-            {/* Filter Options - Updated onClick */}
-            <Tooltip title={areActionButtonsDisabled ? "Cannot filter while editing" : "Filter"}>
-              <span>
-                <IconButton onClick={handleFilterClick} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
-                  <FilterAltIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-
-            {/* Upload Options */}
-            <Tooltip title={areActionButtonsDisabled ? "Cannot upload while editing" : "Upload"}>
-              <span>
-                <IconButton onClick={onUpload} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
-                  <UploadIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-
-            {/* Export Options */}
-            <Tooltip title={areActionButtonsDisabled ? "Cannot export while editing" : "Export"}>
-              <span>
-                <IconButton onClick={onExport} disabled={areActionButtonsDisabled} sx={{ opacity: areActionButtonsDisabled ? 0.5 : 1 }}>
-                  <FileDownloadIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-
-            {/* Help button */}
-            <Tooltip title="Help">
-              <IconButton size="small" onClick={handleHelpClick}>
-                <HelpIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-      </Box>
-
-      {/* Confirmation Dialog */}
-      <Dialog 
-        open={confirmationDialogOpen} 
-        onClose={() => setConfirmationDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Mode Switch</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            You have {selectionModel.length} rows selected. Switching to {targetMode} mode will clear your selection. Do you want to continue?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmationDialogOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={() => {
-              setMode(targetMode);
-              clearSelection();
-              setConfirmationDialogOpen(false);
-              if (targetMode === 'add') {
-                addRow();
-              }
-            }} 
-            color="primary"
-          >
-            Continue
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Use the imported DataGridHelpDialog */}
-      <DataGridHelpDialog 
-        open={helpDialogOpen} 
-        onClose={() => setHelpDialogOpen(false)}
-      />
-
-      {/* Global Filter Dialog */}
-      <GlobalFilterDialog
-        open={filterDialogOpen}
-        onClose={() => setFilterDialogOpen(false)}
-        onApply={handleApplyFilters}
-        // Pass department options if available/needed from parent or context
-        // departmentOptions={...} 
-      />
-
-      {/* Validation Errors Dialog */}
-      <Dialog
-        open={validationDialogOpen}
-        onClose={() => setValidationDialogOpen(false)}
-        maxWidth="md"
-      >
-        <DialogTitle>Validation Errors</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            The following validation errors need to be fixed before saving:
-          </DialogContentText>
-          <Box component="ul" sx={{ mt: 2 }}>
-            {getAllValidationErrors().map((error, index) => (
-              <Typography component="li" key={index}>
-                Row {error.rowId}: {error.field} - {error.message}
-              </Typography>
-            ))}
-            {getAllValidationErrors().length === 0 && (
-              <Typography component="li">
-                {mode === 'edit' && actualEditedRowCount > 0 ? (
-                  "There are validation errors in the current editing session. Please check highlighted fields for specific issues."
-                ) : mode === 'add' && isAddingRow ? (
-                  "There are validation errors in the new row. Please check highlighted fields for specific issues."
-                ) : (
-                  "No specific validation details available"
-                )}
-              </Typography>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setValidationDialogOpen(false)} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Debug Dialog */}
-      <Dialog
-        open={debugDialogOpen}
-        onClose={() => setDebugDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Debug Edits</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Current edited fields ({actualEditedRowCount} rows with changes):
-          </DialogContentText>
-          <Box 
-            component="pre" 
-            sx={{ 
-              mt: 2, 
-              p: 2, 
-              bgcolor: '#f5f5f5', 
-              borderRadius: 1,
-              overflow: 'auto',
-              maxHeight: '400px'
-            }}
-          >
-            {JSON.stringify(
-              getPendingChanges().map(item => {
-                const { rowId, changes } = item;
-                
-                // Get the original values for comparison
-                const originalData = getOriginalRowData(rowId);
-                const originalValues: Record<string, any> = {};
-                
-                if (originalData) {
-                  // Extract only the fields that have changed
-                  Object.keys(changes).forEach(field => {
-                    originalValues[field] = originalData[field];
-                  });
-                }
-                
-                return {
-                  rowId,
-                  changes,
-                  originalValues
-                };
-              }), 
-              null, 
-              2
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDebugDialogOpen(false)} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-     {/* Delete Confirmation Dialog */}
-     <Dialog
-       open={deleteConfirmationDialogOpen}
-       onClose={() => setDeleteConfirmationDialogOpen(false)}
-     >
-       <DialogTitle>Confirm Deletion</DialogTitle>
-       <DialogContent>
-         <DialogContentText>
-           Are you sure you want to delete {selectionModel.length} selected row(s)? This action cannot be undone.
-         </DialogContentText>
-       </DialogContent>
-       <DialogActions>
-         <Button onClick={() => setDeleteConfirmationDialogOpen(false)}>Cancel</Button>
-         <Button onClick={handleConfirmDelete} color="error">
-           Delete
-         </Button>
-       </DialogActions>
-     </Dialog>
-    </Box>
   );
 };
 

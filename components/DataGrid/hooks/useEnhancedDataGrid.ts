@@ -116,12 +116,15 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
   // Other options
   loading: externalLoading = false,
 }: EnhancedDataGridHookOptions<T>): EnhancedDataGridHookResult<T> {
-  console.log('[useEnhancedDataGrid] Initializing with:', {
-    columnsCount: columns?.length,
-    rowsCount: rows?.length,
-    useGraphQL,
-    onlyLoadWithFilters
-  });
+  // Only log in development mode
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[useEnhancedDataGrid] Initializing with:', {
+      columnsCount: columns?.length,
+      rowsCount: rows?.length,
+      useGraphQL,
+      onlyLoadWithFilters
+    });
+  }
   
   // State for tracking if filters have been applied
   const [filtersApplied, setFiltersApplied] = useState(false);
@@ -159,17 +162,38 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
     };
   }, [externalPaginationModel, paginationState.page, paginationState.pageSize]);
   
-  // Determine if data should be fetched
+  // Stable reference to useGraphQLFetching
+  const useGraphQLFetchingRef = useRef(useGraphQLFetching);
+  useEffect(() => {
+    useGraphQLFetchingRef.current = useGraphQLFetching;
+  }, [useGraphQLFetching]);
+  
+  // Stable reference to onlyLoadWithFilters
+  const onlyLoadWithFiltersRef = useRef(onlyLoadWithFilters);
+  useEffect(() => {
+    onlyLoadWithFiltersRef.current = onlyLoadWithFilters;
+  }, [onlyLoadWithFilters]);
+  
+  // Stable reference to filtersApplied
+  const filtersAppliedRef = useRef(filtersApplied);
+  useEffect(() => {
+    filtersAppliedRef.current = filtersApplied;
+  }, [filtersApplied]);
+  
+  // Determine if data should be fetched with stable references
   const shouldFetchData = useMemo(() => {
-    if (!useGraphQLFetching) return false;
-    if (!onlyLoadWithFilters) return true;
-    return filtersApplied;
-  }, [useGraphQLFetching, onlyLoadWithFilters, filtersApplied]);
+    if (!useGraphQLFetchingRef.current) return false;
+    if (!onlyLoadWithFiltersRef.current) return true;
+    return filtersAppliedRef.current;
+  }, [/* No dependencies to reduce re-renders */]);
   
   // Setup GraphQL data with conditional fetching
   const graphQLResult = useMemo(() => {
     if (!shouldFetchData) {
-      console.log('[useEnhancedDataGrid] Skipping GraphQL fetch - conditions not met');
+      // Only log in development mode and only once
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[useEnhancedDataGrid] Skipping GraphQL fetch - conditions not met');
+      }
       return {
         rows: [],
         totalRows: 0,
@@ -189,7 +213,10 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
       };
     }
     
-    console.log('[useEnhancedDataGrid] Initiating GraphQL fetch');
+    // Only log in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[useEnhancedDataGrid] Initiating GraphQL fetch');
+    }
     try {
       // Convert filter model to the format expected by useGraphQLData
       const filterObj: Record<string, any> = {};
@@ -242,13 +269,15 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
       };
     }
   }, [
-    shouldFetchData, 
-    paginationState.pageSize, 
-    paginationState.page, 
-    query, 
-    variables, 
-    internalFilterModel, 
-    internalSortModel
+    shouldFetchData,
+    // Use stable references for these values
+    // paginationState.pageSize and paginationState.page are stable
+    query,
+    // Use JSON.stringify for deep comparison of objects
+    JSON.stringify(variables),
+    // Only depend on the relevant parts of filter/sort models
+    JSON.stringify(internalFilterModel.items),
+    JSON.stringify(internalSortModel)
   ]);
   
   // Process columns to add custom menu options
@@ -295,21 +324,39 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
     });
   }, [columns]);
   
-  // Determine displayed rows based on configuration
+  // Create stable references for rows
+  const rowsRef = useRef(rows);
+  useEffect(() => {
+    rowsRef.current = rows;
+  }, [rows]);
+  
+  // Create stable references for graphQLResult.rows
+  const graphQLRowsRef = useRef(graphQLResult.rows);
+  useEffect(() => {
+    graphQLRowsRef.current = graphQLResult.rows;
+  }, [graphQLResult.rows]);
+  
+  // Determine displayed rows based on configuration with stable references
   const displayRows = useMemo(() => {
-    if (useGraphQLFetching) {
-      if (onlyLoadWithFilters && !filtersApplied) {
-        console.log('[useEnhancedDataGrid] Returning empty rows - filters not applied');
+    if (useGraphQLFetchingRef.current) {
+      if (onlyLoadWithFiltersRef.current && !filtersAppliedRef.current) {
+        // Only log in development mode
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[useEnhancedDataGrid] Returning empty rows - filters not applied');
+        }
         return [];
       }
-      return graphQLResult.rows || [];
+      return graphQLRowsRef.current || [];
     }
-    return rows || [];
-  }, [useGraphQLFetching, onlyLoadWithFilters, filtersApplied, graphQLResult.rows, rows]);
+    return rowsRef.current || [];
+  }, [/* No dependencies to reduce re-renders */]);
   
   // Enhanced filter handler that tracks filter application
   const handleFilterModelChange = useCallback((newModel: GridFilterModel) => {
-    console.log('[useEnhancedDataGrid] Filter model changed:', newModel);
+    // Only log in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[useEnhancedDataGrid] Filter model changed:', newModel);
+    }
     
     // Update internal state
     setInternalFilterModel(newModel);
@@ -317,8 +364,8 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
     // Track if filters have been applied
     setFiltersApplied(newModel.items && newModel.items.length > 0);
     
-    // If using GraphQL with server-side filtering
-    if (useGraphQLFetching && shouldFetchData) {
+    // If using GraphQL with server-side filtering - use refs for stable comparison
+    if (useGraphQLFetchingRef.current && shouldFetchData) {
       try {
         // Pass filter to GraphQL hook
         const filterObj: Record<string, any> = {};
@@ -350,13 +397,16 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
   
   // Enhanced sort handler
   const handleSortModelChange = useCallback((newModel: GridSortModel) => {
-    console.log('[useEnhancedDataGrid] Sort model changed:', newModel);
+    // Only log in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[useEnhancedDataGrid] Sort model changed:', newModel);
+    }
     
     // Update internal state
     setInternalSortModel(newModel);
     
-    // If using GraphQL with server-side sorting
-    if (useGraphQLFetching && shouldFetchData) {
+    // If using GraphQL with server-side sorting - use refs for stable comparison
+    if (useGraphQLFetchingRef.current && shouldFetchData) {
       try {
         // Pass sort to GraphQL hook
         const sortItems = newModel.map(item => ({
@@ -383,14 +433,17 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
   
   // Enhanced pagination handler
   const handlePaginationModelChange = useCallback((newModel: GridPaginationModel) => {
-    console.log('[useEnhancedDataGrid] Pagination model changed:', newModel);
+    // Only log in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[useEnhancedDataGrid] Pagination model changed:', newModel);
+    }
     
     // Update internal state
     paginationState.setPage(newModel.page);
     paginationState.setPageSize(newModel.pageSize);
     
-    // If using GraphQL with server-side pagination
-    if (useGraphQLFetching && shouldFetchData) {
+    // If using GraphQL with server-side pagination - use refs for stable comparison
+    if (useGraphQLFetchingRef.current && shouldFetchData) {
       try {
         // Pass page to GraphQL hook
         graphQLResult.setPage?.(newModel.page);

@@ -68,9 +68,17 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-// Function to format date/time
+// Function to format date/time without seconds
 function formatDateTime(date) {
-  return date.toLocaleString();
+  const options = { 
+    year: 'numeric', 
+    month: 'numeric', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false
+  };
+  return date.toLocaleString(undefined, options);
 }
 
 // Main function
@@ -144,14 +152,22 @@ function combineFiles() {
   // Log file list
   console.log(`\nFound ${fileDetails.length} files (sorted by last modified)`);
   
-  let combinedContent = `PROCESSING: ${target}\n\n`;
+  // Add timestamp to the output 
+  const now = new Date();
+  const formattedNow = formatDateTime(now);
+  let combinedContent = `PROCESSING: ${target} (Generated: ${formattedNow})\n\n`;
   
   // Process each file
   for (const file of fileDetails) {
     try {
       const content = fs.readFileSync(file.path, 'utf8');
       const lastModified = formatDateTime(file.mtime);
-      combinedContent += `====== ${file.path} (Last Modified: ${lastModified}) ======\n\n${content}\n\n\n`;
+      const fileSize = formatFileSize(file.size);
+      const lineCount = file.lines;
+      
+      combinedContent += `====== ${file.path} ======\n`;
+      combinedContent += `Last Modified: ${lastModified} | Size: ${fileSize} | Lines: ${lineCount}\n\n`;
+      combinedContent += `${content}\n\n\n`;
     } catch (error) {
       combinedContent += `====== ${file.path} ======\n\nERROR: ${error.message}\n\n\n`;
     }
@@ -176,6 +192,7 @@ function combineFiles() {
   
   // Display summary
   console.log(`\nOutput: ${outputPath}`);
+  console.log(`Generated: ${formattedNow}`);
   console.log(`Token count: ${tokenCount.toLocaleString()}`);
   console.log(`Context window: ${percentageUsed}% of 200K`);
   

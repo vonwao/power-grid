@@ -1,0 +1,137 @@
+PROCESSING: components/DataGrid/types (Generated: 5/8/2025, 12:39)
+
+====== components/DataGrid/types/index.ts ======
+Last Modified: 5/7/2025, 15:39 | Size: 90 B | Lines: 3
+
+export * from './serverSide';
+export * from './selection';
+export * from './columnConfig';
+
+
+====== components/DataGrid/types/columnConfig.ts ======
+Last Modified: 5/7/2025, 15:39 | Size: 1.3 KB | Lines: 41
+
+import { GridColDef } from '@mui/x-data-grid';
+import React from 'react';
+
+/**
+ * Enhanced column configuration with additional options for menu customization
+ */
+export interface EnhancedColumnConfig<T = any> extends Omit<GridColDef, 'renderCell' | 'renderEditCell'> {
+  // Field configuration for form integration
+  fieldConfig: {
+    type: 'string' | 'number' | 'date' | 'boolean' | 'select';
+    options?: Array<{ value: any; label: string }>;
+    renderViewMode?: (_value: T | null, _row: any) => React.ReactNode;
+    renderEditMode?: (_props: any) => React.ReactNode;
+    validation?: any;
+    parse?: (_value: any) => T | null;
+    format?: (_value: T | null) => string;
+  };
+  
+  // Legacy field type (for backward compatibility)
+  fieldType?: any;
+  
+  // Legacy validation (for backward compatibility)
+  required?: boolean;
+  validationRules?: any[];
+  validator?: any;
+  
+  // New property for column menu configuration
+  menuOptions?: {
+    // Which menu items to show (defaults to true if not specified)
+    showSortAsc?: boolean;
+    showSortDesc?: boolean;
+    showFilter?: boolean;
+    showColumnSelector?: boolean;
+    // Custom menu items
+    customItems?: Array<{
+      label: string;
+      icon?: React.ReactNode;
+      onClick: (colDef: GridColDef) => void;
+    }>;
+  };
+}
+
+
+====== components/DataGrid/types/serverSide.ts ======
+Last Modified: 4/17/2025, 13:40 | Size: 1023 B | Lines: 48
+
+/**
+ * Types for server-side data loading
+ */
+ 
+/**
+ * Server-side data parameters
+ */
+export interface ServerSideParams {
+  url: string;
+  pageSize: number;
+  initialPage?: number;
+  initialSortModel?: { field: string; sort: 'asc' | 'desc' }[];
+  initialFilterModel?: Record<string, any>;
+}
+ 
+/**
+ * Server-side data result
+ */
+export interface ServerSideResult<T> {
+  rows: T[];
+  totalRows: number;
+  loading: boolean;
+  error: Error | null;
+  setPage: (page: number) => void;
+  setSortModel: (sortModel: { field: string; sort: 'asc' | 'desc' }[]) => void;
+  setFilterModel: (filterModel: Record<string, any>) => void;
+  pageInfo: PageInfo;
+  refetch: () => Promise<any>;
+  resetCursors?: () => void;
+}
+ 
+/**
+ * Core interfaces for cursor pagination
+ */
+export interface PageInfo {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  startCursor?: string | null;
+  endCursor?: string | null;
+}
+ 
+export interface Connection<T> {
+  edges: { cursor: string; node: T }[];
+  pageInfo: PageInfo;
+  totalCount: number;
+}
+ 
+ 
+
+
+====== components/DataGrid/types/selection.ts ======
+Last Modified: 4/11/2025, 06:19 | Size: 545 B | Lines: 23
+
+import { GridRowSelectionModel, GridCallbackDetails } from '@mui/x-data-grid';
+
+/**
+ * Types for row selection
+ */
+
+/**
+ * Selection model state
+ */
+export interface SelectionModelState {
+  selectionModel: any[];
+  onSelectionModelChange: (newSelectionModel: GridRowSelectionModel, details: GridCallbackDetails) => void;
+}
+
+/**
+ * Selection options
+ */
+export interface SelectionOptions {
+  checkboxSelection?: boolean;
+  selectionModel?: any[];
+  onSelectionModelChange?: (selectionModel: any[]) => void;
+  disableMultipleSelection?: boolean;
+}
+
+
