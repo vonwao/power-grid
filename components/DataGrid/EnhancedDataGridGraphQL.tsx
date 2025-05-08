@@ -309,8 +309,11 @@ const selectGraphQLHook = useCallback(() => {
       initialPage: paginationModelToUse.page,
       query,
       variables,
-      filterModel: filterModelToUse,
-      sortModel: sortModelToUse,
+      initialFilterModel: filterModelToUse,
+      initialSortModel: sortModelToUse?.map(item => ({
+        field: item.field,
+        sort: item.sort as 'asc' | 'desc'
+      })),
       nodeToRow: (node) => ({
         ...node,
         id: node.accounting_mtm_history_id || node.id,
@@ -571,7 +574,10 @@ const {
     
     // Update GraphQL hook if using server-side sorting
     if (useGraphQLFetching && sortingMode === 'server') {
-      setSortModel(newModel);
+      setSortModel(newModel.map(item => ({
+        field: item.field,
+        sort: item.sort as 'asc' | 'desc'
+      })));
       
       // Reset to page 0 when sorting changes
       if (currentPage !== 0) {

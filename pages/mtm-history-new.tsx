@@ -646,7 +646,7 @@ const MTMHistoryPage: React.FC<MTMHistoryPageProps> = ({
           onRefresh={() => refetchRef.current()}
         />
         
-        {/* Using the new EnhancedDataGrid component */}
+        {/* Using the new EnhancedDataGrid component with startKey-based pagination */}
         <EnhancedDataGrid
           columns={columns}
           rows={[]} // We'll let the component fetch data via GraphQL
@@ -657,6 +657,7 @@ const MTMHistoryPage: React.FC<MTMHistoryPageProps> = ({
           variables={{
             limit: paginationModel.pageSize,
             filter: combinedFilter,
+            // The startKey will be managed by the useGraphQLData hook
           }}
           
           // New feature: conditional loading

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { GridFilterModel, GridSortModel, GridRowId, GridPaginationModel } from '@mui/x-data-grid';
-import { useGraphQLData } from './useRelayGraphQLData';
+import { useGraphQLData } from './useGraphQLData';
 import { useSelectionModel } from './useSelectionModel';
 import { usePagination } from './usePagination';
 import { EnhancedColumnConfig } from '../types/columnConfig';
@@ -241,11 +241,12 @@ export function useEnhancedDataGrid<T extends { id: GridRowId }>({
       
       return useGraphQLData<T>({
         pageSize: paginationState.pageSize,
-        initialPage: paginationState.page,
         query,
         variables,
-        initialFilterModel: filterObj,
+        initialPage: paginationState.page,
         initialSortModel: sortItems,
+        initialFilterModel: filterObj,
+        nodeToRow: (node: any) => node as T,
       });
     } catch (error) {
       console.error('[useEnhancedDataGrid] Error setting up GraphQL data:', error);
